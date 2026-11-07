@@ -40,16 +40,18 @@
      三档回退链覆盖 Win / macOS / Linux：
        DIN 风格窄体重黑：Bahnschrift(Win) → DIN Alternate(macOS) → Ubuntu/Roboto Condensed(Linux)
        等宽：Cascadia Mono(Win) → SFMono/Consolas → DejaVu Sans Mono(Linux)
-       中文：微软雅黑(Win) → 苹方(macOS) → 思源/Noto/WQY(Linux)
+       中文：Noto Sans SC(优先) → 思源 → 雅黑(Win) → 苹方(macOS) → WQY(Linux)
      完全没有时退到通用 sans-serif —— 版式不变，只是字面观感略有差异。 */
   --dsu-din: "Bahnschrift", "DIN Alternate", "DIN Condensed", "Archivo", "Oswald",
     "Arial Narrow", "Liberation Sans Narrow", "Ubuntu Condensed", "Roboto Condensed",
     "Noto Sans Display", "HarmonyOS Sans SC", "Microsoft YaHei", "PingFang SC", sans-serif;
   --dsu-mono: "Cascadia Mono", "SFMono-Regular", "Consolas", "Menlo", "DejaVu Sans Mono",
     "Liberation Mono", "Noto Sans Mono", ui-monospace, monospace;
-  --dsu-zh: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "HarmonyOS Sans SC",
-    "Source Han Sans SC", "Noto Sans CJK SC", "Noto Sans SC", "WenQuanYi Micro Hei",
-    sans-serif;
+  /* 中文优先 Noto Sans SC / 思源黑体系：笔画更几何，暗底发虚比雅黑轻。
+     没装才退微软雅黑，版式不变。 */
+  --dsu-zh: "Noto Sans SC", "Source Han Sans SC", "Noto Sans CJK SC", "HarmonyOS Sans SC",
+    "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB",
+    "WenQuanYi Micro Hei", sans-serif;
 
   --dsu-speed: 1;
 
@@ -336,50 +338,86 @@
 .dsu-status {
   display: flex;
   align-items: center;
-  gap: 14px;
-  font-family: var(--dsu-din);
-  font-size: 44px;
-  font-weight: 400;
-  letter-spacing: 0.14em;
+  gap: 0;
+  font-family: var(--dsu-zh);
+  font-size: clamp(46px, 4.4vw, 66px);
+  font-weight: 500;
+  font-synthesis: none;
+  letter-spacing: 0.135em;
   color: var(--dsu-ink);
   opacity: 0;
   transition: opacity 300ms ease;
   white-space: nowrap;
+  /* 清晰度优先：只给主字打开次像素抗锯齿，不动根节点，避免小字和玻璃背景一起变样 */
+  -webkit-font-smoothing: auto;
+  text-rendering: auto;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.055), 0 20px 54px rgba(0, 0, 0, 0.46);
 }
 .dsu-status.dsu-in { opacity: 1; }
+/* 字距补偿必须加在文字子项上：flex 容器上的 text-indent 不生效，否则整行会偏右 */
+.dsu-status-zh { text-indent: 0.135em; }
 .dsu-status.dsu-zhline {
   font-family: var(--dsu-zh);
-  font-weight: 400;
-  letter-spacing: 0.22em;
-  text-indent: 0.22em;
-  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: 0.135em;
+  font-size: clamp(46px, 4.4vw, 66px);
+}
+#dsh-startup-root:not(.dsu-dark) .dsu-status {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.82), 0 13px 32px rgba(66, 54, 40, 0.16);
+}
+/* 分隔圆点单独提亮：整句因此有一个视觉锚 */
+.dsu-status .dsu-sep {
+  color: var(--dsu-accent);
+  text-shadow: 0 0 18px var(--dsu-accent-glow, rgba(255, 117, 0, 0.42));
+}
+/* 护城河：只准星步骤启用，避免玻璃背景下每句字都带一圈常驻光晕 */
+#dsh-startup-root .dsu-status.dsu-shield,
+#dsh-startup-root .dsu-sub-en.dsu-shield {
+  text-shadow: 0 0 14px var(--dsu-bg-2), 0 0 5px var(--dsu-bg-2),
+    0 1px 0 rgba(255, 255, 255, 0.055), 0 20px 54px rgba(0, 0, 0, 0.46);
+}
+#dsh-startup-root:not(.dsu-dark) .dsu-status.dsu-shield,
+#dsh-startup-root:not(.dsu-dark) .dsu-sub-en.dsu-shield {
+  text-shadow: 0 0 14px var(--dsu-bg-2), 0 0 5px var(--dsu-bg-2),
+    0 1px 0 rgba(255, 255, 255, 0.82), 0 13px 32px rgba(66, 54, 40, 0.16);
 }
 .dsu-caret {
   display: inline-block;
-  width: 15px;
+  width: 0;
   height: 4px;
+  margin-left: 0;
   background: var(--dsu-accent);
   transform: translateY(3px);
   opacity: 0;
+  transition: width 180ms ease, margin-left 180ms ease, opacity 180ms ease;
 }
 .dsu-caret.dsu-on {
+  width: 15px;
+  margin-left: 14px;
   opacity: 1;
   animation: dsu-blink 1s steps(1, end) infinite;
 }
 @keyframes dsu-blink { 50% { opacity: 0; } }
 
 .dsu-sub-en {
-  margin-top: 14px;
+  margin-top: 16px;
   font-family: var(--dsu-mono);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 400;
-  letter-spacing: 0.44em;
-  text-indent: 0.44em;
+  letter-spacing: 0.46em;
+  text-indent: 0.46em;
   color: var(--dsu-ink-soft);
   opacity: 0;
   white-space: nowrap;
+  -webkit-font-smoothing: auto;
+  text-rendering: auto;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.38);
 }
 .dsu-sub-en.dsu-in { opacity: 1; }
+#dsh-startup-root:not(.dsu-dark) .dsu-sub-en {
+  color: #464b4a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+}
 
 .dsu-rule {
   margin-top: 22px;
@@ -451,14 +489,15 @@
 .dsu-idline.dsu-in { opacity: 1; transform: none; }
 
 /* ── 环形准星（验证通过）───────────────────────────────────────────────── */
-/* 照原片：环居中、直径约 56vw，状态字就落在环心里，两者是一个整体。
+/* 照原片：环居中、直径约 62vw，状态字就落在环心里，两者是一个整体。
+   主字放大到 46–66px 后，环同步从 56vw 提到 62vw，长句才不会压到环上。
    关键是把两段弧的缺口都留在正下方 6 点钟方向，底部字幕永远不会被压到。 */
 .dsu-reticle {
   position: absolute;
   left: 50%;
   top: 45%;
-  width: min(56vw, 86vh, 1040px);
-  height: min(56vw, 86vh, 1040px);
+  width: min(62vw, 86vh, 1040px);
+  height: min(62vw, 86vh, 1040px);
   transform: translate(-50%, -50%);
   z-index: 16;
   opacity: 0;

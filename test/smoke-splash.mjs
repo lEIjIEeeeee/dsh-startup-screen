@@ -588,6 +588,40 @@ console.log('\n[16] 背景模糊必须真的生效（contain:paint 回归防线�
   check('dispose 也会还原', /function dispose\(\)[\s\S]{0,300}restoreAppBackdrop\(\)/.test(src))
 }
 
+console.log('\n[17] P0 中文清晰度与逐字解码')
+{
+  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const src = fs.readFileSync(BUNDLE, 'utf8')
+
+  const zhLine = (css.match(/--dsu-zh:[^;]+;/) || [''])[0]
+  check('中文优先 Noto Sans SC', zhLine.indexOf('"Noto Sans SC"') !== -1 &&
+    (zhLine.indexOf('"Microsoft YaHei"') === -1 || zhLine.indexOf('"Noto Sans SC"') < zhLine.indexOf('"Microsoft YaHei"')))
+  check('主字使用中文栈', /\.dsu-status\s*\{[\s\S]{0,500}font-family:\s*var\(--dsu-zh\)/.test(css))
+  check('主字真实 500 字重', /\.dsu-status\s*\{[\s\S]{0,500}font-weight:\s*500/.test(css))
+  check('禁用伪粗体', /\.dsu-status\s*\{[\s\S]{0,500}font-synthesis:\s*none/.test(css))
+  check('主字响应式 46–66px', /\.dsu-status[\s\S]{0,300}clamp\(46px,\s*4\.4vw,\s*66px\)/.test(css))
+  check('抗锯齿只作用于主字', /\.dsu-status\s*\{[\s\S]{0,800}-webkit-font-smoothing:\s*auto/.test(css) &&
+    /-webkit-font-smoothing:\s*antialiased/.test(css))
+  check('字距补偿加在文字子项上', /\.dsu-status-zh\s*\{[^}]*text-indent:\s*0\.135em/.test(css))
+  check('分隔点有强调色规则', /\.dsu-status\s+\.dsu-sep\s*\{[^}]*color:\s*var\(--dsu-accent\)/.test(css))
+  check('护城河只在 dsu-shield 下生效', /\.dsu-status\.dsu-shield/.test(css) && /\.dsu-sub-en\.dsu-shield/.test(css))
+  check('准星同步放大到 62vw', /\.dsu-reticle\s*\{[\s\S]{0,300}min\(62vw,\s*86vh,\s*1040px\)/.test(css))
+  check('隐藏光标不占布局宽度', /\.dsu-caret\s*\{[^}]*width:\s*0/.test(css) &&
+    /\.dsu-caret\.dsu-on\s*\{[^}]*width:\s*15px/.test(css))
+  check('没有引入 color-mix', !/color-mix\(/.test(css))
+
+  check('typeIn 支持 decode 模式', /function typeIn\(host, text, stagger, mode\)/.test(src))
+  const widePool = (src.match(/GLYPH_WIDE = '([^']+)'/) || [null, ''])[1]
+  check('有全角片假名替身字形池', /^[ァ-ヿ]+$/.test(widePool) && /function glyphFor\(/.test(src), widePool)
+  check('有 startDecode / stopDecode', /function startDecode\(/.test(src) && /function stopDecode\(/.test(src))
+  check('主字用 decode、副标题保持 fade', /typeIn\(ui\.statusZh, step\.zh, 46, 'decode'\)/.test(src) &&
+    /typeIn\(ui\.subEn, step\.en, 13\)/.test(src))
+  check('跳过 / 揭幕会强制锁定真字', /function releaseAll\(\)[\s\S]{0,120}stopDecode\(\)/.test(src) &&
+    /function finale\(\)[\s\S]{0,1400}stopDecode\(\)/.test(src))
+  check('护城河只随准星步骤切换', /classList\.toggle\('dsu-shield', !!step\.reticle\)/.test(src))
+  check('强调色光晕按配置生成', /--dsu-accent-glow/.test(src) && /hexToRgba\(C\.accent/.test(src))
+}
+
 console.log('\n============================')
 console.log(`  通过 ${pass} / 失败 ${fail}`)
 console.log('============================\n')
