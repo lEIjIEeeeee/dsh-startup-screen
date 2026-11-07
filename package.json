@@ -1,7 +1,7 @@
 {
   "name": "dsh-startup-screen",
-  "version": "1.3.0",
-  "description": "DeepSeek Harness 启动界面与启动动画：黑幕 DeepSeek 标识 → 过曝洗白 → 暖白档案底板 → 交互式访问授权序列（需要访问许可 / 身份资料确认 / 接收访问需求 / 开始读取权限 / 读取完毕·核验通过 / 欢迎访问）。中文主字 + 英文等宽副标题，真声素材 + 界面音效，身份名称等参数在 DSH 设置页可改。web profile 与 DeepSeek Harness Desktop 桌面端通用。桌面端（Windows）播放启动动画期间把标题栏整层透明化：最小化/最大化/关闭按钮与其底色一并不可见，播放结束自动还原。",
+  "version": "1.4.0",
+  "description": "DeepSeek Harness 启动界面与启动动画：黑幕 DeepSeek 标识 → 过曝洗白 → 暖白档案底板 → 交互式访问授权序列（需要访问许可 / 身份资料确认 / 接收访问需求 / 开始读取权限 / 读取完毕·核验通过 / 欢迎访问）。中文主字 + 英文等宽副标题，Canvas 活体光场与氛围层，真实 DSH 版本行，真声素材 + 界面音效，身份名称等参数在 DSH 设置页可改。web profile 与 DeepSeek Harness Desktop 桌面端通用。桌面端（Windows）播放启动动画期间把标题栏整层透明化：最小化/最大化/关闭按钮与其底色一并不可见，播放结束自动还原。本仓库为 6shenhonghong9/dsh-startup-screen 的 fork，Canvas 光场等视觉方案参考 QIFANAI/dsh-startup-screen v1.6.0（MIT）。",
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -21,7 +21,7 @@
   "files": [
     "lib",
     "test",
-    "docs",
+    "docs/screenshots",
     "preview/index.html",
     "open-preview.sh",
     "打开预览.cmd",
@@ -39,12 +39,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/6shenhonghong9/dsh-startup-screen.git"
+    "url": "git+https://github.com/lEIjIEeeeee/dsh-startup-screen.git"
   },
   "bugs": {
-    "url": "https://github.com/6shenhonghong9/dsh-startup-screen/issues"
+    "url": "https://github.com/lEIjIEeeeee/dsh-startup-screen/issues"
   },
-  "homepage": "https://github.com/6shenhonghong9/dsh-startup-screen#readme",
+  "homepage": "https://github.com/lEIjIEeeeee/dsh-startup-screen#readme",
   "engines": {
     "node": ">=20"
   },
@@ -59,5 +59,9 @@
       "platform": "web"
     }
   },
-  "author": "沈宏宏"
+  "author": "lEIjIEeeeee",
+  "contributors": [
+    "沈宏宏 (original author)",
+    "QIFANAI (visual design reference)"
+  ]
 }

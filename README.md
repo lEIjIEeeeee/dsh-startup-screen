@@ -5,8 +5,14 @@ DeepSeek Harness 的启动界面与启动动画插件。
 黑幕 DeepSeek 标识 → 过曝洗白 → 暖白「技术档案」底板 → 五步交互式访问授权 →
 色散故障揭幕。
 
-> **已在插件市场上线** —— 在 DSH 的 **设置 →「插件市场」** 搜索 `dsh-startup-screen` 即可一键安装。
-> 目录页：[awesome-dsh-plugin.com/p/6shenhonghong9/dsh-startup-screen](https://awesome-dsh-plugin.com/p/6shenhonghong9/dsh-startup-screen/)
+> 当前版本 **1.4.0**：新增 Canvas 活体光场、环境光效开关、准星刻度 / 数据环 / 雷达扫描、
+> 镜头推进与终幕撕裂带，以及读取宿主真实 DSH 版本的 REV 行。
+
+> 本仓库是 [6shenhonghong9/dsh-startup-screen](https://github.com/6shenhonghong9/dsh-startup-screen) 的 fork。
+> 1.4.0 的 Canvas 光场、氛围层、逐字解码、准星增强与金属鲸鱼等视觉方案，
+> 参考自 [QIFANAI/dsh-startup-screen](https://github.com/QIFANAI/dsh-startup-screen) v1.6.0（MIT）。
+> 插件市场里的 `dsh-startup-screen` 目录页属于原作者项目，不是本仓库；
+> 本仓库不通过该市场分发。仓库地址：[lEIjIEeeeee/dsh-startup-screen](https://github.com/lEIjIEeeeee/dsh-startup-screen)。
 
 ---
 
@@ -24,8 +30,15 @@ DeepSeek Harness 的启动界面与启动动画插件。
 ## 功能
 
 **开机序列**　冷启动时播一段完整的开机动画，六幕连贯：厂牌标识 → 过曝洗白 →
-暖白底板 → 五步授权 → 揭幕。中央一圈环形准星缓慢自转，缺口留在正下方，
-不会挡住底部文字。
+暖白底板 → 五步授权 → 揭幕。中央准星带 48 格刻度、40 格数据环与雷达扫描扇区，
+缺口留在正下方，不会挡住底部文字。
+
+**Canvas 活体光场**　底板后面是一层实时 Canvas：星尘、贝塞尔流光、边缘数据雨与底部水线，
+配合暖冷光斑和体积光。中心区域自动降亮，不压文字；同一台机器构图稳定。
+可以在设置里关掉「环境光效」，低端机也能保持干净。
+
+**真实版本行**　左上角 REV 行读取宿主的真实 DSH 版本与 profile，不是写死的装饰；
+取不到时保留旧占位并自动重试。
 
 **液态玻璃底板**　底板、黑幕可以是半透明磨砂玻璃：整窗重磨砂，文字、线条、准星保持锐利。
 玻璃不透明度、磨砂模糊、玻璃饱和度、背景模糊各自独立可调，随调随生效；关掉即回到实心底板。
@@ -42,8 +55,8 @@ DeepSeek Harness 的启动界面与启动动画插件。
 
 **两套主题**　暖白与暗色，版式、文字位置、进度条与准星完全一致，只换底色与文字反相。
 
-**三十三项设置**　身份名称、编号、权限等级、配色、速度、音色、语速、
-开口留白、每处文案……都能在设置页实时改，改完立即生效。设置页带分类目录与常驻的底部操作条。
+**三十四项设置**　身份名称、编号、权限等级、配色、速度、音色、语速、
+开口留白、环境光效、每处文案……都能在设置页实时改，改完立即生效。设置页带分类目录与常驻的底部操作条。
 
 ---
 
@@ -62,10 +75,20 @@ DeepSeek Harness 的启动界面与启动动画插件。
 
 ## 安装
 
-### 插件市场（推荐）
+### 从 GitHub 安装本 fork（推荐）
 
-DSH **设置 →「插件市场」** → 搜索 `dsh-startup-screen` → 点「安装」。
-目录页：[awesome-dsh-plugin.com/p/6shenhonghong9/dsh-startup-screen](https://awesome-dsh-plugin.com/p/6shenhonghong9/dsh-startup-screen/)
+```bash
+dsh plugin --profile web add https://github.com/lEIjIEeeeee/dsh-startup-screen.git
+```
+
+桌面端（DeepSeek Harness Desktop）同样支持，profile 换成 `desktop`：
+
+```bash
+dsh plugin --profile desktop add https://github.com/lEIjIEeeeee/dsh-startup-screen.git
+```
+
+> 插件市场里的 `dsh-startup-screen` 是原作者 6shenhonghong9 的版本，不是本 fork。
+> 两者包名相同，不能共存；装本仓库前请先卸载市场版本。
 
 ### 本地包安装
 
@@ -157,6 +180,7 @@ dsh plugin --profile web remove dsh-startup-screen
 
 | 选项 | 默认 | 作用 |
 |---|---|---|
+| 环境光效 | 开 | Canvas 星尘 / 流光 / 数据雨 + 暖冷光斑；低端机或想更安静时可以关闭 |
 | 强调色 | `#ff7500` | 阶段条、进度条、准星的橙 |
 | 故障色 A / B | `#ff3b30` / `#2971b8` | 揭幕那下色散故障的红与蓝 |
 
@@ -168,6 +192,25 @@ dsh plugin --profile web remove dsh-startup-screen
 | 黑幕三行 | `深度求索` / `DEEPSEEK` / `DEEPSEEK HARNESS` | 开场黑幕上的字 |
 | 终幕方框 | `DEEPSEEK HARNESS` | 揭幕后中央的黑底白字框 |
 | 页脚 | `POWERED BY DEEPSEEK` | 右下角页脚 |
+
+---
+
+## 视觉方案参考与致谢
+
+本版本基于以下两个 MIT 项目继续工作：
+
+- **6shenhonghong9/dsh-startup-screen**（原始版本，v1.3.0）：
+  Copyright (c) 2026 沈宏宏，MIT。
+  本仓库沿用其启动序列、交互、真声素材、液态玻璃与标题栏同步方案。
+- **QIFANAI/dsh-startup-screen**（v1.6.0）：
+  Copyright (c) 2026 沈宏宏（原始版本）与 dsh-startup-screen contributors（修改），MIT。
+  Canvas 活体光场、氛围层、逐字解码、准星刻度 / 数据环 / 雷达扫描、金属鲸鱼等
+  视觉方案参考自此项目。
+
+相关代码已按当前 1.3.0 底座重写并做性能优化；本仓库不直接分发 QIFANAI 的源文件。
+
+内置音频（`lib/assets/line-*.mp3`、`sfx-*.mp3`）的版权边界见下方「免责声明」；
+MIT 代码许可不覆盖第三方影音素材。
 
 ---
 
@@ -196,4 +239,6 @@ dsh plugin --profile web remove dsh-startup-screen
 
 ## License
 
-MIT © 沈宏宏
+MIT © 2026 沈宏宏 与 dsh-startup-screen contributors
+
+代码许可为 MIT；第三方视觉方案与素材声明见上方「视觉方案参考与致谢」与「免责声明」。
