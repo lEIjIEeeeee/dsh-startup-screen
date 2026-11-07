@@ -187,6 +187,7 @@ check('reset 恢复默认', JSON.parse(r.body).config.identity === 'JOYCE MOORE'
 /* 液态玻璃：默认关闭，三个数值字段都要夹在合法区间 */
 cfg = JSON.parse((await call('exact /dsh-startup/config')).body)
 check('液态玻璃默认开启（本版默认观感）', cfg.config.glass === true, String(cfg.config.glass))
+check('环境光效默认开启', cfg.config.ambient === true, String(cfg.config.ambient))
 check('玻璃不透明度默认 0.75', cfg.config.glassOpacity === 0.75, String(cfg.config.glassOpacity))
 check('磨砂默认 22px', cfg.config.glassBlur === 22, String(cfg.config.glassBlur))
 check('饱和度默认 160%', cfg.config.glassSaturate === 160, String(cfg.config.glassSaturate))
@@ -207,6 +208,10 @@ check('不透明度被夹到下限 0.15', cfg.config.glassOpacity === 0.15, Stri
 check('磨砂被夹到下限 0', cfg.config.glassBlur === 0, String(cfg.config.glassBlur))
 check('饱和度被夹到下限 100', cfg.config.glassSaturate === 100, String(cfg.config.glassSaturate))
 check('背景模糊被夹到下限 0', cfg.config.glassBackdropBlur === 0, String(cfg.config.glassBackdropBlur))
+
+r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { ambient: false } }))
+cfg = JSON.parse(r.body)
+check('环境光效可以关闭', cfg.config.ambient === false, String(cfg.config.ambient))
 r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ action: 'reset' }))
 
 r = await call('exact /dsh-startup/config', 'POST', '{ not json')

@@ -39,6 +39,8 @@
     box-shadow: 0 18px 50px rgba(0,0,0,.45);
     font-size: 12.5px; overflow: hidden;
   }
+  /* 玻璃模式会模糊 body 的直接子节点；预览控制台和设置模拟必须保持清晰 */
+  #console, #settingsMock { filter: none !important; }
   #console header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.1);
@@ -160,6 +162,8 @@
     requireInteraction: true,
     allowSkip: true,
     sound: false,
+    ambient: true,
+    glass: true, glassOpacity: 0.75, glassBlur: 22, glassSaturate: 160, glassBackdropBlur: 28,
     identity: 'JOYCE MOORE',
     identityId: '0087',
     accessLevel: '3',
@@ -214,6 +218,8 @@
         <input type="range" id="fSpeed" min="0.35" max="3" step="0.05" value="1">
       </div>
     </div>
+    <div class="chk"><input type="checkbox" id="fAmbient" checked><label for="fAmbient">环境光效（Canvas 光场 + 氛围层）</label></div>
+    <div class="chk"><input type="checkbox" id="fGlass" checked><label for="fGlass">液态玻璃（透出背后的模拟界面）</label></div>
     <div class="chk"><input type="checkbox" id="fInteract" checked><label for="fInteract">需要人工确认（第 1、2 步停下来等按钮）</label></div>
     <div class="chk"><input type="checkbox" id="fSkip" checked><label for="fSkip">允许跳过（右上角 SKIP / Esc）</label></div>
 
@@ -389,6 +395,8 @@
     c.speed = Number($('fSpeed').value);
     c.requireInteraction = $('fInteract').checked;
     c.allowSkip = $('fSkip').checked;
+    c.ambient = $('fAmbient').checked;
+    c.glass = $('fGlass').checked;
     c.voice = $('fVoice').checked;
     c.voiceLang = $('fVoiceLang').value;
     c.voiceName = $('fVoiceName').value;
@@ -412,7 +420,7 @@
   }
 
   /* 控制台里输完立刻生效需要重播；这里做成"改完点重播"，避免打字打到一半动画重启 */
-  ['fIdentity', 'fId', 'fLevel', 'fTheme', 'fSpeed', 'fInteract', 'fSkip'].forEach(function (id) {
+  ['fIdentity', 'fId', 'fLevel', 'fTheme', 'fSpeed', 'fAmbient', 'fGlass', 'fInteract', 'fSkip'].forEach(function (id) {
     $(id).addEventListener('input', function () {
       // 只更新显示，不打断正在播放的动画
       $('fSpeedVal').textContent = Number($('fSpeed').value).toFixed(2) + '×';

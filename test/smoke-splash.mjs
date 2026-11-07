@@ -48,6 +48,15 @@ function makeEl(tag) {
     children: [],
     hidden: false,
     offsetWidth: 1,
+    clientWidth: 1600,
+    clientHeight: 1020,
+    getContext() {
+      return {
+        clearRect() {}, setTransform() {}, beginPath() {}, moveTo() {}, bezierCurveTo() {},
+        lineTo() {}, stroke() {}, fill() {}, fillRect() {}, arc() {},
+        createLinearGradient() { return { addColorStop() {} } }
+      }
+    },
     parentNode: null,
     appendChild(c) { this.children.push(c); if (c) c.parentNode = this; return c },
     insertBefore(c) { this.children.unshift(c); if (c) c.parentNode = this; return c },
@@ -159,6 +168,9 @@ function run(withSpeech, cfgOverride, env) {
   }
 
   const timers = []
+  /* 光场会用 rAF 自循环；测试桩只执行第一帧，嵌套调用不再递归 */
+  let rafDepth = 0
+  let rafCancels = 0
   const windowStub = {
     __DSH_STARTUP__: {
       enabled: true, mode: 'always', theme: 'light', speed: 1,
@@ -192,8 +204,13 @@ function run(withSpeech, cfgOverride, env) {
     addEventListener() {}, removeEventListener() {}, dispatchEvent() {},
     sessionStorage: { getItem: () => null, setItem() {} },
     localStorage: { getItem: () => null, setItem() {} },
-    requestAnimationFrame: (fn) => { fn(); return 1 },
-    cancelAnimationFrame() {},
+    requestAnimationFrame: (fn) => {
+      if (rafDepth > 0) return 1
+      rafDepth++
+      try { fn() } finally { rafDepth-- }
+      return 1
+    },
+    cancelAnimationFrame() { rafCancels++ },
     /* 小延时同步执行 —— voiceLead 是 240ms，不这样做 line() 永远开不了口；
        大延时（动画时间线）照旧入队，测试保持同步可控 */
     setTimeout: (fn, ms) => {
@@ -252,7 +269,7 @@ function run(withSpeech, cfgOverride, env) {
   } catch (e) {
     thrown = e
   }
-  return { windowStub, root, head, timers, thrown, markup: MARKUP, sandbox, spoken }
+  return { windowStub, root, head, timers, thrown, markup: MARKUP, sandbox, spoken, rafCancels: () => rafCancels }
 }
 
 /* ── 开跑 ───────────────────────────────────────────────────────────────── */
@@ -266,6 +283,7 @@ check('没有 FAILED 兜底标记', r.windowStub.__DSH_STARTUP_FAILED__ !== true
 
 console.log('\n[2] 生成出来的 markup 完整性')
 for (const cls of [
+  'dsu-atmo', 'dsu-beams', 'dsu-floor', 'dsu-field',
   'dsu-plate', 'dsu-vignette', 'dsu-black-inner', 'dsu-wash', 'dsu-brand-1', 'dsu-frame',
   'dsu-scanline', 'dsu-corner', 'dsu-slats', 'dsu-voice', 'dsu-meta', 'dsu-status-zh',
   'dsu-sub-en', 'dsu-rule', 'dsu-logo', 'dsu-dots', 'dsu-idline', 'dsu-reticle', 'dsu-hex',
@@ -620,6 +638,60 @@ console.log('\n[17] P0 中文清晰度与逐字解码')
     /function finale\(\)[\s\S]{0,1400}stopDecode\(\)/.test(src))
   check('护城河只随准星步骤切换', /classList\.toggle\('dsu-shield', !!step\.reticle\)/.test(src))
   check('强调色光晕按配置生成', /--dsu-accent-glow/.test(src) && /hexToRgba\(C\.accent/.test(src))
+}
+
+console.log('\n[18] P1 光场与氛围层')
+{
+  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const src = fs.readFileSync(BUNDLE, 'utf8')
+
+  check('CSS 有光场图层（z 11）', /\.dsu-field\s*\{[\s\S]{0,400}z-index:\s*11/.test(css))
+  check('氛围层都不拦截点击', /\.dsu-atmo,\s*\.dsu-beams,\s*\.dsu-floor,\s*\.dsu-field\s*\{[\s\S]{0,200}pointer-events:\s*none/.test(css))
+  check('水印在光场之上（z 12）', /\.dsu-watermark\s*\{[\s\S]{0,200}z-index:\s*12/.test(css))
+  check('reduced-motion 停止氛围动画', /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,500}\.dsu-atmo::before/.test(css))
+  check('仍然没有引入 color-mix', !/color-mix\(/.test(css))
+  check('光场按玻璃分档（96 / dpr 1.5）', /C\.glass \? 96 : 150/.test(src) && /C\.glass \? 1\.5 : 1\.75/.test(src))
+  check('光场种子读取 facts', /FACTS\.hash/.test(src) && /FACTS\.profile/.test(src) && /FACTS\.bundleCount/.test(src))
+  check('finish / dispose 会停光场', /function releaseAll\(\)[\s\S]{0,160}stopField\(\)/.test(src))
+
+  const on = run(true)
+  check('默认 ambient：生成光场与氛围层', on.markup.includes('dsu-field') && on.markup.includes('dsu-atmo') &&
+    on.markup.includes('dsu-beams') && on.markup.includes('dsu-floor'))
+  check('光场已启动并暴露把手', !!on.windowStub.__DSH_STARTUP_FIELD__)
+  check('测试桩下光场只跑一帧', !!on.windowStub.__DSH_STARTUP_FIELD__ && on.windowStub.__DSH_STARTUP_FIELD__.frames >= 1)
+  on.windowStub.__DSH_STARTUP_API__.finish()
+  check('finish 后光场停止', on.windowStub.__DSH_STARTUP_FIELD__ === null)
+  check('finish 取消了 RAF', on.rafCancels() > 0)
+
+  const off = run(true, { ambient: false })
+  check('ambient=false 不生成光场/氛围层', !off.markup.includes('dsu-field') && !off.markup.includes('dsu-atmo'))
+  check('ambient=false 初始化不抛', off.thrown === null, off.thrown && off.thrown.message)
+  check('ambient=false 不启动光场', !off.windowStub.__DSH_STARTUP_FIELD__)
+}
+
+console.log('\n[19] P1 性能防线（玻璃 + 光效叠加不掉帧）')
+{
+  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const cssNoComments = css.replace(/\/\*[\s\S]*?\*\//g, '')
+  const src = fs.readFileSync(BUNDLE, 'utf8')
+
+  check('应用本体已模糊时关掉底板冗余 backdrop-filter',
+    /\.dsu-glass-appblur \.dsu-plate[\s\S]{0,200}backdrop-filter:\s*none/.test(css))
+  check('应用本体已模糊时关掉黑幕冗余 backdrop-filter',
+    /\.dsu-glass-appblur \.dsu-black[\s\S]{0,200}backdrop-filter:\s*none/.test(css))
+  check('氛围光斑不再用大面积 blur()',
+    !/\.dsu-atmo::before,[\s\S]{0,200}filter:\s*blur\(/.test(cssNoComments))
+  check('体积光不再用大 blur()',
+    !/\.dsu-beams::before,[\s\S]{0,300}filter:\s*blur\(/.test(cssNoComments))
+  check('玻璃高光改用普通混合，不再 screen 读回',
+    /\.dsu-glass::after[\s\S]{0,700}mix-blend-mode:\s*normal/.test(css))
+  check('打开背景模糊时打上性能类', /dsu-glass-appblur/.test(src) &&
+    /root\.classList\.add\('dsu-glass-appblur'\)/.test(src))
+
+  const on = run(true, { glass: true, glassBackdropBlur: 28 })
+  check('glass + 背景模糊 → 有 dsu-glass-appblur', on.root.classList.contains('dsu-glass-appblur'))
+  const off = run(true, { glass: true, glassBackdropBlur: 0 })
+  check('glassBackdropBlur=0 → 不吃掉底板磨砂', !off.root.classList.contains('dsu-glass-appblur'))
 }
 
 console.log('\n============================')

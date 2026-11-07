@@ -139,6 +139,7 @@
 .dsu-watermark {
   position: absolute;
   inset: 0;
+  z-index: 12;
   opacity: 0;
   pointer-events: none;
 }
@@ -149,6 +150,149 @@
 }
 .dsu-dark .dsu-wm {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0));
+}
+
+/* ── 活体背景层：氛围光 / 体积光 / 地面反光 / Canvas 光场 ─────────────── */
+.dsu-atmo,
+.dsu-beams,
+.dsu-floor,
+.dsu-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* A1 大气层：右上暖光 / 左下冷光，缓慢漂移 */
+.dsu-atmo {
+  z-index: 8;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 1400ms ease;
+}
+.dsu-atmo.dsu-in { opacity: 1; }
+.dsu-atmo::before,
+.dsu-atmo::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  /* 不用 filter: blur()：68vw 的大面积模糊每帧都要重算，和液态玻璃叠加时
+     60fps 会掉到 ~49。径向渐变本身已经是软边，去掉模糊观感几乎不变。 */
+  will-change: transform;
+}
+.dsu-atmo::before {
+  width: 68vw;
+  height: 68vw;
+  right: -18vw;
+  top: -30vw;
+  background: radial-gradient(circle, rgba(255, 166, 88, 0.22) 0%, rgba(255, 166, 88, 0.06) 42%, rgba(255, 166, 88, 0) 68%);
+  animation: dsu-atmo-a 26s ease-in-out infinite alternate;
+}
+.dsu-atmo::after {
+  width: 62vw;
+  height: 62vw;
+  left: -20vw;
+  bottom: -30vw;
+  background: radial-gradient(circle, rgba(72, 186, 214, 0.16) 0%, rgba(72, 186, 214, 0.04) 46%, rgba(72, 186, 214, 0) 70%);
+  animation: dsu-atmo-b 34s ease-in-out infinite alternate;
+}
+.dsu-dark .dsu-atmo::before {
+  background: radial-gradient(circle, rgba(255, 150, 60, 0.16) 0%, rgba(255, 150, 60, 0) 66%);
+}
+.dsu-dark .dsu-atmo::after {
+  background: radial-gradient(circle, rgba(60, 170, 210, 0.13) 0%, rgba(60, 170, 210, 0) 68%);
+}
+@keyframes dsu-atmo-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-3vw, 2vh, 0) scale(1.08); }
+}
+@keyframes dsu-atmo-b {
+  from { transform: translate3d(0, 0, 0) scale(1.04); }
+  to { transform: translate3d(3vw, -2vh, 0) scale(1); }
+}
+
+/* A2 体积光：两道极淡的斜向光柱 */
+.dsu-beams {
+  z-index: 9;
+  overflow: hidden;
+  opacity: 0;
+  mix-blend-mode: screen;
+  transition: opacity 1200ms ease;
+}
+.dsu-beams.dsu-in { opacity: 1; }
+#dsh-startup-root:not(.dsu-dark) .dsu-beams { mix-blend-mode: soft-light; }
+.dsu-beams::before,
+.dsu-beams::after {
+  content: "";
+  position: absolute;
+  top: -30%;
+  width: 16%;
+  height: 160%;
+  background: linear-gradient(90deg,
+    rgba(255, 238, 210, 0) 0%,
+    rgba(255, 238, 210, 0.10) 42%,
+    rgba(255, 250, 240, 0.16) 50%,
+    rgba(255, 238, 210, 0.10) 58%,
+    rgba(255, 238, 210, 0) 100%);
+  transform: rotate(15deg);
+  /* 同上：光柱的线性渐变已经有软边，不再叠 blur() */
+  animation: dsu-beam 14s ease-in-out infinite alternate;
+}
+.dsu-beams::before { left: 8%; }
+.dsu-beams::after {
+  left: 62%;
+  width: 10%;
+  opacity: 0.55;
+  animation-duration: 19s;
+  animation-delay: -6s;
+}
+@keyframes dsu-beam {
+  from { transform: translateX(-6vw) rotate(15deg); opacity: 0.45; }
+  to { transform: translateX(6vw) rotate(15deg); opacity: 0.8; }
+}
+
+/* A3 地面反射：底部极弱的地平线与暖色反光 */
+.dsu-floor {
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 1600ms ease 300ms;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 56%, rgba(255, 255, 255, 0.02) 68%, rgba(255, 255, 255, 0.06) 72%, rgba(255, 255, 255, 0) 84%),
+    radial-gradient(70% 30% at 50% 100%, rgba(255, 190, 120, 0.08), rgba(255, 190, 120, 0) 70%);
+}
+.dsu-floor.dsu-in { opacity: 1; }
+.dsu-floor::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 22%;
+  height: 1px;
+  opacity: 0.5;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), var(--dsu-hair) 20%, var(--dsu-hair) 80%, rgba(255, 255, 255, 0));
+}
+
+/* A4 Canvas 光场：星尘 / 贝塞尔流光 / 边缘数据雨 / 底部水线 */
+.dsu-field {
+  z-index: 11;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  mix-blend-mode: screen;
+  transition: opacity 1500ms cubic-bezier(0.22, 0.68, 0.2, 1) 160ms;
+}
+#dsh-startup-root:not(.dsu-dark) .dsu-field { mix-blend-mode: multiply; }
+.dsu-field.dsu-in { opacity: 0.72; }
+#dsh-startup-root:not(.dsu-dark) .dsu-field.dsu-in { opacity: 0.58; }
+/* 玻璃模式：光场叠在磨砂层上，降一档避免发灰 */
+#dsh-startup-root.dsu-glass .dsu-field.dsu-in { opacity: 0.55; }
+#dsh-startup-root.dsu-glass:not(.dsu-dark) .dsu-field.dsu-in { opacity: 0.45; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dsu-atmo::before,
+  .dsu-atmo::after,
+  .dsu-beams::before,
+  .dsu-beams::after { animation: none; }
+  .dsu-field { transition: none; }
 }
 
 /* 细颗粒噪点，让大色块不"塑料" */
@@ -1181,6 +1325,15 @@
   backdrop-filter: blur(var(--dsu-glass-blur, 22px)) saturate(var(--dsu-glass-sat, 150%));
 }
 
+/* 应用本体已经被 blurAppBackdrop 糊过时，底板/黑幕不要再叠一层全屏 backdrop-filter：
+   同一块画面糊两次，实测会把 60fps 拖到 ~49fps。glassBackdropBlur=0 时仍保留
+   底板自身的磨砂，所以这条只在「应用本体模糊」开启时生效。 */
+#dsh-startup-root.dsu-glass-appblur .dsu-plate,
+#dsh-startup-root.dsu-glass-appblur .dsu-black {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 /* 液态感：一道缓慢漂移的斜向高光，叠在玻璃表面而不是文字上 */
 .dsu-glass::after {
   content: '';
@@ -1193,8 +1346,10 @@
     rgba(255, 255, 255, 0) 34%,
     rgba(255, 255, 255, 0) 66%,
     rgba(255, 255, 255, 0.09) 100%);
-  mix-blend-mode: screen;
-  opacity: calc(0.25 + 0.55 * var(--dsu-glass-alpha, 0.55));
+  /* 不用 mix-blend-mode: screen：全屏混合模式会每帧读回背景，
+     用普通混合 + 更低不透明度得到接近的观感。 */
+  mix-blend-mode: normal;
+  opacity: calc(0.12 + 0.22 * var(--dsu-glass-alpha, 0.55));
   animation: dsu-glass-drift 12s ease-in-out infinite alternate;
 }
 
