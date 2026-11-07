@@ -127,7 +127,8 @@ check('没有 Config 导出（普通对象不是 schemastery schema）', mod.Con
 
 console.log('\n[2] apply(ctx)：路由与注入')
 mod.apply(ctx)
-check('注册了 4 条路由', ROUTES.size === 4, [...ROUTES.keys()].join(' | '))
+check('注册了 5 条路由', ROUTES.size === 5, [...ROUTES.keys()].join(' | '))
+check('有 /dsh-startup/facts 路由', ROUTES.has('exact /dsh-startup/facts'))
 check('注册了 1 个 tapIndex', TAPS.length === 1)
 check('用了 ctx.effect 管理生命周期', effects === 1, String(effects))
 
@@ -208,6 +209,13 @@ check('不透明度被夹到下限 0.15', cfg.config.glassOpacity === 0.15, Stri
 check('磨砂被夹到下限 0', cfg.config.glassBlur === 0, String(cfg.config.glassBlur))
 check('饱和度被夹到下限 100', cfg.config.glassSaturate === 100, String(cfg.config.glassSaturate))
 check('背景模糊被夹到下限 0', cfg.config.glassBackdropBlur === 0, String(cfg.config.glassBackdropBlur))
+
+r = await call('exact /dsh-startup/facts')
+const factsBody = JSON.parse(r.body)
+check('/facts 返回 ok', r.statusCode === 200 && factsBody.ok === true)
+check('/facts 带 8 位 hash 指纹', !!factsBody.facts && /^[0-9A-F]{8}$/.test(String(factsBody.facts.hash)), factsBody.facts && factsBody.facts.hash)
+r = await call('exact /dsh-startup/config')
+check('config 响应也带 facts', !!JSON.parse(r.body).facts)
 
 r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { ambient: false } }))
 cfg = JSON.parse(r.body)

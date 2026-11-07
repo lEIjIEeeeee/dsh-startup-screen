@@ -283,7 +283,7 @@ check('没有 FAILED 兜底标记', r.windowStub.__DSH_STARTUP_FAILED__ !== true
 
 console.log('\n[2] 生成出来的 markup 完整性')
 for (const cls of [
-  'dsu-atmo', 'dsu-beams', 'dsu-floor', 'dsu-field',
+  'dsu-atmo', 'dsu-beams', 'dsu-floor', 'dsu-field', 'dsu-sheen', 'dsu-tear',
   'dsu-plate', 'dsu-vignette', 'dsu-black-inner', 'dsu-wash', 'dsu-brand-1', 'dsu-frame',
   'dsu-scanline', 'dsu-corner', 'dsu-slats', 'dsu-voice', 'dsu-meta', 'dsu-status-zh',
   'dsu-sub-en', 'dsu-rule', 'dsu-logo', 'dsu-dots', 'dsu-idline', 'dsu-reticle', 'dsu-hex',
@@ -692,6 +692,39 @@ console.log('\n[19] P1 性能防线（玻璃 + 光效叠加不掉帧）')
   check('glass + 背景模糊 → 有 dsu-glass-appblur', on.root.classList.contains('dsu-glass-appblur'))
   const off = run(true, { glass: true, glassBackdropBlur: 0 })
   check('glassBackdropBlur=0 → 不吃掉底板磨砂', !off.root.classList.contains('dsu-glass-appblur'))
+}
+
+console.log('\n[20] P2 电影细节 / 准星 / 金属鲸鱼 / facts')
+{
+  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const src = fs.readFileSync(BUNDLE, 'utf8')
+
+  check('有洗白掠光层（z 14）', /\.dsu-sheen\s*\{[\s\S]{0,300}z-index:\s*14/.test(css))
+  check('有终幕撕裂带（z 62）', /\.dsu-tear\s*\{[\s\S]{0,300}z-index:\s*62/.test(css))
+  check('有镜头推进', /\.dsu-cam \.dsu-plate[\s\S]{0,120}scale\(1\.035\)/.test(css))
+  check('底板内联 transition 包含 transform', /style\.transition = 'opacity ' \+ ms\(900\) \+ 'ms ease, transform/.test(src))
+  check('水印内联 transition 包含 transform', /style\.transition = 'opacity ' \+ ms\(1100\) \+ 'ms ease, transform/.test(src))
+  check('sheen / tear 只在 ambient 开时触发', /ambientOn\(\) && ui\.sheen/.test(src) && /ambientOn\(\) && ui\.tear/.test(src))
+  check('水印三层景深', /dsu-wm-far/.test(css) && /dsu-wm-mid/.test(css) && /dsu-wm-near/.test(css))
+  check('准星 48 刻度 + 40 数据格', /TICKS = 48/.test(src) && /DATA_TICKS = 40/.test(src))
+  check('准星有扫描扇区 / 彗星 / 冲击波', /dsu-ret-scan/.test(src) && /dsu-ret-comet/.test(src) && /dsu-ping/.test(src))
+  check('准星锁定只在 reticle 步骤', /classList\.add\('dsu-lock'\)/.test(src))
+  check('鲸鱼有金属渐变', /linearGradient/.test(src) && /metalSeq/.test(src))
+  check('REV 行读取真实 facts', /paintMeta\(\)/.test(src) && /REV ' \+ factText\(FACTS\.version\)/.test(src))
+  check('facts 异步刷新', /function refreshFacts\(/.test(src) && /\/dsh-startup\/facts/.test(src))
+  check('facts 未就绪会重试', /setTimeout\(tick, 400\)/.test(src) && /setTimeout\(tick, 600\)/.test(src))
+
+  run(true)
+  const plainMeta = lookup('.dsu-meta-1')
+  check('无 facts 时保留旧 REV 回退', !!plainMeta && plainMeta.textContent === 'REV 0.1.0 · WEB PROFILE', plainMeta && plainMeta.textContent)
+
+  run(true, { facts: { ready: true, version: '9.9.9', profile: 'TEST', bundleCount: 20, hash: 'ABCD1234' } })
+  const meta = lookup('.dsu-meta-1')
+  check('REV 行显示真实版本/profile', !!meta && meta.textContent.indexOf('9.9.9') !== -1 && meta.textContent.indexOf('TEST') !== -1, meta && meta.textContent)
+  const logo = lookup('.dsu-logo')
+  const whale = logo && logo.children && logo.children[0]
+  check('鲸鱼 SVG 含 defs 渐变层', !!whale && whale.children && whale.children[0] && whale.children[0].tagName === 'defs',
+    whale && whale.children && whale.children.map((c) => c.tagName).join(','))
 }
 
 console.log('\n============================')

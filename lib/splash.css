@@ -30,6 +30,7 @@
   --dsu-hair: rgba(10, 10, 10, 0.16);
   --dsu-hair-soft: rgba(10, 10, 10, 0.07);
   --dsu-accent: #ff7500;
+  --dsu-accent-2: #2c7a8a;
   --dsu-glitch-a: #ff3b30;
   --dsu-glitch-b: #2971b8;
   --dsu-box-bg: #0a0a0a;
@@ -95,6 +96,7 @@
   --dsu-bg-2: #131315;
   --dsu-ink: #f2f1ee;
   --dsu-ink-soft: #cfcecb;
+  --dsu-accent-2: #6fd3e8;
   --dsu-muted: #85847f;
   --dsu-hair: rgba(255, 255, 255, 0.18);
   --dsu-hair-soft: rgba(255, 255, 255, 0.07);
@@ -127,6 +129,8 @@
     radial-gradient(120% 90% at 78% 12%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 55%),
     linear-gradient(168deg, var(--dsu-bg-2) 0%, var(--dsu-bg) 42%, var(--dsu-bg) 100%);
   opacity: 0;
+  transform-origin: 50% 45%;
+  transition: transform 3.4s cubic-bezier(0.16, 0.84, 0.24, 1);
 }
 
 .dsu-dark .dsu-plate {
@@ -142,6 +146,8 @@
   z-index: 12;
   opacity: 0;
   pointer-events: none;
+  transform-origin: 50% 45%;
+  transition: transform 4.6s cubic-bezier(0.16, 0.84, 0.24, 1);
 }
 .dsu-wm {
   position: absolute;
@@ -150,6 +156,19 @@
 }
 .dsu-dark .dsu-wm {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0));
+}
+/* 水印三层景深：远 / 中 / 近 */
+.dsu-wm-far { filter: blur(2.6px) saturate(0.8); opacity: 0.32; }
+.dsu-wm-mid { filter: blur(1.1px) saturate(0.9); opacity: 0.55; }
+.dsu-wm-near { filter: blur(0.3px); opacity: 0.85; }
+
+/* A4 镜头推进：底板 1.035× / 水印 1.06× 视差 */
+#dsh-startup-root.dsu-cam .dsu-plate { transform: scale(1.035); }
+#dsh-startup-root.dsu-cam .dsu-watermark { transform: scale(1.06) translateY(-0.6%); }
+
+@media (prefers-reduced-motion: reduce) {
+  #dsh-startup-root.dsu-cam .dsu-plate,
+  #dsh-startup-root.dsu-cam .dsu-watermark { transform: none; transition: none; }
 }
 
 /* ── 活体背景层：氛围光 / 体积光 / 地面反光 / Canvas 光场 ─────────────── */
@@ -287,12 +306,76 @@
 #dsh-startup-root.dsu-glass .dsu-field.dsu-in { opacity: 0.55; }
 #dsh-startup-root.dsu-glass:not(.dsu-dark) .dsu-field.dsu-in { opacity: 0.45; }
 
+/* A5 洗白掠光：底板被"洗"出来时，一道高光横掠过去 */
+.dsu-sheen {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: 0;
+  width: 46%;
+  z-index: 14;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transform: translateX(-72%);
+  background: linear-gradient(100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.10) 34%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.10) 66%,
+    rgba(255, 255, 255, 0) 100%);
+}
+.dsu-dark .dsu-sheen {
+  background: linear-gradient(100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.045) 34%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.045) 66%,
+    rgba(255, 255, 255, 0) 100%);
+}
+.dsu-sheen.dsu-go { animation: dsu-sheen 1250ms cubic-bezier(0.32, 0, 0.68, 1) 1 forwards; }
+@keyframes dsu-sheen {
+  0% { opacity: 0; transform: translateX(-72%); }
+  12% { opacity: 1; }
+  78% { opacity: 0.85; }
+  100% { opacity: 0; transform: translateX(232%); }
+}
+
+/* 终幕撕裂带：色散层做"字在抖"，这一层做"画面在撕" */
+.dsu-tear {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  z-index: 62;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 16%,
+    var(--dsu-glitch-a) 46%,
+    var(--dsu-glitch-b) 58%,
+    rgba(255, 255, 255, 0) 100%);
+}
+.dsu-tear.dsu-go { animation: dsu-tear 880ms cubic-bezier(0.45, 0, 0.6, 1) 1 forwards; }
+@keyframes dsu-tear {
+  0% { opacity: 0; transform: translate(0, 6vh); }
+  10% { opacity: 0.95; }
+  40% { transform: translate(2.2vw, 42vh); }
+  68% { transform: translate(-1.6vw, 70vh); }
+  100% { opacity: 0; transform: translate(0, 98vh); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dsu-atmo::before,
   .dsu-atmo::after,
   .dsu-beams::before,
   .dsu-beams::after { animation: none; }
   .dsu-field { transition: none; }
+  .dsu-sheen.dsu-go,
+  .dsu-tear.dsu-go { animation: none; opacity: 0; }
 }
 
 /* 细颗粒噪点，让大色块不"塑料" */
@@ -663,6 +746,94 @@
   stroke: var(--dsu-ink);
   stroke-width: 1.6;
   opacity: 0.85;
+}
+
+/* 刻度环：48 格沿环逐格点亮一圈（仪表自检），读完停在暗态 */
+.dsu-reticle .dsu-tick {
+  stroke: var(--dsu-ink);
+  stroke-width: 1;
+  opacity: 0.16;
+  animation: dsu-tick-on 520ms ease-out both;
+}
+.dsu-reticle .dsu-tick-major { stroke-width: 1.7; opacity: 0.24; }
+@keyframes dsu-tick-on {
+  0% { stroke: var(--dsu-accent); opacity: 1; }
+  55% { stroke: var(--dsu-accent); opacity: 0.8; }
+  100% { stroke: var(--dsu-ink); opacity: 0.16; }
+}
+
+/* 雷达扫描扇区：conic 渐变 + 环形遮罩，只在中环那一圈扫 */
+.dsu-ret-scan {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(from 0deg,
+    rgba(255, 117, 0, 0) 0deg,
+    var(--dsu-accent-soft, rgba(255, 117, 0, 0.10)) 15deg,
+    var(--dsu-accent-strong, rgba(255, 117, 0, 0.72)) 19deg,
+    rgba(255, 117, 0, 0) 20.5deg);
+  -webkit-mask-image: radial-gradient(circle closest-side at 50% 50%,
+    transparent 0 56%, #000 57% 73%, transparent 74.5%);
+  mask-image: radial-gradient(circle closest-side at 50% 50%,
+    transparent 0 56%, #000 57% 73%, transparent 74.5%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  will-change: transform;
+  animation: dsu-ret-sweep 3.2s linear infinite;
+}
+@keyframes dsu-ret-sweep { to { transform: rotate(360deg); } }
+
+/* 咬合：环出现那一下先收 3.5% 再弹回 */
+.dsu-reticle.dsu-lock { animation: dsu-ret-lock 860ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes dsu-ret-lock {
+  0% { transform: translate(-50%, -50%) scale(1.03); }
+  16% { transform: translate(-50%, -50%) scale(0.965); }
+  34% { transform: translate(-50%, -50%) scale(1.012); }
+  60% { transform: translate(-50%, -50%) scale(1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* 彗星弧 / 数据环 / 锁定冲击波 */
+.dsu-ret-comet {
+  fill: none;
+  stroke: var(--dsu-accent-2);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  opacity: 0.9;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: dsu-spin 6.8s linear infinite;
+}
+.dsu-tick-data {
+  stroke: var(--dsu-accent-2);
+  stroke-width: 0.8;
+  opacity: 0.14;
+}
+.dsu-tick-data.dsu-lit { opacity: 0.9; }
+.dsu-ping {
+  fill: none;
+  stroke: var(--dsu-accent);
+  stroke-width: 1.2;
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+}
+.dsu-reticle.dsu-lock .dsu-ping { animation: dsu-ping 1200ms cubic-bezier(0.2, 0.8, 0.2, 1) 1; }
+@keyframes dsu-ping {
+  0% { opacity: 0.65; transform: scale(0.94); }
+  70% { opacity: 0.16; }
+  100% { opacity: 0; transform: scale(1.16); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsu-reticle .dsu-tick,
+  .dsu-ret-scan,
+  .dsu-ret-comet,
+  .dsu-reticle.dsu-lock,
+  .dsu-reticle.dsu-lock .dsu-ping { animation: none; }
 }
 
 /* 读取阶段的十六进制瀑布：放到原片里最空的上右区，不去和主体挤中间 */
