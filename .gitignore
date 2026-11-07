@@ -1,0 +1,47 @@
+# ── 依赖与构建产物（本项目是零依赖插件，没有构建步骤，防御性忽略）──
+node_modules/
+dist/
+coverage/
+*.tgz
+releases/
+
+# ── 日志 ──────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── 环境变量 / 本地配置 ────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+dsh-startup.json
+
+# ── 系统与编辑器 ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# ── 本地 AI / 助手配置（要提交其中某个文件时，删掉对应行）────────────
+.claude/
+CLAUDE.md
+AGENTS.md
+opencode.json
+.opencode/
+
+# ── docs：只提交 screenshots，其他本地文档不发布 ────────────────────────
+docs/*
+!docs/screenshots/
+!docs/screenshots/**
+
+# ── 临时文件 ───────────────────────────────────────────────────────────
+*.tmp
+*.bak
+*.orig
+.preview/
+
+# 注意：test/ 随包发布，不能忽略；docs/ 只提交 screenshots/。
