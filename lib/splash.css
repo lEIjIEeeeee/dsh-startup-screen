@@ -750,7 +750,7 @@
 .dsu-checks {
   position: absolute;
   right: 46px;
-  top: 392px;
+  top: 50%;
   z-index: 21;
   width: 270px;
   padding: 16px 18px 12px;
@@ -761,7 +761,7 @@
   font-size: 10px;
   letter-spacing: 0.12em;
   opacity: 0;
-  transform: translateX(18px);
+  transform: translate(18px, -50%);
   transition: opacity 620ms ease, transform 620ms cubic-bezier(0.16, 0.84, 0.24, 1);
   transition-delay: 520ms;
   border: 1px solid rgba(10, 10, 10, 0.16);
@@ -775,7 +775,7 @@
   background: rgba(10, 12, 14, 0.55);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
-.dsu-checks.dsu-in { opacity: 1; transform: none; }
+.dsu-checks.dsu-in { opacity: 1; transform: translate(0, -50%); }
 .dsu-checks-h {
   padding-bottom: 7px;
   margin-bottom: 4px;
@@ -842,7 +842,25 @@
   transition: width 420ms cubic-bezier(0.3, 0.9, 0.25, 1);
 }
 .dsu-check.dsu-on::after { width: 100%; }
-@media (max-width: 1400px) { .dsu-checks { display: none; } }
+/* 窄屏：面板留在右侧，压紧并上移到 SKIP 下面，避开最长标题；
+   右侧十六进制瀑布在窄屏让位。 */
+@media (max-width: 1400px) and (min-width: 1180px) {
+  .dsu-checks {
+    left: auto;
+    right: 20px;
+    top: 50%;
+    width: 230px;
+    padding: 12px 14px 8px;
+    transform: translate(18px, -50%);
+  }
+  .dsu-checks.dsu-in { transform: translate(0, -50%); }
+  .dsu-checks-h { padding-bottom: 5px; margin-bottom: 2px; font-size: 8.5px; }
+  .dsu-check { padding: 4px 0; }
+  .dsu-check-k { width: 72px; font-size: 10px; }
+  .dsu-check-v { font-size: 10.5px; }
+  .dsu-hex { display: none; }
+}
+@media (max-width: 1179px) { .dsu-checks { display: none; } }
 
 .dsu-trace {
   position: absolute;

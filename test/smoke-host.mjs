@@ -214,6 +214,8 @@ r = await call('exact /dsh-startup/facts')
 const factsBody = JSON.parse(r.body)
 check('/facts 返回 ok', r.statusCode === 200 && factsBody.ok === true)
 check('/facts 带 8 位 hash 指纹', !!factsBody.facts && /^[0-9A-F]{8}$/.test(String(factsBody.facts.hash)), factsBody.facts && factsBody.facts.hash)
+const hostSrcForFacts = fs.readFileSync(path.join(PLUGIN_ROOT, 'lib', 'index.js'), 'utf8')
+check('/facts 会重采 sessions', /refreshSessions\(ctx\)/.test(hostSrcForFacts))
 r = await call('exact /dsh-startup/config')
 check('config 响应也带 facts', !!JSON.parse(r.body).facts)
 

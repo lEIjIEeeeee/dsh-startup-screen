@@ -377,7 +377,14 @@ console.log('\n[9] 右下角身份读数：不压版心、窄窗口不丢、第 
   check('.dsu-idline 右对齐成独立读数', /text-align:\s*right/.test(idlineRule))
   check('.dsu-idline.dsu-in 落到 transform: none', /\.dsu-idline\.dsu-in\s*\{[^}]*transform:\s*none/.test(css))
   check('窄窗口不再藏掉身份读数（无 display:none 规则）', !/\.dsu-idline\s*\{\s*display:\s*none/.test(css))
-  check('1400px 以下收起右侧自检面板', /@media \(max-width: 1400px\) \{ \.dsu-checks \{ display: none; \} \}/.test(css))
+  check('自检面板垂直居中',
+    /\.dsu-checks\s*\{[\s\S]{0,300}top:\s*50%/.test(css) &&
+    /transform:\s*translate\(18px,\s*-50%\)/.test(css) &&
+    /\.dsu-checks\.dsu-in\s*\{[^}]*translate\(0,\s*-50%\)/.test(css))
+  check('窄屏面板留在右侧、垂直居中并让位给标题',
+    /@media \(max-width: 1400px\) and \(min-width: 1180px\)[\s\S]{0,500}\.dsu-checks\s*\{[\s\S]{0,200}right: 20px;[\s\S]{0,80}top: 50%;[\s\S]{0,160}width: 230px;/.test(css) &&
+    /\.dsu-hex \{ display: none; \}/.test(css) &&
+    /@media \(max-width: 1179px\) \{ \.dsu-checks \{ display: none; \} \}/.test(css))
   check('第 3 幕起（i >= 2）就收掉身份读数', /if \(i >= 2\) ui\.idline\.classList\.remove\('dsu-in'\)/.test(src))
   check('退场只发生在 stepLoop 开场与 finale 两处', (src.match(/ui\.idline\.classList\.remove\('dsu-in'\)/g) || []).length === 2)
 }
@@ -714,6 +721,8 @@ console.log('\n[20] P2 电影细节 / 准星 / 金属鲸鱼 / facts')
   check('REV 行读取真实 facts', /paintMeta\(\)/.test(src) && /REV ' \+ factText\(FACTS\.version\)/.test(src))
   check('facts 异步刷新', /function refreshFacts\(/.test(src) && /\/dsh-startup\/facts/.test(src))
   check('facts 未就绪会重试', /setTimeout\(tick, 400\)/.test(src) && /setTimeout\(tick, 600\)/.test(src))
+  check('facts 就绪后仍继续轮询', /即使已经 ready 也继续轮询/.test(src))
+  check('会话变化不重排光场', /f\.hash !== prevHash/.test(src))
 
   run(true)
   const plainMeta = lookup('.dsu-meta-1')
