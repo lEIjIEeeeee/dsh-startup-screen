@@ -58,6 +58,13 @@ const TAPS = []
 let effects = 0
 let rejectNext = undefined
 
+const workspaceRegistry = {
+  list: () => [{ sessionIds: ['s1', 's2'] }],
+  archivedSessionIds: ['s1', 's2']
+}
+const sessionsService = {
+  list: () => ['s1']
+}
 const ctx = {
   webServer: {
     register(route) {
@@ -68,6 +75,8 @@ const ctx = {
     tapIndex(fn) { TAPS.push(fn); return () => TAPS.splice(TAPS.indexOf(fn), 1) },
   },
   get(name) {
+    if (name === 'workspaceRegistry') return workspaceRegistry
+    if (name === 'sessions') return sessionsService
     if (name !== 'connection') return undefined
     return {
       // 官方 dsh-host-open-in-app 同款栅栏：返回 undefined = 放行
@@ -214,6 +223,9 @@ r = await call('exact /dsh-startup/facts')
 const factsBody = JSON.parse(r.body)
 check('/facts 返回 ok', r.statusCode === 200 && factsBody.ok === true)
 check('/facts 带 8 位 hash 指纹', !!factsBody.facts && /^[0-9A-F]{8}$/.test(String(factsBody.facts.hash)), factsBody.facts && factsBody.facts.hash)
+check('/facts 用工作区注册表算总会话数', factsBody.facts.sessionsTotal === 2, String(factsBody.facts.sessionsTotal))
+check('/facts 记录归档会话数', factsBody.facts.sessionsArchived === 2, String(factsBody.facts.sessionsArchived))
+check('/facts 记录未归档会话数', factsBody.facts.sessions === 1, String(factsBody.facts.sessions))
 const hostSrcForFacts = fs.readFileSync(path.join(PLUGIN_ROOT, 'lib', 'index.js'), 'utf8')
 check('/facts 会重采 sessions', /refreshSessions\(ctx\)/.test(hostSrcForFacts))
 r = await call('exact /dsh-startup/config')

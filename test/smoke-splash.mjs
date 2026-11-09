@@ -758,11 +758,19 @@ console.log('\n[21] P3 数据面板 / 首帧实心 / 细环 / 双语解码')
 
   run(true, { facts: { ready: true, profile: 'DESKTOP', version: '0.2.1', bundleCount: 18, model: 'deepseek-chat', sandbox: 'workspace-write', sessions: 3, hash: 'A1B2C3D4' } })
   const checks = lookup('.dsu-checks')
-  check('自检面板 5 行 + 表头', checks && checks.children.length === 6, checks && checks.children.length)
+  check('自检面板 6 行 + 表头', checks && checks.children.length === 7, checks && checks.children.length)
   check('自检第一行是 PROFILE / DESKTOP', !!checks && checks.children[1] &&
     checks.children[1].children[0].textContent === 'PROFILE' &&
     checks.children[1].children[1].textContent === 'DESKTOP',
     checks && checks.children[1] && checks.children[1].children[1].textContent)
+  run(true, { facts: { ready: true, profile: 'DESKTOP', version: '0.2.1', bundleCount: 18, model: 'deepseek-chat', sandbox: 'workspace-write', sessions: 1, sessionsTotal: 2, sessionsArchived: 2, hash: 'A1B2C3D4' } })
+  const checksTotal = lookup('.dsu-checks')
+  check('SESSIONS 显示未归档会话数', !!checksTotal && checksTotal.children[5] &&
+    checksTotal.children[5].children[1].textContent === '1',
+    checksTotal && checksTotal.children[5] && checksTotal.children[5].children[1].textContent)
+  check('ARCHIVED 显示归档会话数', !!checksTotal && checksTotal.children[6] &&
+    checksTotal.children[6].children[1].textContent === '2',
+    checksTotal && checksTotal.children[6] && checksTotal.children[6].children[1].textContent)
   const trace = lookup('.dsu-trace')
   check('底部波形生成了 SVG', !!trace && trace.children[0] && trace.children[0].tagName === 'svg')
   const fact1 = lookup('.dsu-facts-1')
