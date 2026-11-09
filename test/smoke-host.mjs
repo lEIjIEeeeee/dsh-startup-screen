@@ -187,7 +187,7 @@ check('reset 恢复默认', JSON.parse(r.body).config.identity === 'JOYCE MOORE'
 
 /* 液态玻璃：默认关闭，三个数值字段都要夹在合法区间 */
 cfg = JSON.parse((await call('exact /dsh-startup/config')).body)
-check('液态玻璃默认开启（本版默认观感）', cfg.config.glass === true, String(cfg.config.glass))
+check('液态玻璃默认关闭（实心底板更像成片）', cfg.config.glass === false, String(cfg.config.glass))
 check('环境光效默认开启', cfg.config.ambient === true, String(cfg.config.ambient))
 check('玻璃不透明度默认 0.75', cfg.config.glassOpacity === 0.75, String(cfg.config.glassOpacity))
 check('磨砂默认 22px', cfg.config.glassBlur === 22, String(cfg.config.glassBlur))

@@ -284,6 +284,7 @@ check('没有 FAILED 兜底标记', r.windowStub.__DSH_STARTUP_FAILED__ !== true
 console.log('\n[2] 生成出来的 markup 完整性')
 for (const cls of [
   'dsu-atmo', 'dsu-beams', 'dsu-floor', 'dsu-field', 'dsu-sheen', 'dsu-tear',
+  'dsu-facts-1', 'dsu-facts-2', 'dsu-checks', 'dsu-trace',
   'dsu-plate', 'dsu-vignette', 'dsu-black-inner', 'dsu-wash', 'dsu-brand-1', 'dsu-frame',
   'dsu-scanline', 'dsu-corner', 'dsu-slats', 'dsu-voice', 'dsu-meta', 'dsu-status-zh',
   'dsu-sub-en', 'dsu-rule', 'dsu-logo', 'dsu-dots', 'dsu-idline', 'dsu-reticle', 'dsu-hex',
@@ -376,7 +377,7 @@ console.log('\n[9] 右下角身份读数：不压版心、窄窗口不丢、第 
   check('.dsu-idline 右对齐成独立读数', /text-align:\s*right/.test(idlineRule))
   check('.dsu-idline.dsu-in 落到 transform: none', /\.dsu-idline\.dsu-in\s*\{[^}]*transform:\s*none/.test(css))
   check('窄窗口不再藏掉身份读数（无 display:none 规则）', !/\.dsu-idline\s*\{\s*display:\s*none/.test(css))
-  check('那条 @media(max-width:1180px) 兜底已移除', !/1180px/.test(css))
+  check('1400px 以下收起右侧自检面板', /@media \(max-width: 1400px\) \{ \.dsu-checks \{ display: none; \} \}/.test(css))
   check('第 3 幕起（i >= 2）就收掉身份读数', /if \(i >= 2\) ui\.idline\.classList\.remove\('dsu-in'\)/.test(src))
   check('退场只发生在 stepLoop 开场与 finale 两处', (src.match(/ui\.idline\.classList\.remove\('dsu-in'\)/g) || []).length === 2)
 }
@@ -554,9 +555,9 @@ console.log('\n[14] 液态玻璃：透出背景，但主体素材保持不透明
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
   check('CSS 有 backdrop-filter 磨砂', /backdrop-filter:\s*blur\(var\(--dsu-glass-blur/.test(css))
   check('CSS 让底板半透明（用 alpha 变量）', /\.dsu-glass \.dsu-plate[\s\S]{0,400}var\(--dsu-glass-alpha/.test(css))
-  check('CSS 让黑幕半透明', /\.dsu-glass \.dsu-black[\s\S]{0,200}rgba\(4, 6, 10/.test(css))
+  check('CSS 首帧黑幕实心（玻璃不穿透）', /\.dsu-glass \.dsu-black[\s\S]{0,200}background: #04060a/.test(css))
   check('CSS 有液态高光动画', /@keyframes dsu-glass-drift/.test(css))
-  check('CSS 根节点背景透明', /#dsh-startup-root\.dsu-glass\s*\{\s*background:\s*transparent/.test(css))
+  check('CSS 根节点在玻璃铺满后才透明', /#dsh-startup-root\.dsu-glass\.dsu-glass-live\s*\{\s*background:\s*transparent/.test(css))
 }
 
 console.log('\n[15] 背景模糊：独立图层，不与任何素材绑定')
@@ -617,13 +618,13 @@ console.log('\n[17] P0 中文清晰度与逐字解码')
   check('主字使用中文栈', /\.dsu-status\s*\{[\s\S]{0,500}font-family:\s*var\(--dsu-zh\)/.test(css))
   check('主字真实 500 字重', /\.dsu-status\s*\{[\s\S]{0,500}font-weight:\s*500/.test(css))
   check('禁用伪粗体', /\.dsu-status\s*\{[\s\S]{0,500}font-synthesis:\s*none/.test(css))
-  check('主字响应式 46–66px', /\.dsu-status[\s\S]{0,300}clamp\(46px,\s*4\.4vw,\s*66px\)/.test(css))
+  check('主字响应式 48–72px', /\.dsu-status[\s\S]{0,300}clamp\(48px,\s*4\.7vw,\s*72px\)/.test(css))
   check('抗锯齿只作用于主字', /\.dsu-status\s*\{[\s\S]{0,800}-webkit-font-smoothing:\s*auto/.test(css) &&
     /-webkit-font-smoothing:\s*antialiased/.test(css))
   check('字距补偿加在文字子项上', /\.dsu-status-zh\s*\{[^}]*text-indent:\s*0\.135em/.test(css))
   check('分隔点有强调色规则', /\.dsu-status\s+\.dsu-sep\s*\{[^}]*color:\s*var\(--dsu-accent\)/.test(css))
   check('护城河只在 dsu-shield 下生效', /\.dsu-status\.dsu-shield/.test(css) && /\.dsu-sub-en\.dsu-shield/.test(css))
-  check('准星同步放大到 62vw', /\.dsu-reticle\s*\{[\s\S]{0,300}min\(62vw,\s*86vh,\s*1040px\)/.test(css))
+  check('准星同步放大到 66vw', /\.dsu-reticle\s*\{[\s\S]{0,400}min\(66vw,\s*94vh,\s*1180px\)/.test(css))
   check('隐藏光标不占布局宽度', /\.dsu-caret\s*\{[^}]*width:\s*0/.test(css) &&
     /\.dsu-caret\.dsu-on\s*\{[^}]*width:\s*15px/.test(css))
   check('没有引入 color-mix', !/color-mix\(/.test(css))
@@ -632,8 +633,8 @@ console.log('\n[17] P0 中文清晰度与逐字解码')
   const widePool = (src.match(/GLYPH_WIDE = '([^']+)'/) || [null, ''])[1]
   check('有全角片假名替身字形池', /^[ァ-ヿ]+$/.test(widePool) && /function glyphFor\(/.test(src), widePool)
   check('有 startDecode / stopDecode', /function startDecode\(/.test(src) && /function stopDecode\(/.test(src))
-  check('主字用 decode、副标题保持 fade', /typeIn\(ui\.statusZh, step\.zh, 46, 'decode'\)/.test(src) &&
-    /typeIn\(ui\.subEn, step\.en, 13\)/.test(src))
+  check('主字与副标题都用 decode', /typeIn\(ui\.statusZh, step\.zh, 46, 'decode'\)/.test(src) &&
+    /typeIn\(ui\.subEn, step\.en, 13, 'decode'\)/.test(src))
   check('跳过 / 揭幕会强制锁定真字', /function releaseAll\(\)[\s\S]{0,120}stopDecode\(\)/.test(src) &&
     /function finale\(\)[\s\S]{0,1400}stopDecode\(\)/.test(src))
   check('护城河只随准星步骤切换', /classList\.toggle\('dsu-shield', !!step\.reticle\)/.test(src))
@@ -650,7 +651,7 @@ console.log('\n[18] P1 光场与氛围层')
   check('水印在光场之上（z 12）', /\.dsu-watermark\s*\{[\s\S]{0,200}z-index:\s*12/.test(css))
   check('reduced-motion 停止氛围动画', /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,500}\.dsu-atmo::before/.test(css))
   check('仍然没有引入 color-mix', !/color-mix\(/.test(css))
-  check('光场按玻璃分档（96 / dpr 1.5）', /C\.glass \? 96 : 150/.test(src) && /C\.glass \? 1\.5 : 1\.75/.test(src))
+  check('光场用 QIF 强度（150 / dpr 1.75）', /var limit = 150/.test(src) && /Math\.min\(1\.75/.test(src))
   check('光场种子读取 facts', /FACTS\.hash/.test(src) && /FACTS\.profile/.test(src) && /FACTS\.bundleCount/.test(src))
   check('finish / dispose 会停光场', /function releaseAll\(\)[\s\S]{0,160}stopField\(\)/.test(src))
 
@@ -725,6 +726,39 @@ console.log('\n[20] P2 电影细节 / 准星 / 金属鲸鱼 / facts')
   const whale = logo && logo.children && logo.children[0]
   check('鲸鱼 SVG 含 defs 渐变层', !!whale && whale.children && whale.children[0] && whale.children[0].tagName === 'defs',
     whale && whale.children && whale.children.map((c) => c.tagName).join(','))
+}
+
+console.log('\n[21] P3 数据面板 / 首帧实心 / 细环 / 双语解码')
+{
+  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const src = fs.readFileSync(BUNDLE, 'utf8')
+  const host = fs.readFileSync(fileURLToPath(new URL('../lib/index.js', import.meta.url)), 'utf8')
+
+  check('有左侧两行真实数据', /dsu-facts-1/.test(src) && /dsu-facts-2/.test(src))
+  check('有右侧自检面板', /dsu-checks/.test(src) && /dsu-check-k/.test(css))
+  check('有底部动态波形', /dsu-trace/.test(src) && /dsu-trace-line/.test(css))
+  check('自检每步点亮', /setChecks\(n\)/.test(src))
+  check('数据面板随第二幕进场', /ui\.checks\.classList\.add\('dsu-in'\)/.test(src))
+  check('facts 采集 sessions', /FACTS\.sessions/.test(src) && /get\('sessions'\)/.test(host) && /facts\.sessions/.test(host))
+  check('玻璃默认关闭', /glass: false/.test(host))
+  check('首帧黑幕实心', /\.dsu-glass \.dsu-black[\s\S]{0,200}background: #04060a/.test(css))
+  check('玻璃透明等底板铺满', /dsu-glass\.dsu-glass-live/.test(css) && /classList\.add\('dsu-glass-live'\)/.test(src))
+  check('准星细环 + 柔光', /\.dsu-reticle::before/.test(css) &&
+    /\.dsu-ring-a[\s\S]{0,100}stroke-width: 1\.6[\s\S]{0,80}opacity: 0\.72/.test(css))
+  check('双语都用 decode', /typeIn\(ui\.subEn, step\.en, 13, 'decode'\)/.test(src))
+
+  run(true, { facts: { ready: true, profile: 'DESKTOP', version: '0.2.1', bundleCount: 18, model: 'deepseek-chat', sandbox: 'workspace-write', sessions: 3, hash: 'A1B2C3D4' } })
+  const checks = lookup('.dsu-checks')
+  check('自检面板 5 行 + 表头', checks && checks.children.length === 6, checks && checks.children.length)
+  check('自检第一行是 PROFILE / DESKTOP', !!checks && checks.children[1] &&
+    checks.children[1].children[0].textContent === 'PROFILE' &&
+    checks.children[1].children[1].textContent === 'DESKTOP',
+    checks && checks.children[1] && checks.children[1].children[1].textContent)
+  const trace = lookup('.dsu-trace')
+  check('底部波形生成了 SVG', !!trace && trace.children[0] && trace.children[0].tagName === 'svg')
+  const fact1 = lookup('.dsu-facts-1')
+  check('左侧 MODEL 行有真实值', !!fact1 && fact1.children[1] && fact1.children[1].textContent === 'deepseek-chat',
+    fact1 && fact1.children[1] && fact1.children[1].textContent)
 }
 
 console.log('\n============================')

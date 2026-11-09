@@ -139,6 +139,18 @@
     linear-gradient(168deg, var(--dsu-bg-2) 0%, var(--dsu-bg) 42%, var(--dsu-bg) 100%);
 }
 
+/* 底板上固定的斜向掠光：金属面被顶灯照到的读法 */
+.dsu-plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(103deg,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.055) 46%,
+    rgba(255, 255, 255, 0) 62%);
+}
+
 /* 背景里若隐若现的档案面板（参考片右侧极淡的方块群） */
 .dsu-watermark {
   position: absolute;
@@ -567,7 +579,7 @@
   align-items: center;
   gap: 0;
   font-family: var(--dsu-zh);
-  font-size: clamp(46px, 4.4vw, 66px);
+  font-size: clamp(48px, 4.7vw, 72px);
   font-weight: 500;
   font-synthesis: none;
   letter-spacing: 0.135em;
@@ -587,7 +599,7 @@
   font-family: var(--dsu-zh);
   font-weight: 500;
   letter-spacing: 0.135em;
-  font-size: clamp(46px, 4.4vw, 66px);
+  font-size: clamp(48px, 4.7vw, 72px);
 }
 #dsh-startup-root:not(.dsu-dark) .dsu-status {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.82), 0 13px 32px rgba(66, 54, 40, 0.16);
@@ -715,37 +727,206 @@
 }
 .dsu-idline.dsu-in { opacity: 1; transform: none; }
 
+/* ── 真实数据：左侧两行读数 / 右侧自检清单 / 底部波形 ─────────────────── */
+.dsu-facts {
+  position: absolute;
+  left: 46px;
+  z-index: 20;
+  font-family: var(--dsu-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.145em;
+  color: var(--dsu-muted);
+  opacity: 0;
+  transform: translateX(-18px);
+  transition: opacity 520ms ease, transform 520ms cubic-bezier(0.16, 0.84, 0.24, 1);
+  transition-delay: 620ms;
+  white-space: nowrap;
+}
+.dsu-facts.dsu-in { opacity: 1; transform: none; }
+.dsu-facts b { color: var(--dsu-accent); font-weight: 400; }
+.dsu-facts-1 { top: 240px; }
+.dsu-facts-2 { top: 258px; }
+
+.dsu-checks {
+  position: absolute;
+  right: 46px;
+  top: 392px;
+  z-index: 21;
+  width: 270px;
+  padding: 16px 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: var(--dsu-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  opacity: 0;
+  transform: translateX(18px);
+  transition: opacity 620ms ease, transform 620ms cubic-bezier(0.16, 0.84, 0.24, 1);
+  transition-delay: 520ms;
+  border: 1px solid rgba(10, 10, 10, 0.16);
+  border-left: 2px solid var(--dsu-accent);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 24px 60px rgba(56, 46, 34, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  overflow: hidden;
+}
+.dsu-dark .dsu-checks {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(10, 12, 14, 0.55);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+.dsu-checks.dsu-in { opacity: 1; transform: none; }
+.dsu-checks-h {
+  padding-bottom: 7px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--dsu-hair);
+  color: var(--dsu-muted);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+}
+.dsu-live {
+  color: var(--dsu-accent);
+  animation: dsu-live-pulse 2.4s ease-in-out infinite;
+}
+@keyframes dsu-live-pulse {
+  0%, 100% { opacity: 0.46; }
+  50% { opacity: 1; }
+}
+.dsu-check {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--dsu-hair-soft);
+  color: var(--dsu-muted);
+}
+.dsu-check-k { width: 82px; flex: none; font-size: 10.5px; }
+.dsu-check-v {
+  flex: 1;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  color: var(--dsu-ink-soft);
+}
+.dsu-check i {
+  width: 4px;
+  height: 4px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--dsu-hair);
+  transform: translateY(-1px);
+}
+.dsu-check.dsu-on { color: var(--dsu-ink); }
+.dsu-check.dsu-on .dsu-check-v { color: var(--dsu-ink); }
+.dsu-check.dsu-on i {
+  background: var(--dsu-accent);
+  box-shadow: 0 0 8px var(--dsu-accent);
+}
+.dsu-check.dsu-past i {
+  background: var(--dsu-accent-2);
+  box-shadow: 0 0 6px var(--dsu-accent-2);
+  opacity: 0.75;
+}
+.dsu-check::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 0;
+  height: 1px;
+  background: var(--dsu-accent);
+  transition: width 420ms cubic-bezier(0.3, 0.9, 0.25, 1);
+}
+.dsu-check.dsu-on::after { width: 100%; }
+@media (max-width: 1400px) { .dsu-checks { display: none; } }
+
+.dsu-trace {
+  position: absolute;
+  left: 50%;
+  bottom: 17%;
+  width: min(520px, 44vw);
+  height: 46px;
+  transform: translateX(-50%);
+  z-index: 18;
+  opacity: 0;
+  transition: opacity 700ms ease;
+  pointer-events: none;
+}
+.dsu-trace.dsu-in { opacity: 0.74; }
+.dsu-trace svg { width: 100%; height: 100%; overflow: visible; }
+.dsu-trace-base { stroke: var(--dsu-hair); stroke-width: 1; opacity: 0.55; }
+.dsu-trace-tick { stroke: var(--dsu-hair); stroke-width: 1; opacity: 0.45; }
+.dsu-trace-line {
+  fill: none;
+  stroke: var(--dsu-accent-2);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 4px rgba(44, 122, 138, 0.45));
+}
+#dsh-startup-root:not(.dsu-dark) .dsu-trace-line { opacity: 0.62; }
+.dsu-trace-cursor {
+  stroke: var(--dsu-accent);
+  stroke-width: 1;
+  opacity: 0.8;
+  transform-box: view-box;
+  animation: dsu-trace-scan 4.6s linear infinite;
+}
+@keyframes dsu-trace-scan {
+  from { transform: translateX(0); }
+  to { transform: translateX(520px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsu-trace-cursor,
+  .dsu-live { animation: none; }
+}
+
 /* ── 环形准星（验证通过）───────────────────────────────────────────────── */
-/* 照原片：环居中、直径约 62vw，状态字就落在环心里，两者是一个整体。
-   主字放大到 46–66px 后，环同步从 56vw 提到 62vw，长句才不会压到环上。
+/* 照原片：环居中、直径约 66vw，状态字就落在环心里，两者是一个整体。
+   主字放大到 48–72px 后，环同步提到 66vw，长句才不会压到环上。
    关键是把两段弧的缺口都留在正下方 6 点钟方向，底部字幕永远不会被压到。 */
 .dsu-reticle {
   position: absolute;
   left: 50%;
   top: 45%;
-  width: min(62vw, 86vh, 1040px);
-  height: min(62vw, 86vh, 1040px);
+  width: min(66vw, 94vh, 1180px);
+  height: min(66vw, 94vh, 1180px);
   transform: translate(-50%, -50%);
   z-index: 16;
   opacity: 0;
   transition: opacity 500ms ease;
   pointer-events: none;
+  filter: drop-shadow(0 0 36px rgba(0, 0, 0, 0.35));
+}
+.dsu-reticle::before {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(111, 211, 232, 0) 54%, rgba(111, 211, 232, 0.07) 68%, rgba(111, 211, 232, 0) 76%);
+  filter: blur(8px);
 }
 .dsu-reticle.dsu-in { opacity: 1; }
 .dsu-reticle svg { width: 100%; height: 100%; overflow: visible; }
-.dsu-ret-rot-a { transform-origin: 50% 50%; animation: dsu-spin 9s linear infinite; }
-.dsu-ret-rot-b { transform-origin: 50% 50%; animation: dsu-spin 5.4s linear infinite reverse; }
+.dsu-ret-rot-a { transform-origin: 50% 50%; animation: dsu-spin 18s linear infinite; }
+.dsu-ret-rot-b { transform-origin: 50% 50%; animation: dsu-spin 11s linear infinite reverse; }
 @keyframes dsu-spin { to { transform: rotate(360deg); } }
-.dsu-reticle .dsu-ring-a { fill: none; stroke: var(--dsu-ink); stroke-width: 6; }
-.dsu-reticle .dsu-ring-b { fill: none; stroke: var(--dsu-box-ink); stroke-width: 2.2; opacity: 0.95; }
+.dsu-reticle .dsu-ring-a { fill: none; stroke: var(--dsu-ink); stroke-width: 1.6; opacity: 0.72; }
+.dsu-reticle .dsu-ring-b { fill: none; stroke: var(--dsu-box-ink); stroke-width: 1; opacity: 0.38; }
 .dsu-reticle .dsu-dot-a { fill: var(--dsu-ink); }
 .dsu-reticle .dsu-dot-b { fill: var(--dsu-box-ink); }
 .dsu-reticle .dsu-dot-o { fill: var(--dsu-accent); }
 .dsu-reticle .dsu-bracket {
   fill: none;
   stroke: var(--dsu-ink);
-  stroke-width: 1.6;
-  opacity: 0.85;
+  stroke-width: 1;
+  opacity: 0.55;
 }
 
 /* 刻度环：48 格沿环逐格点亮一圈（仪表自检），读完停在暗态 */
@@ -1308,16 +1489,45 @@
   z-index: 17;
   pointer-events: none;
 }
+/* 完整矩形机框：四角连通，不做切角 */
+.dsu-frame::before {
+  content: "";
+  position: absolute;
+  inset: 22px;
+  border: 1px solid var(--dsu-hair);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 0 rgba(0, 0, 0, 0.30),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  transition: opacity 780ms ease;
+}
+.dsu-frame.dsu-in::before { opacity: 1; }
+.dsu-frame::after {
+  content: "";
+  position: absolute;
+  inset: 22px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 900ms ease;
+  background-image:
+    repeating-linear-gradient(90deg, var(--dsu-hair) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, var(--dsu-hair) 0 1px, transparent 1px 24px);
+  background-size: 100% 5px, 100% 5px;
+  background-position: 0 0, 0 100%;
+  background-repeat: no-repeat, no-repeat;
+}
+.dsu-frame.dsu-in::after { opacity: 0.5; }
 
 .dsu-corner {
   position: absolute;
-  width: 16px;
-  height: 16px;
+  width: 26px;
+  height: 26px;
   opacity: 0;
   transition: opacity 640ms ease, transform 640ms cubic-bezier(0.16, 0.84, 0.24, 1);
 }
 .dsu-corner::before,
-.dsu-corner::after { content: ""; position: absolute; background: var(--dsu-hair); }
+.dsu-corner::after { content: ""; position: absolute; background: var(--dsu-hair); opacity: 0.62; }
 .dsu-corner::before { width: 100%; height: 1px; }
 .dsu-corner::after { width: 1px; height: 100%; }
 .dsu-c-tl { left: 26px; top: 26px; transform: translate(-10px, -10px); }
@@ -1464,7 +1674,9 @@
    #dsh-startup-root 上加 .dsu-glass 时生效。只把「背景层」（底板 / 黑幕）
    改成半透明 + 磨砂，文字、线条、鲸鱼标识、读数仍是实心 ——
    所以稿面主体保留，只是能透过它看到后面的桌面壁纸或窗口。 */
-#dsh-startup-root.dsu-glass { background: transparent !important; }
+/* 只有底板已经铺满（JS 加 dsu-glass-live）后才让根节点透出去。
+   首帧必须保持实心黑底，否则会直接露出后面的 DSH 界面。 */
+#dsh-startup-root.dsu-glass.dsu-glass-live { background: transparent !important; }
 
 .dsu-glass .dsu-plate {
   background:
@@ -1491,9 +1703,10 @@
 }
 
 .dsu-glass .dsu-black {
-  background: rgba(4, 6, 10, calc(var(--dsu-glass-alpha, 0.55) * 0.96)) !important;
-  -webkit-backdrop-filter: blur(var(--dsu-glass-blur, 22px)) saturate(var(--dsu-glass-sat, 150%));
-  backdrop-filter: blur(var(--dsu-glass-blur, 22px)) saturate(var(--dsu-glass-sat, 150%));
+  /* 第一幕必须实心：玻璃只作用于底板，不能让首帧透出 DSH 界面 */
+  background: #04060a !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* 应用本体已经被 blurAppBackdrop 糊过时，底板/黑幕不要再叠一层全屏 backdrop-filter：

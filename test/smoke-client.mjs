@@ -260,7 +260,7 @@ console.log('\n[9] 液态玻璃面板控件')
   check('源码里三个玻璃滑条都在', /玻璃不透明度/.test(code) && /磨砂模糊/.test(code) && /玻璃饱和度/.test(code))
   check('「透出桌面壁纸」已删除', !/透出桌面壁纸/.test(code) && !/glassWallpaper/.test(code))
   check('「背景模糊」独立存在（不依赖壁纸）', /背景模糊/.test(code) && /glassBackdropBlur/.test(code))
-  check('玻璃参数有 FALLBACK 兜底', /glass: true, glassOpacity: 0\.75, glassBlur: 22, glassSaturate: 160/.test(code))
+  check('玻璃参数有 FALLBACK 兜底', /glass: false, glassOpacity: 0\.75, glassBlur: 22, glassSaturate: 160/.test(code))
 }
 
 console.log('\n[10] 设置页分类目录（点击平滑滚动）')
