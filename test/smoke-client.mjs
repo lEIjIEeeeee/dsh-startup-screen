@@ -34,6 +34,7 @@ const React = {
     const i = hookIndex++
     if (!ranEffects.has(i)) { ranEffects.add(i); fn() }
   },
+  useRef: () => ({ current: null }),
   useStateReset() {},
 }
 function resetHooks() { hookIndex = 0 }
@@ -263,13 +264,19 @@ console.log('\n[9] 液态玻璃面板控件')
   check('玻璃参数有 FALLBACK 兜底', /glass: false, glassOpacity: 0\.75, glassBlur: 22, glassSaturate: 160/.test(code))
 }
 
-console.log('\n[10] 设置页分类目录（点击平滑滚动）')
+console.log('\n[10] 设置页：左侧导航 + 分页 + 固定底栏')
 {
-  check('有目录容器 .__ss_toc', /__ss_toc/.test(code))
-  check('目录项是按钮并可点击', /__ss_tocItem/.test(code) && /onClick: function \(\) \{ jumpTo\(/.test(code))
-  check('滚动用 scrollIntoView + smooth', /scrollIntoView\(\{ block: 'start', behavior: 'smooth' \}\)/.test(code))
+  check('有左侧导航 .__ss_nav', /__ss_nav/.test(code))
+  check('导航项可点击切页', /__ss_navItem/.test(code) && /switchTab\(p\[0\]\)/.test(code))
+  check('五个页面：播放/外观/声音/内容/关于',
+    ['play', 'appearance', 'sound', 'content', 'about'].every((k) => code.indexOf("'" + k + "'") !== -1))
+  check('页面容器有 __ss_page', /__ss_page/.test(code) && (code.match(/__ss_page_/g) || []).length >= 5)
+  check('右侧内容区独立滚动', /__ss_content\{[^}]*overflow-y:auto/.test(code))
+  check('底部操作栏在内容区之外固定', /__ss_footer/.test(code) && /__ss_main\{[^}]*display:flex;flex-direction:column/.test(code))
+  check('底部操作栏不再使用 sticky', !/__ss_actionsSticky/.test(code))
+
   const groups = ['play', 'identity', 'interact', 'voice', 'visual', 'text']
-  check('六个分类都有锚点分组名', groups.every((g) => code.indexOf("'" + g + "'") !== -1), groups.join(','))
+  check('六个设置分组仍保留', groups.every((g) => code.indexOf('__ss_group_' + g) !== -1), groups.join(','))
   check('分组节点都挂了 id 锚点', (code.match(/id: '__ss_group_/g) || []).length === 6, String((code.match(/id: '__ss_group_/g) || []).length))
 
   const t2 = renderPanel()
@@ -282,16 +289,15 @@ console.log('\n[10] 设置页分类目录（点击平滑滚动）')
     else if (kids && typeof kids === 'object') walkId(kids)
   }
   walkId(t2)
-  check('渲染出的面板里真的有六个锚点 id', groups.every((g) => ids.indexOf('__ss_group_' + g) !== -1), ids.join(','))
+  check('渲染出的面板里六组都在（隐藏页也保留 DOM）', groups.every((g) => ids.indexOf('__ss_group_' + g) !== -1), ids.join(','))
+  check('渲染出五个页面', ['play', 'appearance', 'sound', 'content', 'about'].every((k) => ids.indexOf('__ss_page_' + k) !== -1), ids.join(','))
 
-  /* 底部操作条固定在视口内：滚到哪都能点到「保存」 */
-  check('操作条用了 sticky 固定', /__ss_actionsSticky/.test(code) && /position:sticky/.test(code))
-  check('sticky 贴在底部', /__ss_actionsSticky\{[^}]*bottom:/.test(code))
   check('有未保存状态提示', /__ss_dirty/.test(code) && /未保存/.test(code))
-  check('「立即预览」也在底部操作条里（和保存并排）', /__ss_actionsSticky[\s\S]{0,400}立即预览/.test(code))
-  check('预览说明也并进操作条', /__ss_barHint/.test(code) && /预览会按当前「已保存」的配置重播一次/.test(code))
-  check('配置文件路径也在操作条里', /__ss_barFile/.test(code) && /配置文件：/.test(code))
-  check('改动置 dirty、保存/恢复/放弃都会清除', /setDirty\(true\)/.test(code) && (code.match(/setDirty\(false\)/g) || []).length >= 3, String((code.match(/setDirty\(false\)/g) || []).length))
+  check('「立即预览」在底部操作栏', /__ss_footer[\s\S]{0,600}立即预览/.test(code))
+  check('预览使用当前修改、不写盘', /Object\.assign\(\{\}, base, draft/.test(code) && /「立即预览」使用当前修改/.test(code))
+  check('恢复默认有二次确认', /window\.confirm/.test(code) && /恢复默认会覆盖/.test(code))
+  check('配置文件路径在关于页', /__ss_barFile/.test(code) && /配置文件：/.test(code))
+  check('改动置 dirty、保存/恢复会清除', /setDirty\(true\)/.test(code) && (code.match(/setDirty\(false\)/g) || []).length >= 3, String((code.match(/setDirty\(false\)/g) || []).length))
 }
 
 console.log('\n============================')

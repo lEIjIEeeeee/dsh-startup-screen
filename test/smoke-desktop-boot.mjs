@@ -162,6 +162,7 @@ function boot(opts) {
     },
     useState: (v) => (typeof v === 'function' ? [v(), () => {}] : [v, () => {}]),
     useEffect: () => {},
+    useRef: () => ({ current: null }),
   }
   const mod = win.__loaded.factory((name) => {
     if (name === 'react') return React
