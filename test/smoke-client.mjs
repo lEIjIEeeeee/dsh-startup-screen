@@ -7,6 +7,7 @@
 import fs from 'node:fs'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
+import { warnIfStale } from './_fresh.mjs'
 
 let pass = 0
 let fail = 0
@@ -88,6 +89,7 @@ class AbortControllerStub {
 }
 const CLIENT_BUNDLE = fileURLToPath(new URL('../lib/client.js', import.meta.url))
 const CLIENT_SOURCE = fileURLToPath(new URL('../src/client/index.jsx', import.meta.url))
+warnIfStale(CLIENT_BUNDLE, [CLIENT_SOURCE])
 const code = fs.readFileSync(CLIENT_BUNDLE, 'utf8')
 const SOURCE = fs.readFileSync(CLIENT_SOURCE, 'utf8')
 const sandbox = {

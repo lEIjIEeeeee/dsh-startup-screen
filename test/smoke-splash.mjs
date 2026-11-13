@@ -14,9 +14,12 @@
 import fs from 'node:fs'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
+import { warnIfStale } from './_fresh.mjs'
 
 const BUNDLE = fileURLToPath(new URL('../lib/splash.js', import.meta.url))
 const SOURCE = fileURLToPath(new URL('../src/splash/index.js', import.meta.url))
+const CSS_SOURCE = fileURLToPath(new URL('../src/splash/styles/index.css', import.meta.url))
+warnIfStale(BUNDLE, [SOURCE, CSS_SOURCE])
 
 let pass = 0
 let fail = 0

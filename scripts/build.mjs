@@ -122,7 +122,9 @@ main().catch((err) => {
   /* esbuild 的报错对象直接打印很难读，把位置和原因摘出来 */
   if (err && Array.isArray(err.errors) && err.errors.length > 0) {
     for (const e of err.errors) {
-      const loc = e.location ? e.location.file + ':' + e.location.line + ':' + e.location.column + '  ' : ''
+      const loc = e.location
+        ? e.location.file + ':' + e.location.line + ':' + e.location.column + '  '
+        : ''
       console.error('[build] ' + loc + e.text)
     }
   } else {
