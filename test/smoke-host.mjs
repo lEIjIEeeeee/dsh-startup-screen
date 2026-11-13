@@ -159,6 +159,8 @@ r = await call('prefix /dsh-startup/asset', 'GET', undefined, '/dsh-startup/asse
 check('目录穿越被拒 -> 404', r.statusCode === 404, String(r.statusCode))
 r = await call('prefix /dsh-startup/asset', 'GET', undefined, '/dsh-startup/asset/nope.mp3')
 check('不存在的素材 -> 404', r.statusCode === 404, String(r.statusCode))
+r = await call('prefix /dsh-startup/asset', 'GET', undefined, '/dsh-startup/asset/%E0%A4%A')
+check('畸形百分号编码 -> 400 且不抛异常', r.statusCode === 400, String(r.statusCode))
 for (const f of ['line-1', 'line-2', 'line-3', 'line-4', 'line-5']) {
   const rr = await call('prefix /dsh-startup/asset', 'GET', undefined, '/dsh-startup/asset/' + f + '.mp3')
   check('真声素材 ' + f + '.mp3 -> 200', rr.statusCode === 200 && rr.body.length > 5000, rr.statusCode + ' ' + rr.body.length)
@@ -238,6 +240,10 @@ await call('exact /dsh-startup/config', 'POST', JSON.stringify({ action: 'reset'
 
 r = await call('exact /dsh-startup/config', 'POST', '{ not json')
 check('非法 JSON 返回 400', r.statusCode === 400, String(r.statusCode))
+r = await call('exact /dsh-startup/config', 'POST', 'x'.repeat(70 * 1024))
+check('超限请求体返回 413', r.statusCode === 413, String(r.statusCode))
+r = await call('exact /dsh-startup/config')
+check('超限请求体不写盘（仍是默认身份）', JSON.parse(r.body).config.identity === 'JOYCE MOORE', JSON.parse(r.body).config.identity)
 r = await call('exact /dsh-startup/config', 'DELETE')
 check('不支持的方法返回 405', r.statusCode === 405, String(r.statusCode))
 

@@ -20,6 +20,8 @@ function main() {
     return
   }
 
+  /* 接入构建管线时，第一步必须是清空 lib/ 再产出：
+     重命名或删除模块后，残留的旧文件不会被 git diff 发现。 */
   console.error('[build] src/ 已存在，但构建管线尚未接入（Phase 2）。')
   process.exitCode = 1
 }
