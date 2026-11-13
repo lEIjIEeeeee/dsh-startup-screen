@@ -7,6 +7,7 @@ import { EventEmitter } from 'node:events'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import vm from 'node:vm'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const PLUGIN_ROOT = fileURLToPath(new URL('..', import.meta.url))
@@ -278,6 +279,32 @@ check('挂载点紧跟 <body>', /<body>\s*<div id="dsh-startup-root"/.test(after
 check('幂等：二次调用不重复注入', TAPS[0](after) === after)
 check('原 <div id="root"></div> 仍在（应用照常挂载）', after.includes('<div id="root"></div>'))
 check('内联载荷里没有裸的 < （防 </script> 提前闭合）', !inlinePayload(after).includes('<'))
+
+console.log('\n[6b] 内联启动脚本：存储被禁用时仍要挂 9 秒兜底')
+{
+  const m = after.match(/<script>window\.__DSH_STARTUP_BOOT__="index";([\s\S]*?)<\/script>/)
+  check('找到内联启动脚本', !!m)
+  const timers = []
+  const win = {}
+  const doc = {
+    getElementById: () => null,
+    documentElement: { classList: { add() {}, remove() {} } },
+    body: { style: {} },
+  }
+  const blocked = { getItem() { throw new Error('storage blocked') } }
+  const sandbox = {
+    window: win, document: doc, Date,
+    sessionStorage: blocked, localStorage: blocked,
+    setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length },
+  }
+  sandbox.globalThis = sandbox
+  vm.createContext(sandbox)
+  let threw = null
+  try { vm.runInContext(m[1], sandbox, { filename: 'bootstrap.js' }) } catch (e) { threw = e }
+  check('存储抛错不会中断启动脚本', threw === null, threw && threw.message)
+  check('存储抛错时仍注册 9 秒兜底', timers.some((t) => t.ms === 9000), timers.map((t) => t.ms).join(','))
+  check('存储抛错不会被误判为跳过', win.__DSH_STARTUP_SKIP__ !== true, String(win.__DSH_STARTUP_SKIP__))
+}
 
 console.log('\n[7] XSS 边界：身份名称里的尖括号不会逃出内联脚本')
 await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { identity: '</script><img src=x onerror=alert(1)>' } }))

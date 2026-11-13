@@ -82,10 +82,15 @@ const fetchStub = (url, init) => {
 
 /* ── 按 ModuleLoader 的方式加载 bundle ───────────────────────────────────── */
 console.log('\n[1] 加载器协议（window.__ModuleLoader__.load）')
+class AbortControllerStub {
+  constructor() { this.signal = { aborted: false } }
+  abort() { this.signal.aborted = true }
+}
 const CLIENT_BUNDLE = fileURLToPath(new URL('../lib/client.js', import.meta.url))
 const code = fs.readFileSync(CLIENT_BUNDLE, 'utf8')
 const sandbox = {
   window: windowStub, document: documentStub, fetch: fetchStub,
+  AbortController: AbortControllerStub,
   console, Promise, Object, Array, JSON, String, Number, Math, Date, Error,
   setTimeout, clearTimeout, Symbol,
 }
@@ -150,6 +155,7 @@ check('首屏显示"读取配置中…"', JSON.stringify(tree).includes('读取�
 await flush(); await flush()
 tree = renderPanel()
 check('GET /dsh-startup/config 被调用', requests.some((r) => r.url === '/dsh-startup/config' && (!r.init || !r.init.method)), requests.map((r) => (r.init && r.init.method) || 'GET').join(','))
+check('配置请求带超时信号（路由挂住时能放弃）', requests.some((r) => r.url === '/dsh-startup/config' && r.init && r.init.signal), '')
 const texts = walk(tree).filter((n) => typeof n.props.children === 'string').map((n) => n.props.children)
 check('渲染出「身份名称」字段', texts.includes('身份名称'), texts.slice(0, 12).join('/'))
 check('渲染出「身份编号」字段', texts.includes('身份编号'))

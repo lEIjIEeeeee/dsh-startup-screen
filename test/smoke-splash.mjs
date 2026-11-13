@@ -552,12 +552,14 @@ console.log('\n[14] 液态玻璃：透出背景，但主体素材保持不透明
   check('--dsu-glass-alpha 生效', g.root.style.getPropertyValue('--dsu-glass-alpha') === '0.4', g.root.style.getPropertyValue('--dsu-glass-alpha'))
   check('--dsu-glass-blur 生效', g.root.style.getPropertyValue('--dsu-glass-blur') === '24px', g.root.style.getPropertyValue('--dsu-glass-blur'))
   check('--dsu-glass-sat 生效', g.root.style.getPropertyValue('--dsu-glass-sat') === '170%', g.root.style.getPropertyValue('--dsu-glass-sat'))
-  check('开玻璃时不立即置透明（会露出 DSH 0.2.1 的启动白底）', g.root.style.background !== 'transparent', String(g.root.style.background))
+  check('开玻璃时不立即置透明（会露出应用启动白底）', g.root.style.background !== 'transparent', String(g.root.style.background))
   check('源码里透明是在底板 opacity=1 之后才设置', /ui\.plate\.style\.opacity = '1'[\s\S]{0,400}root\.style\.background = 'transparent'/.test(fs.readFileSync(BUNDLE, 'utf8')))
 
   const off = run(true)
   check('默认不开启玻璃', !off.root.classList.contains('dsu-glass'), off.root._cls)
   check('默认不动根节点背景', !off.root.style.background, String(off.root.style.background))
+  /* 离线预览、旧宿主、自举兜底会直接读这份出厂默认，缺字段就会静默关掉玻璃 */
+  check('出厂默认包含 glass 五项', /glass: false,[\s\S]{0,200}glassBackdropBlur: 28/.test(fs.readFileSync(BUNDLE, 'utf8')))
 
   /* 区间夹取：越界值也要落到合法范围 */
   const edge = run(true, { glass: true, glassOpacity: 5, glassBlur: 999, glassSaturate: 10 })
