@@ -5,20 +5,27 @@
  * src/ 是源码，lib/ 是提交进仓库的产物。输出先写到 lib.tmp/，
  * 全部成功后再切换：构建中途失败时旧产物原样保留，不会把 lib/ 删成半套。
  *
- * 宿主入口和素材直接复制；启动动画打成 IIFE；设置面板打成 CJS，
+ * 宿主入口和共享模块打成 ESM；启动动画打成 IIFE；设置面板打成 CJS，
  * 外面套一层宿主的模块注册壳（window.__ModuleLoader__.load）。
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
+import { NS } from '../src/shared/routes.js'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = path.join(ROOT, 'src')
 const LIB = path.join(ROOT, 'lib')
 const OUT = path.join(ROOT, 'lib.tmp')
 const BACKUP = path.join(ROOT, 'lib.bak')
-const PLUGIN_ID = 'dsh-startup-screen'
+
+/* 版本号唯一来源是 package.json；构建时写进宿主和设置面板。 */
+const PLUGIN_VERSION = (() => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
+  return String(pkg.version || '0.0.0')
+})()
+const DEFINE = { __PLUGIN_VERSION__: JSON.stringify(PLUGIN_VERSION) }
 
 /* 加载器在 factory 里注入这些模块。不标成 external 就会被重复打包，
    体积变大还是小事，拿到第二份 React 会直接触发 invalid hook call。 */
@@ -62,13 +69,23 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true })
 
   try {
-    /* 宿主目前原样复制。加共享模块之前必须先把这里改成 esbuild 打包，
-       否则复制出来的 lib/index.js 会带着解析不了的相对 import。 */
-    copy(path.join(SRC, 'index.js'), path.join(OUT, 'index.js'))
     copy(path.join(SRC, 'assets'), path.join(OUT, 'assets'))
 
     /* 样式先原样复制；拆分与合并留到样式重构时再做 */
     copy(path.join(SRC, 'splash', 'styles', 'index.css'), path.join(OUT, 'splash.css'))
+
+    /* 宿主和共享模块一起打包；import.meta.url 在 lib/index.js 里仍指向 lib/ */
+    await build({
+      entryPoints: [path.join(SRC, 'index.js')],
+      outfile: path.join(OUT, 'index.js'),
+      bundle: true,
+      format: 'esm',
+      platform: 'node',
+      target: 'node20',
+      charset: 'utf8',
+      define: DEFINE,
+      legalComments: 'none',
+    })
 
     await build({
       entryPoints: [path.join(SRC, 'splash', 'index.js')],
@@ -91,11 +108,12 @@ async function main() {
       target: 'es2019',
       charset: 'utf8',
       external: CLIENT_EXTERNALS,
+      define: DEFINE,
       legalComments: 'none',
       banner: {
         js: [
           'window.__ModuleLoader__.load({',
-          "  id: '" + PLUGIN_ID + "',",
+          "  id: '" + NS + "',",
           '  factory: (require) => {',
           '    var module = { exports: {} };',
           '    var exports = module.exports;',

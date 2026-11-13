@@ -191,6 +191,8 @@ r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { id
 check('身份编号留空 + 纯中文名 → 兜底 OPERATOR', JSON.parse(r.body).config.identityId === 'OPERATOR', JSON.parse(r.body).config.identityId)
 r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { identity: 'Ada Lovelace', identityId: '' } }))
 check('身份编号留空 + 英文名 → 自动派生 ADALOVELACE', JSON.parse(r.body).config.identityId === 'ADALOVELACE', JSON.parse(r.body).config.identityId)
+r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { identityId: 'A-12' } }))
+check('身份编号只保留字母数字（与动画显示一致）', JSON.parse(r.body).config.identityId === 'A12', JSON.parse(r.body).config.identityId)
 r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { speed: 0.01, theme: 'neon', accent: 'javascript:alert(1)' } }))
 cfg = JSON.parse(r.body)
 check('speed 低于下限被夹到 0.35', cfg.config.speed === 0.35, String(cfg.config.speed))
@@ -317,6 +319,27 @@ check('载荷里没有 </script>', !payload.includes('</script>'))
 check('转义后仍是合法 JSON 且值可还原', (() => {
   try { return JSON.parse(payload).identity === '</script><img src=x onerror=alert(1)>' } catch { return false }
 })())
+
+console.log('\n[8] 单一事实来源')
+{
+  const read = (rel) => fs.readFileSync(path.join(PLUGIN_ROOT, rel), 'utf8')
+  const host = read('src/index.js')
+  const splash = read('src/splash/index.js')
+  const client = read('src/client/index.jsx')
+  const defaults = read('src/shared/defaults.js')
+  const routes = read('src/shared/routes.js')
+
+  check('默认配置只在 shared/defaults.js 定义一次',
+    /export const DEFAULTS = \{/.test(defaults) &&
+    !/var DEFAULTS = \{/.test(splash) &&
+    !/const DEFAULTS = \{/.test(host))
+  check('设置面板不再自带 FALLBACK 副本', !/var FALLBACK = \{/.test(client))
+  check('路由常量只在 shared/routes.js 定义', /export const ROUTES = \{/.test(routes))
+  check('三个运行时都不再硬编码路由字面量',
+    [host, splash, client].every((s) => !/['"]\/dsh-startup\//.test(s)))
+  check('版本号由构建时注入，不再手写常量',
+    /__PLUGIN_VERSION__/.test(host) && /__PLUGIN_VERSION__/.test(client) && !/FALLBACK_VERSION/.test(client))
+}
 
 fs.rmSync(SMOKE_HOME, { recursive: true, force: true })
 console.log('\n============================')

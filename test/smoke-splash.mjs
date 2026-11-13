@@ -19,7 +19,8 @@ import { warnIfStale } from './_fresh.mjs'
 const BUNDLE = fileURLToPath(new URL('../lib/splash.js', import.meta.url))
 const SOURCE = fileURLToPath(new URL('../src/splash/index.js', import.meta.url))
 const CSS_SOURCE = fileURLToPath(new URL('../src/splash/styles/index.css', import.meta.url))
-warnIfStale(BUNDLE, [SOURCE, CSS_SOURCE])
+const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.js', import.meta.url))
+warnIfStale(BUNDLE, [SOURCE, CSS_SOURCE, DEFAULTS_SOURCE])
 
 let pass = 0
 let fail = 0
@@ -563,7 +564,7 @@ console.log('\n[14] 液态玻璃：透出背景，但主体素材保持不透明
   check('默认不开启玻璃', !off.root.classList.contains('dsu-glass'), off.root._cls)
   check('默认不动根节点背景', !off.root.style.background, String(off.root.style.background))
   /* 离线预览、旧宿主、自举兜底会直接读这份出厂默认，缺字段就会静默关掉玻璃 */
-  check('出厂默认包含 glass 五项', /glass: false,[\s\S]{0,200}glassBackdropBlur: 28/.test(fs.readFileSync(SOURCE, 'utf8')))
+  check('出厂默认包含 glass 五项', /glass: false,[\s\S]{0,200}glassBackdropBlur: 28/.test(fs.readFileSync(DEFAULTS_SOURCE, 'utf8')))
 
   /* 区间夹取：越界值也要落到合法范围 */
   const edge = run(true, { glass: true, glassOpacity: 5, glassBlur: 999, glassSaturate: 10 })
@@ -732,7 +733,7 @@ console.log('\n[20] P2 电影细节 / 准星 / 金属鲸鱼 / facts')
   check('准星锁定只在 reticle 步骤', /classList\.add\('dsu-lock'\)/.test(src))
   check('鲸鱼有金属渐变', /linearGradient/.test(src) && /metalSeq/.test(src))
   check('REV 行读取真实 facts', /paintMeta\(\)/.test(src) && /REV ' \+ factText\(FACTS\.version\)/.test(src))
-  check('facts 异步刷新', /function refreshFacts\(/.test(src) && /\/dsh-startup\/facts/.test(src))
+  check('facts 异步刷新', /function refreshFacts\(/.test(src) && /ROUTES\.facts/.test(src))
   check('facts 未就绪会重试', /setTimeout\(tick, 400\)/.test(src) && /setTimeout\(tick, 600\)/.test(src))
   check('facts 就绪后仍继续轮询', /即使已经 ready 也继续轮询/.test(src))
   check('会话变化不重排光场', /f\.hash !== prevHash/.test(src))
@@ -755,6 +756,7 @@ console.log('\n[21] P3 数据面板 / 首帧实心 / 细环 / 双语解码')
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
   const src = fs.readFileSync(SOURCE, 'utf8')
   const host = fs.readFileSync(fileURLToPath(new URL('../src/index.js', import.meta.url)), 'utf8')
+  const defaults = fs.readFileSync(DEFAULTS_SOURCE, 'utf8')
 
   check('有左侧两行真实数据', /dsu-facts-1/.test(src) && /dsu-facts-2/.test(src))
   check('有右侧自检面板', /dsu-checks/.test(src) && /dsu-check-k/.test(css))
@@ -762,7 +764,7 @@ console.log('\n[21] P3 数据面板 / 首帧实心 / 细环 / 双语解码')
   check('自检每步点亮', /setChecks\(n\)/.test(src))
   check('数据面板随第二幕进场', /ui\.checks\.classList\.add\('dsu-in'\)/.test(src))
   check('facts 采集 sessions', /FACTS\.sessions/.test(src) && /get\('sessions'\)/.test(host) && /facts\.sessions/.test(host))
-  check('玻璃默认关闭', /glass: false/.test(host))
+  check('玻璃默认关闭', /glass: false/.test(defaults))
   check('首帧黑幕实心', /\.dsu-glass \.dsu-black[\s\S]{0,200}background: #04060a/.test(css))
   check('玻璃透明等底板铺满', /dsu-glass\.dsu-glass-live/.test(css) && /classList\.add\('dsu-glass-live'\)/.test(src))
   check('准星细环 + 柔光', /\.dsu-reticle::before/.test(css) &&

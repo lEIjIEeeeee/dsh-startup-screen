@@ -9,10 +9,12 @@
  * 注册 id 必须和插件名一致，否则加载器会报错；注册壳由构建时套上。
  */
 import * as react from 'react'
+import { DEFAULTS } from '../shared/defaults.js'
+import { ROUTES } from '../shared/routes.js'
 
 var h = react.createElement
 
-var API = '/dsh-startup/config'
+var API = ROUTES.config
 
     /* ── CSS ─────────────────────────────────────────────────────────────── */
     var CSS = [
@@ -266,23 +268,14 @@ var API = '/dsh-startup/config'
     }
 
     /* ── 面板 ────────────────────────────────────────────────────────────── */
-    /* 本地兜底：宿主版本较旧、配置里还没有这些字段时，面板也要能正常显示，不能是一片 undefined。 */
-    var FALLBACK = {
-      voice: true, voiceLang: 'en', voiceName: '', voiceRate: 0.88, voicePitch: 0.85,
-      voiceVolume: 0.9, voiceCue: true, voiceLead: 240, voiceSource: 'asset',
-      sound: true, soundVolume: 0.5,
-      ambient: true,
-      glass: false, glassOpacity: 0.75, glassBlur: 22, glassSaturate: 160,
-      glassBackdropBlur: 28
-    }
     function num(v, d) {
       var n = Number(v)
       return isFinite(n) ? n : d
     }
 
     /* 版本号按可靠性取：先看配置接口返回值，再看页面里注入的值，
-       最后用下面的常量兜底，避免面板显示 undefined。 */
-    var FALLBACK_VERSION = '1.4.0'
+       最后用构建时写进来的版本兜底，避免面板显示 undefined。 */
+    var BUILD_VERSION = __PLUGIN_VERSION__
     function readInjectedVersion() {
       try {
         var v = window.__DSH_STARTUP_VERSION__
@@ -317,8 +310,8 @@ var API = '/dsh-startup/config'
           .then((j) => {
             stop()
             if (!j || j.ok !== true) throw new Error((j && j.error) || 'load failed')
-            setDraft(Object.assign({}, FALLBACK, j.config))
-            setDefaults(Object.assign({}, FALLBACK, j.defaults))
+            setDraft(Object.assign({}, DEFAULTS, j.config))
+            setDefaults(Object.assign({}, DEFAULTS, j.defaults))
             setDirty(false)
             setFile(j.file || '')
             if (j.version) setVersion(String(j.version))
@@ -442,7 +435,7 @@ var API = '/dsh-startup/config'
 
       /* 版本号常驻顶部，不进骨架屏 —— 它不依赖配置接口，
          接口挂了也该看得见当前装的是哪一版。 */
-      var versionLine = h('div', { className: '__ss_version' }, '版本 v' + (version || FALLBACK_VERSION))
+      var versionLine = h('div', { className: '__ss_version' }, '版本 v' + (version || BUILD_VERSION))
 
       if (!draft) {
         return h('div', { className: '__ss_root' },
@@ -748,7 +741,7 @@ var API = '/dsh-startup/config'
             onClick: function () { switchTab(p[0]) }
           }, p[1])
         }),
-        h('div', { className: '__ss_navVersion' }, 'v' + (version || FALLBACK_VERSION))
+        h('div', { className: '__ss_navVersion' }, 'v' + (version || BUILD_VERSION))
       )
 
       var footer = h('div', { className: '__ss_footer' },

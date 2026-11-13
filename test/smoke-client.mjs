@@ -89,9 +89,11 @@ class AbortControllerStub {
 }
 const CLIENT_BUNDLE = fileURLToPath(new URL('../lib/client.js', import.meta.url))
 const CLIENT_SOURCE = fileURLToPath(new URL('../src/client/index.jsx', import.meta.url))
-warnIfStale(CLIENT_BUNDLE, [CLIENT_SOURCE])
+const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.js', import.meta.url))
+warnIfStale(CLIENT_BUNDLE, [CLIENT_SOURCE, DEFAULTS_SOURCE])
 const code = fs.readFileSync(CLIENT_BUNDLE, 'utf8')
 const SOURCE = fs.readFileSync(CLIENT_SOURCE, 'utf8')
+const DEFAULTS_TEXT = fs.readFileSync(DEFAULTS_SOURCE, 'utf8')
 const sandbox = {
   window: windowStub, document: documentStub, fetch: fetchStub,
   AbortController: AbortControllerStub,
@@ -265,12 +267,14 @@ console.log('\n[9] 液态玻璃面板控件')
   collect(t)
   check('有「液态玻璃」开关', labels.some((l) => l.indexOf('液态玻璃') !== -1), labels.filter((l) => l.indexOf('玻璃') !== -1).join('|'))
   check('有「环境光效」开关', labels.some((l) => l.indexOf('环境光效') !== -1), labels.filter((l) => l.indexOf('环境光效') !== -1).join('|'))
-  check('环境光效有 FALLBACK 兜底', /ambient: true/.test(SOURCE))
+  check('环境光效有默认值兜底', /ambient: true/.test(DEFAULTS_TEXT))
   check('启动时加载配置会把 facts 合进配置', /cfg\.facts = j\.facts/.test(SOURCE))
   check('源码里三个玻璃滑条都在', /玻璃不透明度/.test(SOURCE) && /磨砂模糊/.test(SOURCE) && /玻璃饱和度/.test(SOURCE))
   check('「透出桌面壁纸」已删除', !/透出桌面壁纸/.test(SOURCE) && !/glassWallpaper/.test(SOURCE))
   check('「背景模糊」独立存在（不依赖壁纸）', /背景模糊/.test(SOURCE) && /glassBackdropBlur/.test(SOURCE))
-  check('玻璃参数有 FALLBACK 兜底', /glass: false, glassOpacity: 0\.75, glassBlur: 22, glassSaturate: 160/.test(SOURCE))
+  check('玻璃参数有默认值兜底',
+    /glass: false/.test(DEFAULTS_TEXT) && /glassOpacity: 0\.75/.test(DEFAULTS_TEXT) &&
+    /glassBlur: 22/.test(DEFAULTS_TEXT) && /glassSaturate: 160/.test(DEFAULTS_TEXT))
 }
 
 console.log('\n[10] 设置页：左侧导航 + 分页 + 固定底栏')

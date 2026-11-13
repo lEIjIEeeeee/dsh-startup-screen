@@ -15,129 +15,16 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { DEFAULTS } from './shared/defaults.js'
+import { normalize } from './shared/schema.js'
+import { NS, ROUTES } from './shared/routes.js'
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const DSH_HOME = process.env.DSH_HOME || path.join(os.homedir(), '.dsh')
 const CONFIG_FILE = path.join(DSH_HOME, 'dsh-startup.json')
 
-const NS = 'dsh-startup-screen'
-const ROUTE_BASE = '/dsh-startup'
-
-/** 版本号只从 package.json 读一次，避免源码里再写一份。
-    读不到时用 0.0.0，设置面板会显示它，不会显示 undefined。 */
-const PLUGIN_VERSION = (() => {
-  try {
-    const pkg = JSON.parse(fs.readFileSync(path.join(PACKAGE_ROOT, 'package.json'), 'utf8'))
-    const v = String(pkg.version || '').trim()
-    return v || '0.0.0'
-  } catch (err) {
-    return '0.0.0'
-  }
-})()
-
-/** 默认配置。字段与浏览器侧的默认值保持一致，改这里要同步改那边。 */
-const DEFAULTS = {
-  enabled: true,
-  mode: 'session',            // always | session | daily
-  theme: 'light',             // light | dark
-  speed: 1,
-  requireInteraction: true,
-  allowSkip: true,
-  ambient: true,              // 环境光效：Canvas 光场 + 氛围层 + 电影感细节
-  sound: true,                // 界面音效（WebAudio 合成，无音频文件）
-  soundVolume: 0.5,
-  voice: true,                // 女声播报（Web Speech API）
-  voiceLang: 'en',            // en | zh | both
-  voiceName: '',              // '' = 自动挑（按分数优先神经网络女声）
-  voiceRate: 0.88,            // 电影旁白档：比朗读慢，字与字之间才有重量
-  voicePitch: 0.85,           // 压低音调，深沉的 AI 女声
-  voiceVolume: 0.9,
-  voiceCue: true,             // 念台词前的一声轻提示
-  sfx: 'audio',               // 音效来源：audio=lib/assets 里的真素材 / synth=现场合成
-  voiceSource: 'asset',       // 语音来源：asset=优先用真声素材（拿不到自动回落 TTS）/ tts=全 TTS
-  voiceLead: 240,             // 提示音之后留一小段空白再开口
-  identity: 'JOYCE MOORE',    // ← 设置页里可改的「身份名称」
-  identityId: '0087',
-  accessLevel: '3',
-  brand1: 'DEEPSEEK',
-  brand2: 'SYNTHESIZE INTELLIGENCE',
-  brand3a: 'HARNESS',
-  brand3b: 'OS',
-  orgZh: '深度求索',
-  orgEn: 'DEEPSEEK',
-  orgSub: 'DEEPSEEK HARNESS',
-  welcomeBox: 'DEEPSEEK HARNESS',
-  footer: 'POWERED BY DEEPSEEK',
-  accent: '#ff7500',
-  glitchA: '#ff3b30',
-  glitchB: '#2971b8',
-  /* 液态玻璃：背景层做成半透明磨砂，能透出后面的窗口；文字和图形保持不透明。
-     默认关闭，实心底板更像成片。 */
-  glass: false,               // 总开关（默认关：实心底板更像成片；想透桌面再开）
-  glassOpacity: 0.75,         // 0.15 ~ 0.95：越低越透；0.75 时背后是「暖白模糊」而不是灰
-  glassBlur: 22,              // 0 ~ 60px：玻璃自身的磨砂
-  glassSaturate: 160,         // 100 ~ 200%：玻璃后面的饱和度（液态玻璃那种通透感）
-  glassBackdropBlur: 28       // 0 ~ 80px：背景模糊（实际作用于应用本体，超过 60 会糊成纯色）
-}
-
-const TEXT_KEYS = [
-  'identity', 'identityId', 'accessLevel',
-  'brand1', 'brand2', 'brand3a', 'brand3b',
-  'orgZh', 'orgEn', 'orgSub', 'welcomeBox', 'footer', 'voiceName'
-]
-const COLOR_KEYS = ['accent', 'glitchA', 'glitchB']
-const ENUMS = {
-  mode: ['always', 'session', 'daily'],
-  theme: ['light', 'dark'],
-  voiceLang: ['en', 'zh', 'both'],
-  sfx: ['audio', 'synth'],
-  voiceSource: ['asset', 'tts']
-}
-const BOOL_KEYS = ['enabled', 'requireInteraction', 'allowSkip', 'ambient', 'sound', 'voice', 'voiceCue', 'glass']
-/** 数值字段的合法区间（越界即夹取）。 */
-const RANGES = {
-  speed: [0.35, 3],
-  soundVolume: [0, 1],
-  voiceRate: [0.5, 2],
-  voiceLead: [0, 1200],
-  voicePitch: [0, 2],
-  voiceVolume: [0, 1],
-  glassOpacity: [0.15, 0.95],
-  glassBlur: [0, 60],
-  glassSaturate: [100, 200],
-  glassBackdropBlur: [0, 80]
-}
-
-function normalize(input) {
-  const out = { ...DEFAULTS }
-  const src = input && typeof input === 'object' ? input : {}
-  for (const key of Object.keys(DEFAULTS)) {
-    if (!(key in src) || src[key] === undefined || src[key] === null) continue
-    const value = src[key]
-    if (BOOL_KEYS.includes(key)) {
-      out[key] = value === true || value === 'true' || value === 1 || value === '1'
-    } else if (ENUMS[key]) {
-      out[key] = ENUMS[key].includes(value) ? value : DEFAULTS[key]
-    } else if (key === 'speed' || RANGES[key]) {
-      const [lo, hi] = RANGES[key] || RANGES.speed
-      const n = Number(value)
-      out[key] = Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : DEFAULTS[key]
-    } else if (COLOR_KEYS.includes(key)) {
-      const s = String(value).trim()
-      out[key] = /^#[0-9a-fA-F]{3,8}$/.test(s) ? s : DEFAULTS[key]
-    } else if (TEXT_KEYS.includes(key)) {
-      out[key] = String(value).slice(0, 64)
-    } else {
-      out[key] = value
-    }
-  }
-  if (!String(out.identity).trim()) out.identity = DEFAULTS.identity
-  if (!String(out.identityId).trim()) {
-    out.identityId = String(out.identity).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12)
-  }
-  if (!String(out.identityId).trim()) out.identityId = 'OPERATOR'
-  return out
-}
+/* 版本号由构建时注入，唯一来源是 package.json。 */
+const PLUGIN_VERSION = __PLUGIN_VERSION__
 
 function readConfig() {
   try {
@@ -452,13 +339,13 @@ function apply(ctx) {
 
   disposers.push(registerRoute({
     kind: 'exact',
-    path: ROUTE_BASE + '/splash.css',
+    path: ROUTES.css,
     handler: (req, res) => sendText(res, 'text/css; charset=utf-8', readSplashCss())
   }))
 
   disposers.push(registerRoute({
     kind: 'exact',
-    path: ROUTE_BASE + '/splash.js',
+    path: ROUTES.splash,
     handler: (req, res) => sendText(res, 'application/javascript; charset=utf-8', readSplashJs())
   }))
 
@@ -466,7 +353,7 @@ function apply(ctx) {
      素材缺失时浏览器会自动改用合成音。 */
   disposers.push(registerRoute({
     kind: 'prefix',
-    path: ROUTE_BASE + '/asset',
+    path: ROUTES.asset,
     handler: (req, res) => {
       let pathname
       try {
@@ -495,7 +382,7 @@ function apply(ctx) {
 
   disposers.push(registerRoute({
     kind: 'exact',
-    path: ROUTE_BASE + '/config',
+    path: ROUTES.config,
     handler: async (req, res) => {
       const method = (req.method || 'GET').toUpperCase()
       if (method === 'GET') {
@@ -538,7 +425,7 @@ function apply(ctx) {
 
   disposers.push(registerRoute({
     kind: 'exact',
-    path: ROUTE_BASE + '/facts',
+    path: ROUTES.facts,
     handler: (req, res) => {
       if ((req.method || 'GET').toUpperCase() !== 'GET') {
         sendJson(res, 405, { ok: false, error: 'method not allowed' })
@@ -550,16 +437,16 @@ function apply(ctx) {
   }))
 
   disposers.push(webServer.tapIndex((html) => {
-    if (!html || html.includes(ROUTE_BASE + '/splash.js')) return html
+    if (!html || html.includes(ROUTES.splash)) return html
     const cfg = readConfig()
     cfg.facts = factsCache.value || { ready: false }
     const head =
-      '<link rel="stylesheet" href="' + ROUTE_BASE + '/splash.css">' +
+      '<link rel="stylesheet" href="' + ROUTES.css + '">' +
       '<style id="dsh-startup-critical">' + CRITICAL_CSS + '</style>'
     const body =
       '<div id="dsh-startup-root" class="dsu-root dsu-boot"></div>' +
       '<script>window.__DSH_STARTUP_BOOT__="index";window.__DSH_STARTUP_VERSION__=' + safeJson(PLUGIN_VERSION) + ';window.__DSH_STARTUP__=' + safeJson(cfg) + ';' + BOOTSTRAP_JS + '</script>' +
-      '<script defer src="' + ROUTE_BASE + '/splash.js"></script>'
+      '<script defer src="' + ROUTES.splash + '"></script>'
 
     let out = html
     if (out.includes('</head>')) out = out.replace('</head>', head + '</head>')

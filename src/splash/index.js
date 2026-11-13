@@ -7,10 +7,14 @@
  *
  * 配置来自 window.__DSH_STARTUP__，也可以用 window.__DSH_STARTUP_API__.replay() 重播。
  * ========================================================================== */
-'use strict'
+import { DEFAULTS } from '../shared/defaults.js'
+import { ROUTES } from '../shared/routes.js'
+import { IDENTITY_MAX, normalizeIdentityId } from '../shared/schema.js'
 
 /* 顶层守卫收进 boot()：构建时外面再套一层立即执行，同一份脚本重复加载也只跑一遍。 */
 function boot() {
+  'use strict'
+
   if (window.__DSH_STARTUP_LOADED__) return
   window.__DSH_STARTUP_LOADED__ = true
 
@@ -60,50 +64,6 @@ function boot() {
     '21.4077 28.8169 21.7197C29.5259 22.0161 30.0615 22.5601 30.834 23.3281C31.6216 ' +
     '24.2559 31.7632 24.5117 32.2124 25.208C32.5669 25.752 32.8901 26.312 33.1104 ' +
     '26.9521C33.2446 27.3521 33.0713 27.6802 32.6064 27.8799Z'
-
-  /* ── 默认配置（与宿主侧保持一致）────────────────────────────────────────── */
-  var DEFAULTS = {
-    enabled: true,
-    mode: 'session',            // always | session | daily
-    theme: 'light',             // light | dark
-    speed: 1,
-    requireInteraction: true,   // 第 1、2 步等待用户确认
-    allowSkip: true,
-    ambient: true,              // 环境光效：Canvas 光场 + 氛围层 + 电影感细节
-    sound: true,                // 界面音效（WebAudio 合成，无音频文件）
-    soundVolume: 0.5,
-    voice: true,                // 女声播报
-    voiceLang: 'en',            // en | zh | both
-    voiceName: '',              // '' = 自动挑女声（见 FEMALE_HINTS）
-    voiceRate: 0.88,            // 电影旁白档：比朗读慢，字与字之间才有重量
-    voicePitch: 0.85,           // 压低音调，深沉的 AI 女声
-    voiceVolume: 0.9,
-    voiceCue: true,             // 念台词前的一声轻提示
-    sfx: 'audio',               // audio=真素材（用户音频里抠的音效）/ synth=现场合成
-    voiceSource: 'asset',       // asset=优先用真声素材 / tts=全部 TTS 合成
-    voiceLead: 240,             // 提示音之后留一小段空白再开口
-    identity: 'JOYCE MOORE',    // ← 设置页可改的"身份名称"
-    identityId: '0087',
-    accessLevel: '3',
-    brand1: 'DEEPSEEK',
-    brand2: 'SYNTHESIZE INTELLIGENCE',
-    brand3a: 'HARNESS',
-    brand3b: 'OS',
-    orgZh: '深度求索',
-    orgEn: 'DEEPSEEK',
-    orgSub: 'DEEPSEEK HARNESS',
-    welcomeBox: 'DEEPSEEK HARNESS',
-    footer: 'POWERED BY DEEPSEEK',
-    accent: '#ff7500',
-    glitchA: '#ff3b30',
-    glitchB: '#2971b8',
-    /* 液态玻璃：离线预览、旧宿主、自举兜底这三种情况会直接读这份默认值 */
-    glass: false,
-    glassOpacity: 0.75,
-    glassBlur: 22,
-    glassSaturate: 160,
-    glassBackdropBlur: 28
-  }
 
   /* ── 序列脚本：中文主字 + 英文等宽字幕 + 底部日志 ───────────────────────
      `say` 是专门给语音播报用的自然语句（照着参考片里女声念状态行的节奏，
@@ -199,10 +159,8 @@ function boot() {
       }
     }
     out.speed = Math.min(3, Math.max(0.35, Number(out.speed) || 1))
-    out.identity = String(out.identity || DEFAULTS.identity).slice(0, 48)
-    /* 代号取身份名称里的字母数字；纯中文名字取不到时退回 OPERATOR */
-    out.identityId = String(out.identityId || out.identity).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12)
-    if (!out.identityId) out.identityId = 'OPERATOR'
+    out.identity = String(out.identity || DEFAULTS.identity).slice(0, IDENTITY_MAX)
+    out.identityId = normalizeIdentityId(out.identityId, out.identity)
     return out
   }
 
@@ -368,7 +326,7 @@ function boot() {
     var deadline = Date.now() + 2200
     function tick() {
       try {
-        fetch('/dsh-startup/facts', { headers: { Accept: 'application/json' } })
+        fetch(ROUTES.facts, { headers: { Accept: 'application/json' } })
           .then(function (r) { return r.json() })
           .then(function (j) {
             if (j && j.ok === true && j.facts && j.facts.ready === true) applyFacts(j.facts)
@@ -672,7 +630,7 @@ function boot() {
     if (window.__DSH_STARTUP_SCRIPT_URL__) {
       s.src = window.__DSH_STARTUP_SCRIPT_URL__
     } else {
-      s.src = '/dsh-startup/splash.js?t=' + Date.now()
+      s.src = ROUTES.splash + '?t=' + Date.now()
     }
     document.head.appendChild(s)
     return s
@@ -1706,7 +1664,7 @@ function boot() {
       if (buffers[name] || fetching[name]) return
       fetching[name] = true
       try {
-        fetch('/dsh-startup/asset/' + name + '.mp3')
+        fetch(ROUTES.asset + '/' + name + '.mp3')
           .then(function (r) { return r.ok ? r.arrayBuffer() : null })
           .then(function (ab) { return ab ? ac().decodeAudioData(ab) : null })
           .then(function (buf) { if (buf) buffers[name] = buf })
@@ -1722,7 +1680,7 @@ function boot() {
       if (C.voiceSource === 'tts') return Promise.resolve(false)
       pending[name] = new Promise(function (resolve) {
         try {
-          fetch('/dsh-startup/asset/' + name + '.mp3')
+          fetch(ROUTES.asset + '/' + name + '.mp3')
             .then(function (r) { return r.ok ? r.arrayBuffer() : null })
             .then(function (ab) { if (!ab) return null; return ac(true).decodeAudioData(ab) })
             .then(function (buf) {

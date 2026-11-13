@@ -51,7 +51,7 @@ export default [
       parserOptions: {
         ecmaFeatures: { jsx: true },
       },
-      globals: { ...globals.node },
+      globals: { ...globals.node, __PLUGIN_VERSION__: 'readonly' },
     },
     rules: {
       'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrors: 'none' }],

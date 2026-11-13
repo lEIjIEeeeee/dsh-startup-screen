@@ -361,7 +361,7 @@ console.log('\n[6] 设置面板顶部的版本号（桌面端 / 旧 Host 的兜�
   const injected = s.win.__DSH_STARTUP_VERSION__
   const text = versionText(s)
   check('没有版本来源时仍显示版本号（不出现 undefined）', /^版本 v\d+\.\d+\.\d+/.test(text), text)
-  check('兜底常量与 package.json 的版本一致（防两处漂移）', text === '版本 v' + pkgVersion, text + ' vs ' + pkgVersion)
+  check('构建期版本号与 package.json 一致（防两处漂移）', text === '版本 v' + pkgVersion, text + ' vs ' + pkgVersion)
   check('顶部那行确实是版本号，不是原来那段说明', !panelTexts(s).some((t) => String(t).includes('启动界面：')), '')
   check('host 没注入版本时 window.__DSH_STARTUP_VERSION__ 为空', !injected, String(injected))
 }
