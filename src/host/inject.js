@@ -3,7 +3,9 @@ import { ROUTES } from '../shared/routes.js'
 
 /** 内联到页面里的 JSON 不能出现 `</script>`。 */
 export function safeJson(value) {
-  return JSON.stringify(value).replace(/</g, '\\u003c').replace(/\u2028|\u2029/g, '')
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028|\u2029/g, '')
 }
 
 /** 首屏兜底样式：在应用挂载前先盖住窗口，避免闪出界面本体。 */
@@ -38,12 +40,24 @@ export function injectIndex(host) {
     const cfg = readConfig()
     cfg.facts = factsCache.value || { ready: false }
     const head =
-      '<link rel="stylesheet" href="' + ROUTES.css + '">' +
-      '<style id="dsh-startup-critical">' + CRITICAL_CSS + '</style>'
+      '<link rel="stylesheet" href="' +
+      ROUTES.css +
+      '">' +
+      '<style id="dsh-startup-critical">' +
+      CRITICAL_CSS +
+      '</style>'
     const body =
       '<div id="dsh-startup-root" class="dsu-root dsu-boot"></div>' +
-      '<script>window.__DSH_STARTUP_BOOT__="index";window.__DSH_STARTUP_VERSION__=' + safeJson(version) + ';window.__DSH_STARTUP__=' + safeJson(cfg) + ';' + BOOTSTRAP_JS + '</script>' +
-      '<script defer src="' + ROUTES.splash + '"></script>'
+      '<script>window.__DSH_STARTUP_BOOT__="index";window.__DSH_STARTUP_VERSION__=' +
+      safeJson(version) +
+      ';window.__DSH_STARTUP__=' +
+      safeJson(cfg) +
+      ';' +
+      BOOTSTRAP_JS +
+      '</script>' +
+      '<script defer src="' +
+      ROUTES.splash +
+      '"></script>'
 
     let out = html
     if (out.includes('</head>')) out = out.replace('</head>', head + '</head>')

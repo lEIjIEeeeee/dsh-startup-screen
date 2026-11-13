@@ -122,7 +122,7 @@ export function collectFacts(ctx, cache) {
     facts.hash = shortHash(
       [facts.profile, facts.version, facts.model, facts.sandbox, facts.bundleCount]
         .map((x) => (x === null || x === undefined ? '-' : String(x)))
-        .join('|')
+        .join('|'),
     )
     facts.ready = true
   })().catch(() => {

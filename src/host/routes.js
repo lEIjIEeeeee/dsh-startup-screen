@@ -77,7 +77,17 @@ function sendText(res, type, text) {
  * host: { ctx, webServer, packageRoot, version, factsCache, readConfig, writeConfig, defaults, configFile }
  */
 export function registerRoutes(host) {
-  const { ctx, webServer, packageRoot, version, factsCache, readConfig, writeConfig, defaults, configFile } = host
+  const {
+    ctx,
+    webServer,
+    packageRoot,
+    version,
+    factsCache,
+    readConfig,
+    writeConfig,
+    defaults,
+    configFile,
+  } = host
   const readSplashCss = makeReader(path.join(packageRoot, 'lib', 'splash.css'))
   const readSplashJs = makeReader(path.join(packageRoot, 'lib', 'splash.js'))
   const assetsDir = path.join(packageRoot, 'lib', 'assets')
@@ -86,7 +96,8 @@ export function registerRoutes(host) {
   /** 来源校验：自定义路由必须过这一关，否则任意网页都能读写配置。 */
   function rejected(req, res) {
     try {
-      const conn = (typeof ctx.get === 'function' ? ctx.get('connection') : undefined) || ctx.connection
+      const conn =
+        (typeof ctx.get === 'function' ? ctx.get('connection') : undefined) || ctx.connection
       if (!conn || typeof conn.requestRejection !== 'function') return false
       const code = conn.requestRejection(req)
       if (code === undefined || code === null || code === false) return false
@@ -114,7 +125,7 @@ export function registerRoutes(host) {
       kind: 'exact',
       path: ROUTES.css,
       handler: (req, res) => sendText(res, 'text/css; charset=utf-8', readSplashCss()),
-    })
+    }),
   )
 
   disposers.push(
@@ -122,7 +133,7 @@ export function registerRoutes(host) {
       kind: 'exact',
       path: ROUTES.splash,
       handler: (req, res) => sendText(res, 'application/javascript; charset=utf-8', readSplashJs()),
-    })
+    }),
   )
 
   /* 音频素材：只读、白名单、不含子路径，杜绝目录穿越。
@@ -162,7 +173,7 @@ export function registerRoutes(host) {
         })
         res.end(bytes)
       },
-    })
+    }),
   )
 
   disposers.push(
@@ -211,14 +222,15 @@ export function registerRoutes(host) {
             return
           }
           const current = readConfig()
-          const patch = payload && typeof payload.patch === 'object' && payload.patch ? payload.patch : payload
+          const patch =
+            payload && typeof payload.patch === 'object' && payload.patch ? payload.patch : payload
           const cfgNow = writeConfig({ ...current, ...patch })
           sendJson(res, 200, { ok: true, version, config: cfgNow, defaults })
         } catch (err) {
           sendJson(res, 500, { ok: false, error: String((err && err.message) || err) })
         }
       },
-    })
+    }),
   )
 
   disposers.push(
@@ -237,7 +249,7 @@ export function registerRoutes(host) {
         }
         sendJson(res, 200, { ok: true, facts: factsSnapshot(factsCache) })
       },
-    })
+    }),
   )
 
   return disposers
