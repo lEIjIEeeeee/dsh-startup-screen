@@ -10,6 +10,8 @@ import { normalize } from '../shared/schema.js'
  * @param {string} configFile
  */
 export function createConfig(configFile) {
+  let seq = 0
+
   function read() {
     try {
       return normalize(JSON.parse(fs.readFileSync(configFile, 'utf8')))
@@ -21,11 +23,12 @@ export function createConfig(configFile) {
   function write(next) {
     const cfg = normalize(next)
     fs.mkdirSync(path.dirname(configFile), { recursive: true })
-    const tmp = configFile + '.tmp'
+    /* 临时文件名带 pid + 序号：并发保存时不会互相踩掉对方的 rename。 */
+    const tmp = configFile + '.' + process.pid + '.' + seq++ + '.tmp'
     fs.writeFileSync(tmp, JSON.stringify(cfg, null, 2), 'utf8')
     fs.renameSync(tmp, configFile)
     return cfg
   }
 
-  return { file: configFile, defaults: DEFAULTS, read, write }
+  return { read, write }
 }

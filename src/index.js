@@ -16,7 +16,6 @@
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { DEFAULTS } from './shared/defaults.js'
 import { NS } from './shared/routes.js'
 import { createConfig } from './host/config.js'
 import { collectFacts, createFactsCache } from './host/facts.js'
@@ -29,8 +28,6 @@ const CONFIG_FILE = path.join(DSH_HOME, 'dsh-startup.json')
 
 /* 版本号由构建时注入，唯一来源是 package.json。 */
 const PLUGIN_VERSION = __PLUGIN_VERSION__
-
-const factsCache = createFactsCache()
 
 const name = NS
 const inject = ['webServer', 'connection']
@@ -52,6 +49,8 @@ function hasRoutes(server) {
 }
 
 function apply(ctx) {
+  /* 每次 apply 一份新缓存：宿主热重载时不会沿用旧 ctx 采到的快照。 */
+  const factsCache = createFactsCache()
   try { collectFacts(ctx, factsCache) } catch (err) { /* 采事实失败绝不影响插件 */ }
   const disposers = []
   const webServer = resolveWebServer(ctx)
@@ -75,28 +74,26 @@ function apply(ctx) {
     packageRoot: PACKAGE_ROOT,
     configFile: CONFIG_FILE,
     version: PLUGIN_VERSION,
-    defaults: DEFAULTS,
     factsCache,
     readConfig: config.read,
     writeConfig: config.write,
   }
 
-  /* 注册中途失败时把已注册的路由摘掉，避免宿主里留下半套路由。 */
+  /* 装配中途失败时把已注册的路由和 effect 一起摘掉，避免宿主里留下半套插件。 */
   try {
     disposers.push(...registerRoutes(host))
     disposers.push(injectIndex(host))
+    ctx.effect(() => () => {
+      for (const dispose of disposers) {
+        try { dispose() } catch (err) { /* noop */ }
+      }
+    })
   } catch (err) {
     for (const dispose of disposers) {
       try { dispose() } catch (e) { /* noop */ }
     }
     throw err
   }
-
-  ctx.effect(() => () => {
-    for (const dispose of disposers) {
-      try { dispose() } catch (err) { /* noop */ }
-    }
-  })
 }
 
 /* 只导出 name / inject / apply 三个具名成员，和宿主内置插件保持一致。

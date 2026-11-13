@@ -1,5 +1,6 @@
 // @ts-nocheck —— 迁移期先不收紧类型，后续再逐块补 JSDoc。
 import { ROUTES } from '../shared/routes.js'
+import { factsSnapshot } from './facts.js'
 
 /** 内联到页面里的 JSON 不能出现 `</script>`。 */
 export function safeJson(value) {
@@ -38,7 +39,7 @@ export function injectIndex(host) {
   return webServer.tapIndex((html) => {
     if (!html || html.includes(ROUTES.splash)) return html
     const cfg = readConfig()
-    cfg.facts = factsCache.value || { ready: false }
+    cfg.facts = factsSnapshot(factsCache)
     const head =
       '<link rel="stylesheet" href="' +
       ROUTES.css +

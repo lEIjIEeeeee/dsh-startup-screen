@@ -1,10 +1,11 @@
 // @ts-nocheck —— 迁移期先不收紧类型，后续再逐块补 JSDoc。
 import fs from 'node:fs'
 import path from 'node:path'
+import { DEFAULTS } from '../shared/defaults.js'
 import { ROUTES } from '../shared/routes.js'
 import { factsSnapshot, refreshSessions } from './facts.js'
 
-/** 静态文件按修改时间缓存：改完插件刷新页面就生效。 */
+/** 静态文件按修改时间缓存：改完插件刷新页面就生效。文件缺失返回 null，由调用方回 503。 */
 function makeReader(file) {
   let cache = null
   return function read() {
@@ -15,7 +16,7 @@ function makeReader(file) {
       }
       return cache.text
     } catch (err) {
-      return ''
+      return null
     }
   }
 }
@@ -30,17 +31,35 @@ function sendJson(res, code, payload, done) {
   res.end(body, done)
 }
 
-/** 读请求体；超限返回 `{ tooLarge: true }`，由调用方回 413，绝不把空 patch 当成功写盘。 */
-function readBody(req, limit = 64 * 1024) {
+/**
+ * 读请求体。三种结果：
+ *   `{ tooLarge: true }` 超限，调用方回 413；
+ *   `{ error: true }`    连接中断或超时，调用方回 400，绝不能当成空 patch 写盘；
+ *   其余                 正常读到文本。
+ */
+function readBody(req, limit = 64 * 1024, timeoutMs = 15000) {
   return new Promise((resolve) => {
     let size = 0
-    let tooLarge = false
+    let settled = false
     const chunks = []
+    const finish = (result) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve(result)
+    }
+    const timer = setTimeout(() => {
+      try {
+        if (typeof req.destroy === 'function') req.destroy()
+      } catch (err) {
+        /* noop */
+      }
+      finish({ tooLarge: false, text: '', error: true })
+    }, timeoutMs)
     req.on('data', (c) => {
-      if (tooLarge) return
+      if (settled) return
       size += c.length
       if (size > limit) {
-        tooLarge = true
         chunks.length = 0
         /* 先暂停，让调用方把 413 写出去，连接随后再销毁 */
         try {
@@ -48,17 +67,13 @@ function readBody(req, limit = 64 * 1024) {
         } catch (err) {
           /* noop */
         }
-        resolve({ tooLarge: true, text: '' })
+        finish({ tooLarge: true, text: '' })
         return
       }
       chunks.push(c)
     })
-    req.on('end', () => {
-      if (!tooLarge) resolve({ tooLarge: false, text: Buffer.concat(chunks).toString('utf8') })
-    })
-    req.on('error', () => {
-      if (!tooLarge) resolve({ tooLarge: false, text: '' })
-    })
+    req.on('end', () => finish({ tooLarge: false, text: Buffer.concat(chunks).toString('utf8') }))
+    req.on('error', () => finish({ tooLarge: false, text: '', error: true }))
   })
 }
 
@@ -72,22 +87,19 @@ function sendText(res, type, text) {
   res.end(body)
 }
 
+/** 构建产物缺失：路由在、文件不在，属于服务端配置问题，回 503 让浏览器侧直接走兜底。 */
+function sendUnavailable(res) {
+  res.writeHead(503)
+  res.end()
+}
+
 /**
  * 注册 5 条 HTTP 路由，返回对应的 disposer 列表。
- * host: { ctx, webServer, packageRoot, version, factsCache, readConfig, writeConfig, defaults, configFile }
+ * host: { ctx, webServer, packageRoot, version, factsCache, readConfig, writeConfig, configFile }
  */
 export function registerRoutes(host) {
-  const {
-    ctx,
-    webServer,
-    packageRoot,
-    version,
-    factsCache,
-    readConfig,
-    writeConfig,
-    defaults,
-    configFile,
-  } = host
+  const { ctx, webServer, packageRoot, version, factsCache, readConfig, writeConfig, configFile } =
+    host
   const readSplashCss = makeReader(path.join(packageRoot, 'lib', 'splash.css'))
   const readSplashJs = makeReader(path.join(packageRoot, 'lib', 'splash.js'))
   const assetsDir = path.join(packageRoot, 'lib', 'assets')
@@ -114,7 +126,21 @@ export function registerRoutes(host) {
     const wrapped = Object.assign({}, route, {
       handler: async (req, res) => {
         if (rejected(req, res)) return
-        return inner(req, res)
+        /* 连接提前断开时 res.writeHead 会抛；这里兜住，避免变成 unhandled rejection。 */
+        try {
+          await inner(req, res)
+        } catch (err) {
+          try {
+            if (!res.headersSent) {
+              res.statusCode = 500
+              res.end()
+            } else if (typeof res.destroy === 'function') {
+              res.destroy()
+            }
+          } catch (e) {
+            /* noop */
+          }
+        }
       },
     })
     return webServer.register(wrapped)
@@ -124,7 +150,11 @@ export function registerRoutes(host) {
     registerRoute({
       kind: 'exact',
       path: ROUTES.css,
-      handler: (req, res) => sendText(res, 'text/css; charset=utf-8', readSplashCss()),
+      handler: (req, res) => {
+        const text = readSplashCss()
+        if (text === null) return sendUnavailable(res)
+        sendText(res, 'text/css; charset=utf-8', text)
+      },
     }),
   )
 
@@ -132,7 +162,11 @@ export function registerRoutes(host) {
     registerRoute({
       kind: 'exact',
       path: ROUTES.splash,
-      handler: (req, res) => sendText(res, 'application/javascript; charset=utf-8', readSplashJs()),
+      handler: (req, res) => {
+        const text = readSplashJs()
+        if (text === null) return sendUnavailable(res)
+        sendText(res, 'application/javascript; charset=utf-8', text)
+      },
     }),
   )
 
@@ -187,7 +221,7 @@ export function registerRoutes(host) {
             ok: true,
             version,
             config: readConfig(),
-            defaults,
+            defaults: DEFAULTS,
             file: configFile,
             facts: factsSnapshot(factsCache),
           })
@@ -198,6 +232,10 @@ export function registerRoutes(host) {
           return
         }
         const body = await readBody(req)
+        if (body.error) {
+          sendJson(res, 400, { ok: false, error: 'request aborted' })
+          return
+        }
         if (body.tooLarge) {
           sendJson(res, 413, { ok: false, error: 'payload too large' }, () => {
             try {
@@ -217,15 +255,15 @@ export function registerRoutes(host) {
         }
         try {
           if (payload && payload.action === 'reset') {
-            const cfgNow = writeConfig(defaults)
-            sendJson(res, 200, { ok: true, version, config: cfgNow, defaults })
+            const cfgNow = writeConfig(DEFAULTS)
+            sendJson(res, 200, { ok: true, version, config: cfgNow, defaults: DEFAULTS })
             return
           }
           const current = readConfig()
           const patch =
             payload && typeof payload.patch === 'object' && payload.patch ? payload.patch : payload
           const cfgNow = writeConfig({ ...current, ...patch })
-          sendJson(res, 200, { ok: true, version, config: cfgNow, defaults })
+          sendJson(res, 200, { ok: true, version, config: cfgNow, defaults: DEFAULTS })
         } catch (err) {
           sendJson(res, 500, { ok: false, error: String((err && err.message) || err) })
         }

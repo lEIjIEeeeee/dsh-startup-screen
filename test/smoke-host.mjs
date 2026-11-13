@@ -13,8 +13,12 @@ import { warnIfStale } from './_fresh.mjs'
 
 const PLUGIN_ROOT = fileURLToPath(new URL('..', import.meta.url))
 const HOST_SOURCE = path.join(PLUGIN_ROOT, 'src', 'index.js')
-const HOST_MODULES = ['config.js', 'facts.js', 'routes.js', 'inject.js']
-  .map((f) => path.join(PLUGIN_ROOT, 'src', 'host', f))
+const HOST_DIR = path.join(PLUGIN_ROOT, 'src', 'host')
+const HOST_MODULES = fs
+  .readdirSync(HOST_DIR)
+  .filter((f) => f.endsWith('.js'))
+  .sort()
+  .map((f) => path.join(HOST_DIR, f))
 const HOST_SOURCES = [HOST_SOURCE, ...HOST_MODULES]
 warnIfStale(path.join(PLUGIN_ROOT, 'lib', 'index.js'), HOST_SOURCES)
 
@@ -253,6 +257,21 @@ r = await call('exact /dsh-startup/config', 'POST', 'x'.repeat(70 * 1024))
 check('超限请求体返回 413', r.statusCode === 413, String(r.statusCode))
 r = await call('exact /dsh-startup/config')
 check('超限请求体不写盘（仍是默认身份）', JSON.parse(r.body).config.identity === 'JOYCE MOORE', JSON.parse(r.body).config.identity)
+
+/* 连接中断不能被当成空 patch：回 400，且不落盘 */
+{
+  const res = fakeRes()
+  const req = new EventEmitter()
+  req.method = 'POST'
+  req.headers = {}
+  req.url = '/'
+  const pending = ROUTES.get('exact /dsh-startup/config').handler(req, res)
+  req.emit('error', new Error('socket hang up'))
+  await pending
+  check('请求体中断返回 400', res.statusCode === 400, String(res.statusCode))
+}
+r = await call('exact /dsh-startup/config')
+check('请求体中断不写盘', JSON.parse(r.body).config.identity === 'JOYCE MOORE', JSON.parse(r.body).config.identity)
 r = await call('exact /dsh-startup/config', 'DELETE')
 check('不支持的方法返回 405', r.statusCode === 405, String(r.statusCode))
 

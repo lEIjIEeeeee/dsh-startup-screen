@@ -136,7 +136,12 @@ dsh plugin --profile web remove dsh-startup-screen
 
 源码在 `src/`，`lib/` 是构建产物（已提交，安装时直接使用）：
 
-- `src/index.js`：宿主入口（路由、配置、页面注入）
+- `src/index.js`：宿主入口，只做路径计算与装配
+- `src/host/config.js`：配置读写（原子落盘）
+- `src/host/facts.js`：启动信息采集（环境、版本、模型、会话数）
+- `src/host/routes.js`：5 条 HTTP 路由与来源校验
+- `src/host/inject.js`：`index.html` 首屏注入
+- `src/shared/`：三个运行时共用的默认值、校验规则、路由常量
 - `src/splash/`：启动动画与样式
 - `src/client/`：设置面板
 - `src/assets/`：音频素材

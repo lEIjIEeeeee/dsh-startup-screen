@@ -15,13 +15,43 @@ function service(ctx, name) {
 }
 
 /** 生成 8 位十六进制短指纹，只用来保证同一台机器的光场构图一致，不用于安全用途。 */
-export function shortHash(text) {
+function shortHash(text) {
   let h = 0x811c9dc5
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i)
     h = Math.imul(h, 0x01000193) >>> 0
   }
   return h.toString(16).toUpperCase().padStart(8, '0')
+}
+
+/**
+ * 工作区注册表知道所有工作区里的会话 + 归档会话；
+ * sessions.list() 默认不含归档，所以 SESSIONS 优先用这里的总数。
+ */
+function readRegistryCounts(ctx) {
+  /** @type {Record<string, number>} */
+  const out = {}
+  try {
+    const wr = service(ctx, 'workspaceRegistry')
+    if (!wr || typeof wr.list !== 'function') return out
+    const ids = new Set()
+    const list = wr.list()
+    if (Array.isArray(list)) {
+      for (const w of list) {
+        if (w && Array.isArray(w.sessionIds)) {
+          for (const id of w.sessionIds) ids.add(String(id))
+        }
+      }
+    }
+    if (Array.isArray(wr.archivedSessionIds)) {
+      for (const id of wr.archivedSessionIds) ids.add(String(id))
+      out.sessionsArchived = wr.archivedSessionIds.length
+    }
+    if (ids.size) out.sessionsTotal = ids.size
+  } catch (err) {
+    /* noop */
+  }
+  return out
 }
 
 export function createFactsCache() {
@@ -94,29 +124,7 @@ export function collectFacts(ctx, cache) {
       /* noop */
     }
 
-    try {
-      /* 工作区注册表知道所有工作区里的会话 + 归档会话；
-         sessions.list() 默认不含归档，所以 SESSIONS 优先用这里的总数。 */
-      const wr = service(ctx, 'workspaceRegistry')
-      if (wr && typeof wr.list === 'function') {
-        const ids = new Set()
-        const list = wr.list()
-        if (Array.isArray(list)) {
-          for (const w of list) {
-            if (w && Array.isArray(w.sessionIds)) {
-              for (const id of w.sessionIds) ids.add(String(id))
-            }
-          }
-        }
-        if (Array.isArray(wr.archivedSessionIds)) {
-          for (const id of wr.archivedSessionIds) ids.add(String(id))
-          facts.sessionsArchived = wr.archivedSessionIds.length
-        }
-        if (ids.size) facts.sessionsTotal = ids.size
-      }
-    } catch (err) {
-      /* noop */
-    }
+    Object.assign(facts, readRegistryCounts(ctx))
 
     /* 只取"这台机器上稳定"的项；会话数会变，不参与指纹 */
     facts.hash = shortHash(
@@ -139,33 +147,14 @@ export async function refreshSessions(ctx, cache) {
   if (!facts) return
   try {
     const s = service(ctx, 'sessions')
-    if (!s || typeof s.list !== 'function') return
-    const r = await s.list()
-    if (Array.isArray(r)) facts.sessions = r.length
-    else if (r && Array.isArray(r.items)) facts.sessions = r.items.length
-    else if (r && Array.isArray(r.sessions)) facts.sessions = r.sessions.length
-  } catch (err) {
-    /* noop */
-  }
-  try {
-    const wr = service(ctx, 'workspaceRegistry')
-    if (wr && typeof wr.list === 'function') {
-      const ids = new Set()
-      const list = wr.list()
-      if (Array.isArray(list)) {
-        for (const w of list) {
-          if (w && Array.isArray(w.sessionIds)) {
-            for (const id of w.sessionIds) ids.add(String(id))
-          }
-        }
-      }
-      if (Array.isArray(wr.archivedSessionIds)) {
-        for (const id of wr.archivedSessionIds) ids.add(String(id))
-        facts.sessionsArchived = wr.archivedSessionIds.length
-      }
-      if (ids.size) facts.sessionsTotal = ids.size
+    if (s && typeof s.list === 'function') {
+      const r = await s.list()
+      if (Array.isArray(r)) facts.sessions = r.length
+      else if (r && Array.isArray(r.items)) facts.sessions = r.items.length
+      else if (r && Array.isArray(r.sessions)) facts.sessions = r.sessions.length
     }
   } catch (err) {
     /* noop */
   }
+  Object.assign(facts, readRegistryCounts(ctx))
 }
