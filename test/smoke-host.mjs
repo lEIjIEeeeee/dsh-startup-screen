@@ -229,7 +229,7 @@ check('/facts 带 8 位 hash 指纹', !!factsBody.facts && /^[0-9A-F]{8}$/.test(
 check('/facts 用工作区注册表算总会话数', factsBody.facts.sessionsTotal === 2, String(factsBody.facts.sessionsTotal))
 check('/facts 记录归档会话数', factsBody.facts.sessionsArchived === 2, String(factsBody.facts.sessionsArchived))
 check('/facts 记录未归档会话数', factsBody.facts.sessions === 1, String(factsBody.facts.sessions))
-const hostSrcForFacts = fs.readFileSync(path.join(PLUGIN_ROOT, 'lib', 'index.js'), 'utf8')
+const hostSrcForFacts = fs.readFileSync(path.join(PLUGIN_ROOT, 'src', 'index.js'), 'utf8')
 check('/facts 会重采 sessions', /refreshSessions\(ctx\)/.test(hostSrcForFacts))
 r = await call('exact /dsh-startup/config')
 check('config 响应也带 facts', !!JSON.parse(r.body).facts)

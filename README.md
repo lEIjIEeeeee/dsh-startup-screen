@@ -132,6 +132,19 @@ dsh plugin --profile web remove dsh-startup-screen
 
 ---
 
+## 开发
+
+源码在 `src/`，`lib/` 是构建产物（已提交，安装时直接使用）：
+
+- `src/index.js`：宿主入口（路由、配置、页面注入）
+- `src/splash/`：启动动画与样式
+- `src/client/`：设置面板
+- `src/assets/`：音频素材
+
+改完源码运行 `npm run build` 重新生成 `lib/`；提交前运行 `npm run verify`（lint + 类型检查 + 四套冒烟测试）。CI 会检查 `lib/` 是否与源码同步。
+
+---
+
 ## 设置选项
 
 装好后进入 **DSH 设置页 →「启动动画」**。

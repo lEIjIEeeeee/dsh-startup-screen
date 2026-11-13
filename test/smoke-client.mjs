@@ -87,7 +87,9 @@ class AbortControllerStub {
   abort() { this.signal.aborted = true }
 }
 const CLIENT_BUNDLE = fileURLToPath(new URL('../lib/client.js', import.meta.url))
+const CLIENT_SOURCE = fileURLToPath(new URL('../src/client/index.jsx', import.meta.url))
 const code = fs.readFileSync(CLIENT_BUNDLE, 'utf8')
+const SOURCE = fs.readFileSync(CLIENT_SOURCE, 'utf8')
 const sandbox = {
   window: windowStub, document: documentStub, fetch: fetchStub,
   AbortController: AbortControllerStub,
@@ -241,9 +243,9 @@ console.log('\n[7] 面板与 README 对齐（音效来源 / 故障色 / 单一�
 
 console.log('\n[8] 「立即预览」入口必须永远有反应（回归防线）')
 {
-  check('preview 里 catch 了 replay 抛错', /try \{ api\.replay\(\) \} catch/.test(code))
-  check('replay 之后有兜底刷新（1.2 秒看根节点 / RUNNING）', /__DSH_STARTUP_RUNNING__/.test(code) && /setTimeout\(function \(\)/.test(code))
-  check('重挂失败时退回 location.reload()', /window\.location\.reload\(\)/.test(code))
+  check('preview 里 catch 了 replay 抛错', /try \{ api\.replay\(\) \} catch/.test(SOURCE))
+  check('replay 之后有兜底刷新（1.2 秒看根节点 / RUNNING）', /__DSH_STARTUP_RUNNING__/.test(SOURCE) && /setTimeout\(function \(\)/.test(SOURCE))
+  check('重挂失败时退回 location.reload()', /window\.location\.reload\(\)/.test(SOURCE))
 }
 
 console.log('\n[9] 液态玻璃面板控件')
@@ -261,28 +263,28 @@ console.log('\n[9] 液态玻璃面板控件')
   collect(t)
   check('有「液态玻璃」开关', labels.some((l) => l.indexOf('液态玻璃') !== -1), labels.filter((l) => l.indexOf('玻璃') !== -1).join('|'))
   check('有「环境光效」开关', labels.some((l) => l.indexOf('环境光效') !== -1), labels.filter((l) => l.indexOf('环境光效') !== -1).join('|'))
-  check('环境光效有 FALLBACK 兜底', /ambient: true/.test(code))
-  check('启动时加载配置会把 facts 合进配置', /cfg\.facts = j\.facts/.test(code))
-  check('源码里三个玻璃滑条都在', /玻璃不透明度/.test(code) && /磨砂模糊/.test(code) && /玻璃饱和度/.test(code))
-  check('「透出桌面壁纸」已删除', !/透出桌面壁纸/.test(code) && !/glassWallpaper/.test(code))
-  check('「背景模糊」独立存在（不依赖壁纸）', /背景模糊/.test(code) && /glassBackdropBlur/.test(code))
-  check('玻璃参数有 FALLBACK 兜底', /glass: false, glassOpacity: 0\.75, glassBlur: 22, glassSaturate: 160/.test(code))
+  check('环境光效有 FALLBACK 兜底', /ambient: true/.test(SOURCE))
+  check('启动时加载配置会把 facts 合进配置', /cfg\.facts = j\.facts/.test(SOURCE))
+  check('源码里三个玻璃滑条都在', /玻璃不透明度/.test(SOURCE) && /磨砂模糊/.test(SOURCE) && /玻璃饱和度/.test(SOURCE))
+  check('「透出桌面壁纸」已删除', !/透出桌面壁纸/.test(SOURCE) && !/glassWallpaper/.test(SOURCE))
+  check('「背景模糊」独立存在（不依赖壁纸）', /背景模糊/.test(SOURCE) && /glassBackdropBlur/.test(SOURCE))
+  check('玻璃参数有 FALLBACK 兜底', /glass: false, glassOpacity: 0\.75, glassBlur: 22, glassSaturate: 160/.test(SOURCE))
 }
 
 console.log('\n[10] 设置页：左侧导航 + 分页 + 固定底栏')
 {
-  check('有左侧导航 .__ss_nav', /__ss_nav/.test(code))
-  check('导航项可点击切页', /__ss_navItem/.test(code) && /switchTab\(p\[0\]\)/.test(code))
+  check('有左侧导航 .__ss_nav', /__ss_nav/.test(SOURCE))
+  check('导航项可点击切页', /__ss_navItem/.test(SOURCE) && /switchTab\(p\[0\]\)/.test(SOURCE))
   check('五个页面：播放/外观/声音/内容/关于',
-    ['play', 'appearance', 'sound', 'content', 'about'].every((k) => code.indexOf("'" + k + "'") !== -1))
-  check('页面容器有 __ss_page', /__ss_page/.test(code) && (code.match(/__ss_page_/g) || []).length >= 5)
-  check('右侧内容区独立滚动', /__ss_content\{[^}]*overflow-y:auto/.test(code))
-  check('底部操作栏在内容区之外固定', /__ss_footer/.test(code) && /__ss_main\{[^}]*display:flex;flex-direction:column/.test(code))
-  check('底部操作栏不再使用 sticky', !/__ss_actionsSticky/.test(code))
+    ['play', 'appearance', 'sound', 'content', 'about'].every((k) => SOURCE.indexOf("'" + k + "'") !== -1))
+  check('页面容器有 __ss_page', /__ss_page/.test(SOURCE) && (SOURCE.match(/__ss_page_/g) || []).length >= 5)
+  check('右侧内容区独立滚动', /__ss_content\{[^}]*overflow-y:auto/.test(SOURCE))
+  check('底部操作栏在内容区之外固定', /__ss_footer/.test(SOURCE) && /__ss_main\{[^}]*display:flex;flex-direction:column/.test(SOURCE))
+  check('底部操作栏不再使用 sticky', !/__ss_actionsSticky/.test(SOURCE))
 
   const groups = ['play', 'identity', 'interact', 'voice', 'visual', 'text']
-  check('六个设置分组仍保留', groups.every((g) => code.indexOf('__ss_group_' + g) !== -1), groups.join(','))
-  check('分组节点都挂了 id 锚点', (code.match(/id: '__ss_group_/g) || []).length === 6, String((code.match(/id: '__ss_group_/g) || []).length))
+  check('六个设置分组仍保留', groups.every((g) => SOURCE.indexOf('__ss_group_' + g) !== -1), groups.join(','))
+  check('分组节点都挂了 id 锚点', (SOURCE.match(/id: '__ss_group_/g) || []).length === 6, String((SOURCE.match(/id: '__ss_group_/g) || []).length))
 
   const t2 = renderPanel()
   const ids = []
@@ -297,12 +299,12 @@ console.log('\n[10] 设置页：左侧导航 + 分页 + 固定底栏')
   check('渲染出的面板里六组都在（隐藏页也保留 DOM）', groups.every((g) => ids.indexOf('__ss_group_' + g) !== -1), ids.join(','))
   check('渲染出五个页面', ['play', 'appearance', 'sound', 'content', 'about'].every((k) => ids.indexOf('__ss_page_' + k) !== -1), ids.join(','))
 
-  check('有未保存状态提示', /__ss_dirty/.test(code) && /未保存/.test(code))
-  check('「立即预览」在底部操作栏', /__ss_footer[\s\S]{0,600}立即预览/.test(code))
-  check('预览使用当前修改、不写盘', /Object\.assign\(\{\}, base, draft/.test(code) && /「立即预览」使用当前修改/.test(code))
-  check('恢复默认有二次确认', /window\.confirm/.test(code) && /恢复默认会覆盖/.test(code))
-  check('配置文件路径在关于页', /__ss_barFile/.test(code) && /配置文件：/.test(code))
-  check('改动置 dirty、保存/恢复会清除', /setDirty\(true\)/.test(code) && (code.match(/setDirty\(false\)/g) || []).length >= 3, String((code.match(/setDirty\(false\)/g) || []).length))
+  check('有未保存状态提示', /__ss_dirty/.test(SOURCE) && /未保存/.test(SOURCE))
+  check('「立即预览」在底部操作栏', /__ss_footer[\s\S]{0,600}立即预览/.test(SOURCE))
+  check('预览使用当前修改、不写盘', /Object\.assign\(\{\}, base, draft/.test(SOURCE) && /「立即预览」使用当前修改/.test(SOURCE))
+  check('恢复默认有二次确认', /window\.confirm/.test(SOURCE) && /恢复默认会覆盖/.test(SOURCE))
+  check('配置文件路径在关于页', /__ss_barFile/.test(SOURCE) && /配置文件：/.test(SOURCE))
+  check('改动置 dirty、保存/恢复会清除', /setDirty\(true\)/.test(SOURCE) && (SOURCE.match(/setDirty\(false\)/g) || []).length >= 3, String((SOURCE.match(/setDirty\(false\)/g) || []).length))
 }
 
 console.log('\n============================')
