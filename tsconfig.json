@@ -19,6 +19,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src/shared/**/*.js", "src/host/**/*.js", "scripts/**/*.mjs"],
+  "include": ["src/index.js", "src/shared/**/*.js", "src/host/**/*.js", "scripts/**/*.mjs"],
   "exclude": ["node_modules", "lib", "dist"]
 }
