@@ -40,7 +40,16 @@ jobs:
         run: npm run build
 
       - name: Committed lib/ must match build output
-        run: git diff --exit-code -- lib
+        shell: pwsh
+        run: |
+          git diff --exit-code -- lib
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          # git diff 只看已跟踪文件；新增文件忘了提交时这里要能发现
+          $dirty = git status --porcelain -- lib
+          if ($dirty) {
+            Write-Error "lib/ 未与构建产物同步：`n$dirty"
+            exit 1
+          }
 
       - name: Test
         run: npm test
