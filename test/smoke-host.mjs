@@ -13,7 +13,10 @@ import { warnIfStale } from './_fresh.mjs'
 
 const PLUGIN_ROOT = fileURLToPath(new URL('..', import.meta.url))
 const HOST_SOURCE = path.join(PLUGIN_ROOT, 'src', 'index.js')
-warnIfStale(path.join(PLUGIN_ROOT, 'lib', 'index.js'), [HOST_SOURCE])
+const HOST_MODULES = ['config.js', 'facts.js', 'routes.js', 'inject.js']
+  .map((f) => path.join(PLUGIN_ROOT, 'src', 'host', f))
+const HOST_SOURCES = [HOST_SOURCE, ...HOST_MODULES]
+warnIfStale(path.join(PLUGIN_ROOT, 'lib', 'index.js'), HOST_SOURCES)
 
 /** 找一份真实的 DSH dist/index.html 来做注入测试；找不到就用等价的最小样本。
  *  跨平台：Windows 的 npx 缓存在 %LOCALAPPDATA%，POSIX 在 ~/.npm 或 ~/.cache。 */
@@ -234,8 +237,8 @@ check('/facts 带 8 位 hash 指纹', !!factsBody.facts && /^[0-9A-F]{8}$/.test(
 check('/facts 用工作区注册表算总会话数', factsBody.facts.sessionsTotal === 2, String(factsBody.facts.sessionsTotal))
 check('/facts 记录归档会话数', factsBody.facts.sessionsArchived === 2, String(factsBody.facts.sessionsArchived))
 check('/facts 记录未归档会话数', factsBody.facts.sessions === 1, String(factsBody.facts.sessions))
-const hostSrcForFacts = fs.readFileSync(HOST_SOURCE, 'utf8')
-check('/facts 会重采 sessions', /refreshSessions\(ctx\)/.test(hostSrcForFacts))
+const hostSrcForFacts = fs.readFileSync(path.join(PLUGIN_ROOT, 'src', 'host', 'routes.js'), 'utf8')
+check('/facts 会重采 sessions', /refreshSessions\(ctx, factsCache\)/.test(hostSrcForFacts))
 r = await call('exact /dsh-startup/config')
 check('config 响应也带 facts', !!JSON.parse(r.body).facts)
 
@@ -324,6 +327,7 @@ console.log('\n[8] 单一事实来源')
 {
   const read = (rel) => fs.readFileSync(path.join(PLUGIN_ROOT, rel), 'utf8')
   const host = read('src/index.js')
+  const hostModules = HOST_MODULES.map((f) => fs.readFileSync(f, 'utf8'))
   const splash = read('src/splash/index.js')
   const client = read('src/client/index.jsx')
   const defaults = read('src/shared/defaults.js')
@@ -336,7 +340,7 @@ console.log('\n[8] 单一事实来源')
   check('设置面板不再自带 FALLBACK 副本', !/var FALLBACK = \{/.test(client))
   check('路由常量只在 shared/routes.js 定义', /export const ROUTES = \{/.test(routes))
   check('三个运行时都不再硬编码路由字面量',
-    [host, splash, client].every((s) => !/['"]\/dsh-startup\//.test(s)))
+    [host, splash, client, ...hostModules].every((s) => !/['"]\/dsh-startup\//.test(s)))
   check('版本号由构建时注入，不再手写常量',
     /__PLUGIN_VERSION__/.test(host) && /__PLUGIN_VERSION__/.test(client) && !/FALLBACK_VERSION/.test(client))
 }

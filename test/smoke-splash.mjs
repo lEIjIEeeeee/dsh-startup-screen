@@ -606,7 +606,7 @@ console.log('\n[15] 背景模糊：独立图层，不与任何素材绑定')
 
 console.log('\n[16b] 启动期不得露出 DSH 白底（0.2.1 起 body 被强制 #fff）')
 {
-  const hostSrc = fs.readFileSync(fileURLToPath(new URL('../src/index.js', import.meta.url)), 'utf8')
+  const hostSrc = fs.readFileSync(fileURLToPath(new URL('../src/host/inject.js', import.meta.url)), 'utf8')
   check('critical CSS 把启动期 body 压成黑底', /html\.dsu-lock body\{background-color:#000!important\}/.test(hostSrc))
   check('覆盖 --dsh-boot-bg 为黑色', /--dsh-boot-bg:#000/.test(hostSrc))
 }
@@ -755,7 +755,7 @@ console.log('\n[21] P3 数据面板 / 首帧实心 / 细环 / 双语解码')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
   const src = fs.readFileSync(SOURCE, 'utf8')
-  const host = fs.readFileSync(fileURLToPath(new URL('../src/index.js', import.meta.url)), 'utf8')
+  const host = fs.readFileSync(fileURLToPath(new URL('../src/host/facts.js', import.meta.url)), 'utf8')
   const defaults = fs.readFileSync(DEFAULTS_SOURCE, 'utf8')
 
   check('有左侧两行真实数据', /dsu-facts-1/.test(src) && /dsu-facts-2/.test(src))
@@ -763,7 +763,7 @@ console.log('\n[21] P3 数据面板 / 首帧实心 / 细环 / 双语解码')
   check('有底部动态波形', /dsu-trace/.test(src) && /dsu-trace-line/.test(css))
   check('自检每步点亮', /setChecks\(n\)/.test(src))
   check('数据面板随第二幕进场', /ui\.checks\.classList\.add\('dsu-in'\)/.test(src))
-  check('facts 采集 sessions', /FACTS\.sessions/.test(src) && /get\('sessions'\)/.test(host) && /facts\.sessions/.test(host))
+  check('facts 采集 sessions', /FACTS\.sessions/.test(src) && /service\(ctx, 'sessions'\)/.test(host) && /facts\.sessions/.test(host))
   check('玻璃默认关闭', /glass: false/.test(defaults))
   check('首帧黑幕实心', /\.dsu-glass \.dsu-black[\s\S]{0,200}background: #04060a/.test(css))
   check('玻璃透明等底板铺满', /dsu-glass\.dsu-glass-live/.test(css) && /classList\.add\('dsu-glass-live'\)/.test(src))
