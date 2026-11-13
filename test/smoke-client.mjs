@@ -81,7 +81,7 @@ const fetchStub = (url, init) => {
 }
 
 /* ── 按 ModuleLoader 的方式加载 bundle ───────────────────────────────────── */
-console.log('\n[1] bundle 协议（window.__ModuleLoader__.load）')
+console.log('\n[1] 加载器协议（window.__ModuleLoader__.load）')
 const CLIENT_BUNDLE = fileURLToPath(new URL('../lib/client.js', import.meta.url))
 const code = fs.readFileSync(CLIENT_BUNDLE, 'utf8')
 const sandbox = {
@@ -154,7 +154,7 @@ const texts = walk(tree).filter((n) => typeof n.props.children === 'string').map
 check('渲染出「身份名称」字段', texts.includes('身份名称'), texts.slice(0, 12).join('/'))
 check('渲染出「身份编号」字段', texts.includes('身份编号'))
 
-/* 面板顶部：原来的大段说明已移除，改成版本号 */
+/* 面板顶部显示版本号 */
 const versionNode = find(tree, (n) => n.props && n.props.className === '__ss_version')
 check('顶部渲染出版本号节点 __ss_version', !!versionNode, versionNode && String(versionNode.props.children))
 check('版本号取自 /dsh-startup/config 返回的 version', versionNode && versionNode.props.children === '版本 v9.9.9', versionNode && String(versionNode.props.children))
@@ -233,7 +233,7 @@ console.log('\n[7] 面板与 README 对齐（音效来源 / 故障色 / 单一�
   check('「开口前留白」上限 1200ms（与 Host 一致）', ranges.some((r) => r.max === 1200), ranges.map((r) => r.max).join(','))
 }
 
-console.log('\n[8] 「立即预览」入口必须永远有反应（1.2.1 回归防线）')
+console.log('\n[8] 「立即预览」入口必须永远有反应（回归防线）')
 {
   check('preview 里 catch 了 replay 抛错', /try \{ api\.replay\(\) \} catch/.test(code))
   check('replay 之后有兜底刷新（1.2 秒看根节点 / RUNNING）', /__DSH_STARTUP_RUNNING__/.test(code) && /setTimeout\(function \(\)/.test(code))
@@ -256,7 +256,7 @@ console.log('\n[9] 液态玻璃面板控件')
   check('有「液态玻璃」开关', labels.some((l) => l.indexOf('液态玻璃') !== -1), labels.filter((l) => l.indexOf('玻璃') !== -1).join('|'))
   check('有「环境光效」开关', labels.some((l) => l.indexOf('环境光效') !== -1), labels.filter((l) => l.indexOf('环境光效') !== -1).join('|'))
   check('环境光效有 FALLBACK 兜底', /ambient: true/.test(code))
-  check('自举路径把 facts 合进配置', /cfg\.facts = j\.facts/.test(code))
+  check('启动时加载配置会把 facts 合进配置', /cfg\.facts = j\.facts/.test(code))
   check('源码里三个玻璃滑条都在', /玻璃不透明度/.test(code) && /磨砂模糊/.test(code) && /玻璃饱和度/.test(code))
   check('「透出桌面壁纸」已删除', !/透出桌面壁纸/.test(code) && !/glassWallpaper/.test(code))
   check('「背景模糊」独立存在（不依赖壁纸）', /背景模糊/.test(code) && /glassBackdropBlur/.test(code))

@@ -79,7 +79,7 @@ const ctx = {
     if (name === 'sessions') return sessionsService
     if (name !== 'connection') return undefined
     return {
-      // 官方 dsh-host-open-in-app 同款栅栏：返回 undefined = 放行
+      // 与宿主同款校验：返回 undefined 表示放行
       requestRejection() { return rejectNext },
     }
   },
@@ -268,7 +268,7 @@ check('注入了首屏兜底 <style>', after.includes('id="dsh-startup-critical"
 check('注入了挂载点 div', after.includes('<div id="dsh-startup-root" class="dsu-root dsu-boot">'))
 check('注入了 window.__DSH_STARTUP__ 配置', /^\{"enabled":/.test(inlinePayload(after)), inlinePayload(after).slice(0, 60))
 check('内联载荷是合法 JSON', (() => { try { JSON.parse(inlinePayload(after)); return true } catch { return false } })())
-/* 设置面板顶部的版本号：Host 从自己的 package.json 读出来，再交给浏览器半侧 */
+/* 设置面板顶部的版本号：服务端从 package.json 读出，注入给页面 */
 const pkgVersion = JSON.parse(fs.readFileSync(path.join(PLUGIN_ROOT, 'package.json'), 'utf8')).version
 check('注入了 window.__DSH_STARTUP_VERSION__', after.includes('window.__DSH_STARTUP_VERSION__='), '')
 check('注入的版本号 = package.json 的 version', after.includes('window.__DSH_STARTUP_VERSION__=' + JSON.stringify(pkgVersion)), pkgVersion)
