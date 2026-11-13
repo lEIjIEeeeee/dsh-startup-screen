@@ -103,8 +103,8 @@ export default [
   },
 
   {
-    // 迁移豁免：Phase 2 原样搬入的旧代码，重写前不套新风格规则。
-    // Phase 5（client）/ Phase 6（splash）完成后删除本段。
+    // 迁移豁免：这批旧代码原样搬进来，重写前不套新风格规则。
+    // 客户端和启动动画重写完成后删除本段。
     files: ['src/client/**/*.{js,jsx}', 'src/splash/**/*.{js,jsx}'],
     rules: {
       'no-var': 'off',
