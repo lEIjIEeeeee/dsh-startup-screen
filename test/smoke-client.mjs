@@ -65,7 +65,7 @@ const CFG = {
   welcomeBox: 'DEEPSEEK HARNESS', footer: 'POWERED BY DEEPSEEK',
   accent: '#ff7500', glitchA: '#ff3b30', glitchB: '#2971b8',
 }
-let versionInResponse = '9.9.9'
+const versionInResponse = '9.9.9'
 const requests = []
 const fetchStub = (url, init) => {
   requests.push({ url, init })

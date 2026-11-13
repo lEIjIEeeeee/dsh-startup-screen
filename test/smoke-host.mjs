@@ -234,7 +234,7 @@ check('config 响应也带 facts', !!JSON.parse(r.body).facts)
 r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { ambient: false } }))
 cfg = JSON.parse(r.body)
 check('环境光效可以关闭', cfg.config.ambient === false, String(cfg.config.ambient))
-r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ action: 'reset' }))
+await call('exact /dsh-startup/config', 'POST', JSON.stringify({ action: 'reset' }))
 
 r = await call('exact /dsh-startup/config', 'POST', '{ not json')
 check('非法 JSON 返回 400', r.statusCode === 400, String(r.statusCode))

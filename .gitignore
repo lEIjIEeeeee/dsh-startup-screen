@@ -1,9 +1,11 @@
-# ── 依赖与构建产物（本项目是零依赖插件，没有构建步骤，防御性忽略）──
+# ── 依赖与构建产物（运行时零依赖；lib/ 是构建产物，需要提交）──────────
 node_modules/
 dist/
 coverage/
 *.tgz
 releases/
+*.tsbuildinfo
+.eslintcache
 
 # ── 日志 ──────────────────────────────────────────────────────────────
 *.log
@@ -37,6 +39,7 @@ opencode.json
 docs/*
 !docs/screenshots/
 !docs/screenshots/**
+docs/_local/
 
 # ── 临时文件 ───────────────────────────────────────────────────────────
 *.tmp

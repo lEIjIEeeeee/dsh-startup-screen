@@ -1,0 +1,20 @@
+# 构建产物由 esbuild 生成，不做二次格式化。
+lib/
+dist/
+releases/
+
+# 第三方产物与锁文件
+node_modules/
+package-lock.json
+
+# 二进制资源
+*.mp3
+*.wav
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# 本地文档与预览产物
+docs/
+preview/index.html
