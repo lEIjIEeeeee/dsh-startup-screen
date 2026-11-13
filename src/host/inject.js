@@ -1,8 +1,12 @@
-// @ts-nocheck —— 迁移期先不收紧类型，后续再逐块补 JSDoc。
 import { ROUTES } from '../shared/routes.js'
 import { factsSnapshot } from './facts.js'
 
-/** 内联到页面里的 JSON 不能出现 `</script>`。 */
+/** @typedef {import('./types.js').HostEnv} HostEnv */
+
+/**
+ * 内联到页面里的 JSON 不能出现 `</script>`。
+ * @param {any} value
+ */
 export function safeJson(value) {
   return JSON.stringify(value)
     .replace(/</g, '\\u003c')
@@ -31,7 +35,7 @@ else{document.documentElement.classList.add('dsu-lock');/* 兜底：动画脚本
 
 /**
  * 把首屏覆盖层注入宿主下发的 index.html。
- * host: { webServer, version, factsCache, readConfig }
+ * @param {HostEnv} host
  * @returns {() => void} disposer
  */
 export function injectIndex(host) {

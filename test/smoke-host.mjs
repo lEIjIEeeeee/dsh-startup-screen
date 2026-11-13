@@ -362,6 +362,8 @@ console.log('\n[8] 单一事实来源')
     [host, splash, client, ...hostModules].every((s) => !/['"]\/dsh-startup\//.test(s)))
   check('版本号由构建时注入，不再手写常量',
     /__PLUGIN_VERSION__/.test(host) && /__PLUGIN_VERSION__/.test(client) && !/FALLBACK_VERSION/.test(client))
+  check('宿主源码全部通过类型检查（没有 @ts-nocheck）',
+    !/@ts-nocheck/.test([host, ...hostModules].join('\n')))
 }
 
 fs.rmSync(SMOKE_HOME, { recursive: true, force: true })

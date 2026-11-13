@@ -1,12 +1,21 @@
-// @ts-nocheck —— 迁移期先不收紧类型，后续再逐块补 JSDoc。
 import fs from 'node:fs'
 import path from 'node:path'
 import { DEFAULTS } from '../shared/defaults.js'
 import { ROUTES } from '../shared/routes.js'
 import { factsSnapshot, refreshSessions } from './facts.js'
 
-/** 静态文件按修改时间缓存：改完插件刷新页面就生效。文件缺失返回 null，由调用方回 503。 */
+/** @typedef {import('node:http').IncomingMessage} IncomingMessage */
+/** @typedef {import('node:http').ServerResponse} ServerResponse */
+/** @typedef {import('./types.js').HostEnv} HostEnv */
+/** @typedef {import('./types.js').Route} Route */
+
+/**
+ * 静态文件按修改时间缓存：改完插件刷新页面就生效。文件缺失返回 null，由调用方回 503。
+ * @param {string} file
+ * @returns {() => string | null}
+ */
 function makeReader(file) {
+  /** @type {{ mtimeMs: number, text: string } | null} */
   let cache = null
   return function read() {
     try {
@@ -21,6 +30,12 @@ function makeReader(file) {
   }
 }
 
+/**
+ * @param {ServerResponse} res
+ * @param {number} code
+ * @param {any} payload
+ * @param {(() => void)} [done]
+ */
 function sendJson(res, code, payload, done) {
   const body = Buffer.from(JSON.stringify(payload), 'utf8')
   res.writeHead(code, {
@@ -36,12 +51,21 @@ function sendJson(res, code, payload, done) {
  *   `{ tooLarge: true }` 超限，调用方回 413；
  *   `{ error: true }`    连接中断或超时，调用方回 400，绝不能当成空 patch 写盘；
  *   其余                 正常读到文本。
+ *
+ * @param {IncomingMessage} req
+ * @param {number} [limit]
+ * @param {number} [timeoutMs]
+ * @returns {Promise<{ tooLarge: boolean, text: string, error?: boolean }>}
  */
 function readBody(req, limit = 64 * 1024, timeoutMs = 15000) {
   return new Promise((resolve) => {
     let size = 0
     let settled = false
+    /** @type {Buffer[]} */
     const chunks = []
+    /**
+     * @param {{ tooLarge: boolean, text: string, error?: boolean }} result
+     */
     const finish = (result) => {
       if (settled) return
       settled = true
@@ -77,6 +101,11 @@ function readBody(req, limit = 64 * 1024, timeoutMs = 15000) {
   })
 }
 
+/**
+ * @param {ServerResponse} res
+ * @param {string} type
+ * @param {string} text
+ */
 function sendText(res, type, text) {
   const body = Buffer.from(text, 'utf8')
   res.writeHead(200, {
@@ -87,7 +116,10 @@ function sendText(res, type, text) {
   res.end(body)
 }
 
-/** 构建产物缺失：路由在、文件不在，属于服务端配置问题，回 503 让浏览器侧直接走兜底。 */
+/**
+ * 构建产物缺失：路由在、文件不在，属于服务端配置问题，回 503 让浏览器侧直接走兜底。
+ * @param {ServerResponse} res
+ */
 function sendUnavailable(res) {
   res.writeHead(503)
   res.end()
@@ -95,7 +127,8 @@ function sendUnavailable(res) {
 
 /**
  * 注册 5 条 HTTP 路由，返回对应的 disposer 列表。
- * host: { ctx, webServer, packageRoot, version, factsCache, readConfig, writeConfig, configFile }
+ * @param {HostEnv} host
+ * @returns {Array<() => void>}
  */
 export function registerRoutes(host) {
   const { ctx, webServer, packageRoot, version, factsCache, readConfig, writeConfig, configFile } =
@@ -103,9 +136,14 @@ export function registerRoutes(host) {
   const readSplashCss = makeReader(path.join(packageRoot, 'lib', 'splash.css'))
   const readSplashJs = makeReader(path.join(packageRoot, 'lib', 'splash.js'))
   const assetsDir = path.join(packageRoot, 'lib', 'assets')
+  /** @type {Array<() => void>} */
   const disposers = []
 
-  /** 来源校验：自定义路由必须过这一关，否则任意网页都能读写配置。 */
+  /**
+   * 来源校验：自定义路由必须过这一关，否则任意网页都能读写配置。
+   * @param {IncomingMessage} req
+   * @param {ServerResponse} res
+   */
   function rejected(req, res) {
     try {
       const conn =
@@ -121,9 +159,17 @@ export function registerRoutes(host) {
     }
   }
 
+  /**
+   * 统一包一层：来源校验 + 异常兜底。handler 的 req/res 类型由 Route 给出。
+   * @param {Route} route
+   * @returns {() => void}
+   */
   function registerRoute(route) {
-    const inner = route && route.handler
-    const wrapped = Object.assign({}, route, {
+    const inner = route.handler
+    /** @type {Route} */
+    const wrapped = {
+      kind: route.kind,
+      path: route.path,
       handler: async (req, res) => {
         if (rejected(req, res)) return
         /* 连接提前断开时 res.writeHead 会抛；这里兜住，避免变成 unhandled rejection。 */
@@ -142,7 +188,7 @@ export function registerRoutes(host) {
           }
         }
       },
-    })
+    }
     return webServer.register(wrapped)
   }
 
@@ -265,7 +311,10 @@ export function registerRoutes(host) {
           const cfgNow = writeConfig({ ...current, ...patch })
           sendJson(res, 200, { ok: true, version, config: cfgNow, defaults: DEFAULTS })
         } catch (err) {
-          sendJson(res, 500, { ok: false, error: String((err && err.message) || err) })
+          sendJson(res, 500, {
+            ok: false,
+            error: err instanceof Error ? err.message : String(err),
+          })
         }
       },
     }),

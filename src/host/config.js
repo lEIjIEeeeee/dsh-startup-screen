@@ -1,4 +1,3 @@
-// @ts-nocheck —— 迁移期先不收紧类型，后续再逐块补 JSDoc。
 import fs from 'node:fs'
 import path from 'node:path'
 import { DEFAULTS } from '../shared/defaults.js'
@@ -8,6 +7,7 @@ import { normalize } from '../shared/schema.js'
  * 配置读写。路径由调用方给，模块自己不推算。
  *
  * @param {string} configFile
+ * @returns {{ read: () => import('./types.js').Config, write: (next: any) => import('./types.js').Config }}
  */
 export function createConfig(configFile) {
   let seq = 0
@@ -20,6 +20,10 @@ export function createConfig(configFile) {
     }
   }
 
+  /**
+   * @param {any} next
+   * @returns {import('./types.js').Config}
+   */
   function write(next) {
     const cfg = normalize(next)
     fs.mkdirSync(path.dirname(configFile), { recursive: true })

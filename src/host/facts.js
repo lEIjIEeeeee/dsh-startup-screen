@@ -1,11 +1,18 @@
-// @ts-nocheck —— 迁移期先不收紧类型，后续再逐块补 JSDoc。
 /* ============================================================================
  * 采集启动界面要显示的真实信息：运行环境、版本、插件数、模型、沙箱模式、会话数。
  * 逐步异步填充，先给页面一份快照，浏览器再补一次。
  * 取不到的字段留空，页面显示 "—"，绝不把异常抛给宿主。
  * ========================================================================== */
 
-/** 从宿主取服务；宿主没有或取失败都当没有。 */
+/** @typedef {import('./types.js').Facts} Facts */
+/** @typedef {import('./types.js').FactsCache} FactsCache */
+/** @typedef {import('./types.js').HostContext} HostContext */
+
+/**
+ * 从宿主取服务；宿主没有或取失败都当没有。
+ * @param {HostContext} ctx
+ * @param {string} name
+ */
 function service(ctx, name) {
   try {
     return typeof ctx.get === 'function' ? ctx.get(name) : undefined
@@ -14,7 +21,10 @@ function service(ctx, name) {
   }
 }
 
-/** 生成 8 位十六进制短指纹，只用来保证同一台机器的光场构图一致，不用于安全用途。 */
+/**
+ * 生成 8 位十六进制短指纹，只用来保证同一台机器的光场构图一致，不用于安全用途。
+ * @param {string} text
+ */
 function shortHash(text) {
   let h = 0x811c9dc5
   for (let i = 0; i < text.length; i++) {
@@ -27,6 +37,7 @@ function shortHash(text) {
 /**
  * 工作区注册表知道所有工作区里的会话 + 归档会话；
  * sessions.list() 默认不含归档，所以 SESSIONS 优先用这里的总数。
+ * @param {HostContext} ctx
  */
 function readRegistryCounts(ctx) {
   /** @type {Record<string, number>} */
@@ -54,17 +65,28 @@ function readRegistryCounts(ctx) {
   return out
 }
 
+/** @returns {FactsCache} */
 export function createFactsCache() {
   return { value: null, started: false }
 }
 
+/**
+ * @param {FactsCache} cache
+ * @returns {Facts}
+ */
 export function factsSnapshot(cache) {
   return cache.value || { ready: false }
 }
 
+/**
+ * @param {HostContext} ctx
+ * @param {FactsCache} cache
+ * @returns {Facts}
+ */
 export function collectFacts(ctx, cache) {
-  if (cache.started) return cache.value
+  if (cache.started) return cache.value || { ready: false }
   cache.started = true
+  /** @type {Facts} */
   const facts = { ready: false }
   cache.value = facts
 
@@ -142,6 +164,10 @@ export function collectFacts(ctx, cache) {
 
 /* 会话可能比插件启动得晚：每次读取真实信息时顺手重采一次，
    动画播放期间浏览器会轮询几次，晚到的会话数也能补上。 */
+/**
+ * @param {HostContext} ctx
+ * @param {FactsCache} cache
+ */
 export async function refreshSessions(ctx, cache) {
   const facts = cache.value
   if (!facts) return
