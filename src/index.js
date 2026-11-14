@@ -2,10 +2,10 @@
  * dsh-startup-screen — 宿主侧入口
  *
  * 只做装配：算路径、拿服务、把路由 / 注入 / 配置 / 事实采集接起来。
- * 具体实现分在 host/ 下的三个模块里：
+ * 具体实现分在 host/ 下的几个模块里：
  *   config.js  配置读写（原子落盘）
  *   facts.js   启动界面要显示的真实信息
- *   routes.js  5 条 HTTP 路由
+ *   routes.js  HTTP 路由
  *   inject.js  index.html 首屏注入
  *
  * 配置不走宿主的 settings 服务，而是自己存一份 JSON、自己画设置面板，
@@ -105,7 +105,6 @@ function apply(ctx) {
 }
 
 /* 只导出 name / inject / apply 三个具名成员，和宿主内置插件保持一致。
-   两点刻意不做：
-   有 default 导出时加载器只认 default，两边都写容易改一处漏一处；
-   Config 在宿主里是配置校验规则，这里只是普通默认值，混用会出错。 */
+   不额外写默认导出：两种写法并存时容易改一处漏一处；
+   也不把默认值包装成宿主的配置规则类型，两者含义不同。 */
 export { apply, inject, name }

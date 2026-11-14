@@ -135,15 +135,15 @@ function check(label, ok, extra) {
   else { fail++; console.log('  FAIL ' + label + (extra ? '  → ' + extra : '')) }
 }
 
-console.log('\n[1] 模块导出形状（对齐 cordis-plugin-loader 的 unwrapExports）')
+console.log('\n[1] 模块导出形状')
 const mod = await import(pathToFileURL(path.join(PLUGIN_ROOT, 'lib', 'index.js')).href)
 check('有具名 name', typeof mod.name === 'string', mod.name)
-check('name 与 cordis.patch.yml 的 id 一致', mod.name === 'dsh-startup-screen', mod.name)
+check('name 与插件 id 一致', mod.name === 'dsh-startup-screen', mod.name)
 check('有具名 inject', Array.isArray(mod.inject), JSON.stringify(mod.inject))
 check('inject 含 webServer + connection', mod.inject.includes('webServer') && mod.inject.includes('connection'))
 check('有具名 apply', typeof mod.apply === 'function')
-check('没有 default 导出（避免 unwrapExports 只认 default）', mod.default === undefined, String(mod.default))
-check('没有 Config 导出（普通对象不是 schemastery schema）', mod.Config === undefined, String(mod.Config))
+check('没有默认导出（避免加载器只认默认导出）', mod.default === undefined, String(mod.default))
+check('没有 Config 导出（普通对象不是宿主的配置规则）', mod.Config === undefined, String(mod.Config))
 
 console.log('\n[2] apply(ctx)：路由与注入')
 mod.apply(ctx)

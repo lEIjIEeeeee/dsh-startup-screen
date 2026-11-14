@@ -22,7 +22,7 @@ export const DEFAULTS = {
   voicePitch: 0.85, // 压低音调，深沉的 AI 女声
   voiceVolume: 0.9,
   voiceCue: true, // 念台词前的一声轻提示
-  sfx: 'audio', // 音效来源：audio=lib/assets 里的真素材 / synth=现场合成
+  sfx: 'audio', // 音效来源：audio=内置素材目录里的真录音 / synth=现场合成
   voiceSource: 'asset', // 语音来源：asset=优先用真声素材（拿不到自动回落 TTS）/ tts=全 TTS
   voiceLead: 240, // 提示音之后留一小段空白再开口
   identity: 'JOYCE MOORE', // ← 设置页里可改的「身份名称」

@@ -8,6 +8,7 @@
  * 配置来自 window.__DSH_STARTUP__，也可以用 window.__DSH_STARTUP_API__.replay() 重播。
  * ========================================================================== */
 import { DEFAULTS } from '../shared/defaults.js'
+import { localDayKey } from '../shared/day.js'
 import { ROUTES } from '../shared/routes.js'
 import { IDENTITY_MAX, normalizeIdentityId } from '../shared/schema.js'
 
@@ -2345,7 +2346,7 @@ function boot() {
     try {
       if (C.mode === 'session') window.sessionStorage.setItem('dsh-startup-screen:shown', '1')
       if (C.mode === 'daily') {
-        window.localStorage.setItem('dsh-startup-screen:day', new Date().toISOString().slice(0, 10))
+        window.localStorage.setItem('dsh-startup-screen:day', localDayKey())
       }
     } catch (err) { /* 隐私模式下不可写，忽略 */ }
     /* 解锁：宿主注入的关键样式用 html.dsu-lock 锁滚动，这里必须一并摘掉，

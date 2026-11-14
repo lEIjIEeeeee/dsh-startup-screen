@@ -17,6 +17,7 @@
 import fs from 'node:fs'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
+import { localDayKey } from '../src/shared/day.js'
 
 let pass = 0
 let fail = 0
@@ -167,6 +168,11 @@ function boot(opts) {
     useState: (v) => (typeof v === 'function' ? [v(), () => {}] : [v, () => {}]),
     useEffect: () => {},
     useRef: () => ({ current: null }),
+    createContext: (value) => ({
+      value,
+      Provider: ({ children }) => children,
+    }),
+    useContext: () => null,
   }
   const primitivesStub = {
     Button({ children, ...rest }) {
@@ -240,11 +246,11 @@ console.log('\n[1] Host 没注入（桌面端 file:// + IPC 形态）→ 自举'
   check('splash.js 带时间戳绕缓存', script && /splash\.js\?t=\d+$/.test(String(script.src)), script && script.src)
   check('配置先落 window（splash.js 直接读它）', s.win.__DSH_STARTUP__ && s.win.__DSH_STARTUP__.identity === undefined && s.win.__DSH_STARTUP__.enabled === true, JSON.stringify(s.win.__DSH_STARTUP__))
   check('加载完成前不写已播标记（失败还能重试）', s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null)
-  /* 样式与脚本都 load 成功之后才落标记 */
+  /* 样式与脚本都 load 成功之后也不由自举写标记：播完 / 跳过由运行时自己记 */
   link.emit && link.emit('load')
   script.emit && script.emit('load')
   await settle()
-  check('样式与脚本都 load 后才回填已播标记', s.win.sessionStorage.getItem('dsh-startup-screen:shown') === '1')
+  check('自举不写已播标记（播完或跳过时由运行时写）', s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null)
   check('挂了 9 秒自愈定时器', s.timers.some((t) => t.ms === 9000), s.timers.map((t) => t.ms).join(','))
 }
 
@@ -275,6 +281,8 @@ console.log('\n[3] 不播的几种情况')
   await settle()
   check('enabled=false → 不建根节点', rootOf(s) === null)
   check('enabled=false → 不写已播标记', s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null)
+  check('enabled=false → 仍挂运行时，设置页「立即预览」可用',
+    s.win.__DSH_STARTUP_SKIP__ === true && tags(s, (e) => e.tagName === 'SCRIPT').length === 1)
 }
 {
   const s = boot({
@@ -283,12 +291,15 @@ console.log('\n[3] 不播的几种情况')
   }); s.apply()
   await settle()
   check('session 模式本会话已播过 → 不重播', rootOf(s) === null)
+  check('session 已播 → 仍挂运行时，设置页「立即预览」可用',
+    s.win.__DSH_STARTUP_SKIP__ === true && tags(s, (e) => e.tagName === 'SCRIPT').length === 1)
+  check('跳过时配置仍在 window 上（预览在它上面合并草稿）',
+    !!s.win.__DSH_STARTUP__ && s.win.__DSH_STARTUP__.mode === 'session')
 }
 {
-  const today = new Date().toISOString().slice(0, 10)
   const s = boot({
     config: { enabled: true, mode: 'daily' },
-    local: { 'dsh-startup-screen:day': today },
+    local: { 'dsh-startup-screen:day': localDayKey() },
   }); s.apply()
   await settle()
   check('daily 模式今天已播过 → 不重播', rootOf(s) === null)
@@ -302,14 +313,13 @@ console.log('\n[3] 不播的几种情况')
 {
   const s = boot({ config: { enabled: true, mode: 'daily' } }); s.apply()
   await settle()
-  const today = new Date().toISOString().slice(0, 10)
   check('daily 首次播放：加载完成前不写日期', s.win.localStorage.getItem('dsh-startup-screen:day') === null, s.win.localStorage.getItem('dsh-startup-screen:day'))
   const dLink = tags(s, (e) => e.tagName === 'LINK')[0]
   const dScript = tags(s, (e) => e.tagName === 'SCRIPT')[0]
   dLink.emit && dLink.emit('load')
   dScript.emit && dScript.emit('load')
   await settle()
-  check('daily 加载成功后记下今天的日期', s.win.localStorage.getItem('dsh-startup-screen:day') === today, s.win.localStorage.getItem('dsh-startup-screen:day'))
+  check('自举不写日期（播完或跳过时由运行时写）', s.win.localStorage.getItem('dsh-startup-screen:day') === null)
   check('daily 模式不写 session 标记', s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null)
 }
 

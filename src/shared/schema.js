@@ -51,6 +51,10 @@ export const RANGES = {
 
 /* 动画里的身份名称最多显示 48 个字符；设置页按同一上限截断，避免存进去的和看到的不一致。 */
 export const IDENTITY_MAX = 48
+/* 身份编号只保留 12 位字母数字，输入框和保存规则共用这个上限。 */
+export const IDENTITY_ID_MAX = 12
+/* 其余文案字段的通用上限。 */
+export const TEXT_MAX = 64
 
 /**
  * 身份编号只保留字母和数字：动画里的等宽排版放不下符号，
@@ -64,7 +68,7 @@ export function normalizeIdentityId(value, identity) {
   const id = String(value || identity || '')
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, '')
-    .slice(0, 12)
+    .slice(0, IDENTITY_ID_MAX)
   return id || 'OPERATOR'
 }
 
@@ -93,7 +97,7 @@ export function normalize(input) {
       const s = String(value).trim()
       out[key] = /^#[0-9a-fA-F]{3,8}$/.test(s) ? s : DEFAULTS[key]
     } else if (TEXT_KEYS.includes(key)) {
-      out[key] = String(value).slice(0, key === 'identity' ? IDENTITY_MAX : 64)
+      out[key] = String(value).slice(0, key === 'identity' ? IDENTITY_MAX : TEXT_MAX)
     } else {
       out[key] = value
     }

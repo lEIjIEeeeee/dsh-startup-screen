@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { DEFAULTS } from '../shared/defaults.js'
+import { IDENTITY_ID_MAX, IDENTITY_MAX, TEXT_MAX } from '../shared/schema.js'
 import { loadConfig, previewConfig, resetConfig, saveConfig } from './api.js'
 import { ColorInput } from './components/ColorInput.jsx'
 import { Field } from './components/Field.jsx'
@@ -262,15 +263,26 @@ export function Panel() {
         <Input
           value={draft.identity}
           placeholder="例如：JOYCE MOORE"
+          maxLength={IDENTITY_MAX}
           onChange={(v) => set('identity', v)}
         />
       </Field>
       <div className="__ss_two">
         <Field label="身份编号" hint="第二步身份卡上的编号，建议用数字。">
-          <Input value={draft.identityId} mono onChange={(v) => set('identityId', v)} />
+          <Input
+            value={draft.identityId}
+            mono
+            maxLength={IDENTITY_ID_MAX}
+            onChange={(v) => set('identityId', v)}
+          />
         </Field>
         <Field label="权限等级">
-          <Input value={draft.accessLevel} mono onChange={(v) => set('accessLevel', v)} />
+          <Input
+            value={draft.accessLevel}
+            mono
+            maxLength={TEXT_MAX}
+            onChange={(v) => set('accessLevel', v)}
+          />
         </Field>
       </div>
     </div>
@@ -281,13 +293,13 @@ export function Panel() {
       <div className="__ss_groupTitle">品牌与文案</div>
       <div className="__ss_two">
         <Field label="左上 · 主标题">
-          <Input value={draft.brand1} onChange={(v) => set('brand1', v)} />
+          <Input value={draft.brand1} maxLength={TEXT_MAX} onChange={(v) => set('brand1', v)} />
         </Field>
         <Field label="左上 · 产品行">
           <div className="__ss_row">
-            <Input value={draft.brand3a} onChange={(v) => set('brand3a', v)} />
+            <Input value={draft.brand3a} maxLength={TEXT_MAX} onChange={(v) => set('brand3a', v)} />
             <span className="__ss_status" aria-hidden="true">+</span>
-            <Input value={draft.brand3b} onChange={(v) => set('brand3b', v)} />
+            <Input value={draft.brand3b} maxLength={TEXT_MAX} onChange={(v) => set('brand3b', v)} />
           </div>
         </Field>
       </div>
@@ -296,22 +308,26 @@ export function Panel() {
       </Field>
       <div className="__ss_two">
         <Field label="黑幕 · 中文">
-          <Input value={draft.orgZh} onChange={(v) => set('orgZh', v)} />
+          <Input value={draft.orgZh} maxLength={TEXT_MAX} onChange={(v) => set('orgZh', v)} />
         </Field>
         <Field label="黑幕 · 英文">
-          <Input value={draft.orgEn} mono onChange={(v) => set('orgEn', v)} />
+          <Input value={draft.orgEn} mono maxLength={TEXT_MAX} onChange={(v) => set('orgEn', v)} />
         </Field>
       </div>
       <div className="__ss_two">
         <Field label="黑幕 · 小字">
-          <Input value={draft.orgSub} mono onChange={(v) => set('orgSub', v)} />
+          <Input value={draft.orgSub} mono maxLength={TEXT_MAX} onChange={(v) => set('orgSub', v)} />
         </Field>
         <Field label="终幕 · 黑框">
-          <Input value={draft.welcomeBox} onChange={(v) => set('welcomeBox', v)} />
+          <Input
+            value={draft.welcomeBox}
+            maxLength={TEXT_MAX}
+            onChange={(v) => set('welcomeBox', v)}
+          />
         </Field>
       </div>
       <Field label="右下 · 页脚">
-        <Input value={draft.footer} mono onChange={(v) => set('footer', v)} />
+        <Input value={draft.footer} mono maxLength={TEXT_MAX} onChange={(v) => set('footer', v)} />
       </Field>
     </div>
   )

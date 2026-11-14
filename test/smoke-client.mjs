@@ -36,6 +36,11 @@ const React = {
     if (!ranEffects.has(i)) { ranEffects.add(i); fn() }
   },
   useRef: () => ({ current: null }),
+  createContext: (value) => ({
+    value,
+    Provider: ({ children }) => children,
+  }),
+  useContext: () => null,
   useStateReset() {},
 }
 function resetHooks() { hookIndex = 0 }
@@ -143,8 +148,11 @@ check('primitives 导出缺失时有兜底 + 告警',
   /typeof primitives\.Button === 'function'/.test(SOURCE) &&
   /typeof primitives\.Input === 'function'/.test(SOURCE) &&
   /console\.warn/.test(SOURCE))
-check('字段标题用 <label> 包住控件（点标题可聚焦）',
-  /<label className="__ss_label">[\s\S]{0,120}\{children\}/.test(SOURCE))
+check('字段标题与控件用 aria-labelledby 关联，不再把多个控件包进一个 label',
+  /aria-labelledby=\{a11y\.labelId\}/.test(SOURCE) &&
+  !/<label className="__ss_label">[\s\S]{0,120}\{children\}/.test(SOURCE))
+check('输入框长度上限跟着字段走（身份名称 48 / 编号 12 / 其余 64）',
+  /IDENTITY_MAX/.test(SOURCE) && /IDENTITY_ID_MAX/.test(SOURCE) && /TEXT_MAX/.test(SOURCE))
 check('导航用 aria-current 标记当前页', /aria-current=/.test(SOURCE))
 check('页面区用 role="region" + aria-labelledby', /role="region"/.test(SOURCE) && /aria-labelledby=/.test(SOURCE))
 check('按钮 / 滑条 / 色块都有 focus-visible 焦点环',

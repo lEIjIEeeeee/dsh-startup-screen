@@ -1,15 +1,28 @@
+import { FieldContext, useFieldId } from '../a11y.js'
+
 /**
- * 一行设置项。label 把控件包在里面，点标题就能聚焦/切换控件，
- * 读屏也会把标题当成控件的名字 —— 不用再手写 htmlFor/id 配对。
+ * 一行设置项：标题在上，控件在下，提示在最后。
+ *
+ * 标题不包住控件 —— 一个标题可能对应多个控件，
+ * 用一个 <label> 全包住会产出不合法的结构。
+ * 这里把标题和提示的 id 交给控件，由控件用 aria-labelledby /
+ * aria-describedby 指回来，读屏能念出正确的名字和说明。
  */
 export function Field({ label, hint, children }) {
+  const base = useFieldId()
+  const labelId = base + '-label'
+  const hintId = hint ? base + '-hint' : undefined
   return (
     <div className="__ss_field">
-      <label className="__ss_label">
+      <span className="__ss_label" id={labelId}>
         <span className="__ss_labelText">{label}</span>
-        {children}
-      </label>
-      {hint ? <div className="__ss_hint">{hint}</div> : null}
+      </span>
+      <FieldContext.Provider value={{ labelId, hintId }}>{children}</FieldContext.Provider>
+      {hint ? (
+        <div className="__ss_hint" id={hintId}>
+          {hint}
+        </div>
+      ) : null}
     </div>
   )
 }

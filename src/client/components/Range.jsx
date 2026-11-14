@@ -1,4 +1,7 @@
-export function Range({ value, min, max, step, display, onChange }) {
+import { useFieldA11y } from '../a11y.js'
+
+export function Range({ value, min, max, step, display, onChange, ...rest }) {
+  const a11y = useFieldA11y()
   const lo = Number(min)
   const hi = Number(max)
   const val = Number(value)
@@ -13,7 +16,10 @@ export function Range({ value, min, max, step, display, onChange }) {
         step={step || 0.05}
         value={value}
         style={{ flex: '1 1 200px', '--ss-fill': pct + '%' }}
+        aria-labelledby={a11y.labelId}
+        aria-describedby={a11y.hintId}
         onChange={(e) => onChange(Number(e.target.value))}
+        {...rest}
       />
       <span className="__ss_status" aria-hidden="true">
         {display}

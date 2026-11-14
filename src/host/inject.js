@@ -23,14 +23,17 @@ export const CRITICAL_CSS = [
   '#dsh-startup-root.dsu-boot{position:fixed;inset:0;z-index:2147483000;background:#000}',
 ].join('')
 
+/* 首屏兜底脚本。这次不播时清掉根节点并留下跳过标记；
+   要播时锁住滚动，并在动画始终没跑起来（脚本缺失、被拦、语法错）时
+   9 秒后无条件放行，绝不把页面锁死在黑屏。 */
 export const BOOTSTRAP_JS = `(function(){try{
 var c=window.__DSH_STARTUP__||{};
 var root=document.getElementById('dsh-startup-root');
 var off=!c.enabled;
 if(!off&&c.mode==='session'){try{if(sessionStorage.getItem('dsh-startup-screen:shown')==='1')off=true}catch(e){}}
-if(!off&&c.mode==='daily'){try{if(localStorage.getItem('dsh-startup-screen:day')===new Date().toISOString().slice(0,10))off=true}catch(e){}}
+if(!off&&c.mode==='daily'){try{var d=new Date();var k=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);if(localStorage.getItem('dsh-startup-screen:day')===k)off=true}catch(e){}}
 if(off){window.__DSH_STARTUP_SKIP__=true;if(root&&root.parentNode)root.parentNode.removeChild(root);}
-else{document.documentElement.classList.add('dsu-lock');/* 兜底：动画脚本没跑起来（404、被拦、语法错）时，9 秒后无条件放行，绝不锁死黑屏。判断依据是时间线有没有开始，不能按类名判断 */setTimeout(function(){try{if(window.__DSH_STARTUP_RUNNING__===true)return;var r=document.getElementById('dsh-startup-root');if(r&&r.parentNode)r.parentNode.removeChild(r);document.documentElement.classList.remove('dsu-lock');if(document.body)document.body.style.overflow='';window.__DSH_STARTUP_FAILED__=true;}catch(e){}},9000);}
+else{document.documentElement.classList.add('dsu-lock');setTimeout(function(){try{if(window.__DSH_STARTUP_RUNNING__===true)return;var r=document.getElementById('dsh-startup-root');if(r&&r.parentNode)r.parentNode.removeChild(r);document.documentElement.classList.remove('dsu-lock');if(document.body)document.body.style.overflow='';window.__DSH_STARTUP_FAILED__=true;}catch(e){}},9000);}
 }catch(e){} })()`
 
 /**

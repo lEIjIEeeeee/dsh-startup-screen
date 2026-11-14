@@ -4,10 +4,11 @@
  * 按宿主的客户端模块格式加载，在设置页注册一个「启动动画」区块，
  * 用来改身份名称、权限等级、配色、速度、交互开关等。
  *
- * 配置读写走宿主侧的 /dsh-startup/config 接口，不用宿主的 settings 服务，
+ * 配置读写走宿主提供的配置接口，不用宿主的设置服务，
  * 这样宿主升级设置模块时不会把面板带崩。
  * 注册 id 必须和插件名一致，否则加载器会报错；注册壳由构建时套上。
  */
+import { localDayKey } from '../shared/day.js'
 import { ROUTES } from '../shared/routes.js'
 import { API } from './api.js'
 import { Panel } from './panel.jsx'
@@ -30,15 +31,6 @@ function readFlag(store, key) {
     return s ? s.getItem(key) : null
   } catch (e) {
     return null
-  }
-}
-
-function writeFlag(store, key, value) {
-  try {
-    const s = window[store]
-    if (s) s.setItem(key, value)
-  } catch (e) {
-    /* 隐私模式下可能抛，忽略 */
   }
 }
 
@@ -88,7 +80,7 @@ function release(ok) {
   }
 }
 
-function injectRoot(cfg, onReady) {
+function injectRoot(cfg) {
   let root = document.getElementById('dsh-startup-root')
   if (!root) {
     root = document.createElement('div')
@@ -116,14 +108,6 @@ function injectRoot(cfg, onReady) {
     if (cssReady && scriptReady && !readyCalled) {
       readyCalled = true
       release(true)
-      /* 只有真的挂上了才算播过：失败时不留标记，下次还能重试 */
-      if (typeof onReady === 'function') {
-        try {
-          onReady()
-        } catch (e) {
-          /* 记标记失败不影响播放 */
-        }
-      }
     }
   }
 
@@ -163,6 +147,21 @@ function injectRoot(cfg, onReady) {
   }, 9000)
 }
 
+/* 这次不播，但先把运行时挂上：设置页的「立即预览」要靠运行时暴露的接口。
+   运行时看到跳过标记只暴露接口，不建界面、不锁滚动。 */
+function loadSkippedRuntime(cfg) {
+  window.__DSH_STARTUP__ = cfg || {}
+  window.__DSH_STARTUP_SKIP__ = true
+  try {
+    delete window.__DSH_STARTUP_LOADED__
+  } catch (e) {
+    window.__DSH_STARTUP_LOADED__ = undefined
+  }
+  /* 样式也一起挂上，预览重播时界面不会裸奔；加载失败不影响页面 */
+  loadCss(ROUTES.css, null)
+  loadScript(ROUTES.splash + '?t=' + Date.now(), null)
+}
+
 function selfBoot() {
   try {
     if (typeof window === 'undefined' || typeof document === 'undefined') return
@@ -184,20 +183,21 @@ function selfBoot() {
       .catch(() => null)
       .then((cfg) => {
         cfg = cfg || { enabled: true, mode: 'session', speed: 1 }
-        if (cfg.enabled === false) return
-        const today = new Date().toISOString().slice(0, 10)
-        if (
-          cfg.mode === 'session' &&
-          readFlag('sessionStorage', 'dsh-startup-screen:shown') === '1'
-        )
+        if (cfg.enabled === false) {
+          loadSkippedRuntime(cfg)
           return
-        if (cfg.mode === 'daily' && readFlag('localStorage', 'dsh-startup-screen:day') === today)
+        }
+        const today = localDayKey()
+        const shownThisSession =
+          cfg.mode === 'session' && readFlag('sessionStorage', 'dsh-startup-screen:shown') === '1'
+        const playedToday =
+          cfg.mode === 'daily' && readFlag('localStorage', 'dsh-startup-screen:day') === today
+        if (shownThisSession || playedToday) {
+          loadSkippedRuntime(cfg)
           return
-        /* 等样式和脚本都加载成功再写标记；失败时不留标记，这个会话还能再试。 */
-        return injectRoot(cfg, () => {
-          if (cfg.mode === 'session') writeFlag('sessionStorage', 'dsh-startup-screen:shown', '1')
-          if (cfg.mode === 'daily') writeFlag('localStorage', 'dsh-startup-screen:day', today)
-        })
+        }
+        /* 已播标记由运行时在播完或跳过时写：脚本加载成功不等于真的播过。 */
+        injectRoot(cfg)
       })
       .catch(() => {
         /* 自举失败就算了，页面本来就是好的 */

@@ -235,6 +235,7 @@ function run(withSpeech, cfgOverride, env) {
       this.text = t; this.rate = 1; this.pitch = 1; this.volume = 1
     }
   }
+  if (E.given) Object.assign(windowStub, E.given)
   windowStub.window = windowStub
 
   const sandbox = {
@@ -430,7 +431,7 @@ console.log('\n[10] 桌面端标题栏同步：仅 Windows 桌面端生效、可
   check('show() 清掉探针符号色', probe.style.getPropertyValue('color') === '')
   check('show() 把 html token 也还原', de.style.getPropertyValue('--dsw-specific-sidebar-fill') === '')
 
-  /* ④ 探针被应用重挂：缓存节点脱离文档后应重新查找（P1） */
+  /* ④ 探针被应用重挂：缓存节点脱离文档后应重新查找 */
   probe.isConnected = false
   const probe2 = mkProbe()
   env.probe = probe2
@@ -662,7 +663,7 @@ console.log('\n[17] P0 中文清晰度与逐字解码')
   check('强调色光晕按配置生成', /--dsu-accent-glow/.test(src) && /hexToRgba\(C\.accent/.test(src))
 }
 
-console.log('\n[18] P1 光场与氛围层')
+console.log('\n[18] 光场与氛围层')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
   const src = fs.readFileSync(SOURCE, 'utf8')
@@ -691,7 +692,7 @@ console.log('\n[18] P1 光场与氛围层')
   check('ambient=false 不启动光场', !off.windowStub.__DSH_STARTUP_FIELD__)
 }
 
-console.log('\n[19] P1 性能防线（玻璃 + 光效叠加不掉帧）')
+console.log('\n[19] 性能防线（玻璃 + 光效叠加不掉帧）')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
   const cssNoComments = css.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -716,7 +717,7 @@ console.log('\n[19] P1 性能防线（玻璃 + 光效叠加不掉帧）')
   check('glassBackdropBlur=0 → 不吃掉底板磨砂', !off.root.classList.contains('dsu-glass-appblur'))
 }
 
-console.log('\n[20] P2 电影细节 / 准星 / 金属鲸鱼 / facts')
+console.log('\n[20] 电影细节 / 准星 / 金属鲸鱼 / facts')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
   const src = fs.readFileSync(SOURCE, 'utf8')
@@ -751,7 +752,7 @@ console.log('\n[20] P2 电影细节 / 准星 / 金属鲸鱼 / facts')
     whale && whale.children && whale.children.map((c) => c.tagName).join(','))
 }
 
-console.log('\n[21] P3 数据面板 / 首帧实心 / 细环 / 双语解码')
+console.log('\n[21] 数据面板 / 首帧实心 / 细环 / 双语解码')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
   const src = fs.readFileSync(SOURCE, 'utf8')
@@ -791,6 +792,16 @@ console.log('\n[21] P3 数据面板 / 首帧实心 / 细环 / 双语解码')
   const fact1 = lookup('.dsu-facts-1')
   check('左侧 MODEL 行有真实值', !!fact1 && fact1.children[1] && fact1.children[1].textContent === 'deepseek-chat',
     fact1 && fact1.children[1] && fact1.children[1].textContent)
+}
+
+console.log('\n[22] 这次不播时仍暴露接口（桌面端「立即预览」依赖）')
+{
+  const rr = run(true, {}, { given: { __DSH_STARTUP_SKIP__: true } })
+  check('加载不抛异常', rr.thrown === null, rr.thrown && rr.thrown.message)
+  const api = rr.windowStub.__DSH_STARTUP_API__
+  check('暴露 __DSH_STARTUP_API__', !!api && typeof api.replay === 'function')
+  check('不建界面、不启动时间线', !rr.windowStub.__DSH_STARTUP_RUNNING__ && rr.root.children.length === 0,
+    String(rr.windowStub.__DSH_STARTUP_RUNNING__))
 }
 
 console.log('\n============================')

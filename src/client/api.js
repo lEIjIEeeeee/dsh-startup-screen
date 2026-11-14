@@ -2,41 +2,65 @@ import { ROUTES } from '../shared/routes.js'
 
 export const API = ROUTES.config
 
-/* 路由挂住时不能让面板永远停在「读取配置中…」 */
+/* 路由挂住时不能让面板永远停在「读取配置中…」，写操作也不能一直转圈 */
 const LOAD_TIMEOUT_MS = 8000
+const WRITE_TIMEOUT_MS = 15000
 const PREVIEW_FALLBACK_MS = 1200
 
 function messageOf(e) {
   return String(e && e.message ? e.message : e)
 }
 
-function post(body) {
-  return fetch(API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  }).then((r) => r.json())
-}
-
-/** 读配置。超时或接口失败都抛带中文提示的 Error，由面板直接显示。 */
-export function loadConfig() {
+/** 带超时的请求；超时抛出的错误带 timeout 标记，调用方据此换中文提示。 */
+function request(init, timeoutMs, timeoutMessage) {
   const ctrl = typeof AbortController === 'function' ? new AbortController() : null
-  const timer = ctrl ? setTimeout(() => ctrl.abort(), LOAD_TIMEOUT_MS) : null
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null
   const stop = () => {
     if (timer) clearTimeout(timer)
   }
-  const init = { headers: { Accept: 'application/json' } }
   if (ctrl) init.signal = ctrl.signal
   return fetch(API, init)
     .then((r) => r.json())
     .then((j) => {
       stop()
-      if (!j || j.ok !== true) throw new Error((j && j.error) || 'load failed')
       return j
     })
     .catch((e) => {
       stop()
-      if (ctrl && ctrl.signal.aborted) throw new Error('读取配置超时，请稍后重试')
+      if (ctrl && ctrl.signal.aborted) {
+        const err = new Error(timeoutMessage)
+        err.timeout = true
+        throw err
+      }
+      throw e
+    })
+}
+
+function post(body) {
+  return request(
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    WRITE_TIMEOUT_MS,
+    '保存超时，请稍后重试',
+  )
+}
+
+/** 读配置。超时或接口失败都抛带中文提示的 Error，由面板直接显示。 */
+export function loadConfig() {
+  return request(
+    { headers: { Accept: 'application/json' } },
+    LOAD_TIMEOUT_MS,
+    '读取配置超时，请稍后重试',
+  )
+    .then((j) => {
+      if (!j || j.ok !== true) throw new Error((j && j.error) || 'load failed')
+      return j
+    })
+    .catch((e) => {
+      if (e && e.timeout) throw e
       throw new Error('读取配置失败：' + messageOf(e))
     })
 }
@@ -48,6 +72,7 @@ export function saveConfig(draft) {
       return j
     })
     .catch((e) => {
+      if (e && e.timeout) throw e
       throw new Error('保存失败：' + messageOf(e))
     })
 }
@@ -59,6 +84,7 @@ export function resetConfig() {
       return j
     })
     .catch((e) => {
+      if (e && e.timeout) throw new Error('恢复默认超时，请稍后重试')
       throw new Error('恢复默认失败：' + messageOf(e))
     })
 }

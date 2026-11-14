@@ -48,7 +48,7 @@ export {}
  */
 
 /**
- * routes / inject 需要的宿主环境。常量不进这里，直接 import shared。
+ * 路由与首屏注入需要的宿主环境；路径等共享常量不放进这里。
  * @typedef {object} HostEnv
  * @property {HostContext} ctx
  * @property {WebServer} webServer
