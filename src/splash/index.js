@@ -7,21 +7,16 @@
  *
  * 配置来自 window.__DSH_STARTUP__，也可以用 window.__DSH_STARTUP_API__.replay() 重播。
  * ========================================================================== */
-import { localDayKey } from '../shared/day.js'
 import { ROUTES } from '../shared/routes.js'
-import { factText, isAmbientOn, normalizeStartupConfig } from './core/config.js'
-import { ROOT_ID, STALL_MS } from './core/constants.js'
-import { clamp01 } from './core/clamp.js'
-import { hexToRgba } from './core/color.js'
 import { createSfx } from './audio/sfx.js'
 import { createVoice } from './audio/voice.js'
 import { createField } from './canvas/field.js'
+import { isAmbientOn, normalizeStartupConfig } from './core/config.js'
+import { ROOT_ID } from './core/constants.js'
 import { createDecoder } from './core/decode.js'
-import { el, setIn } from './core/dom.js'
-import { createWhaleSvg } from './core/whale.js'
+import { createFacts } from './core/facts.js'
 import { STEPS } from './data/steps.js'
 import { createChromeSync } from './dom/chrome-sync.js'
-import { createFacts } from './core/facts.js'
 import { createStage } from './dom/stage.js'
 import { createTimeline } from './timeline/timeline.js'
 
@@ -42,7 +37,7 @@ function boot() {
   })()
 
   /* 真实信息由宿主注入；没有时全部走回退值，不影响动画 */
-  var FACTS = (C.facts && typeof C.facts === 'object') ? C.facts : {}
+  var initialFacts = (C.facts && typeof C.facts === 'object') ? C.facts : {}
   function ambientOn() { return isAmbientOn(C) }
 
   /* ── 桌面端标题栏同步（Windows）──────────────────────────────────────────
@@ -50,7 +45,7 @@ function boot() {
      一块和主题同色的方块：黑幕时是一条亮带，暖白底板上又显得刺眼。
      做法是把桌面版用来取色的隐藏元素改成完全透明，让它把窗口按钮和底色一起藏起来，
      动画结束再还原。浏览器和 macOS 下这段不执行，任何一步失败都静默跳过。 */
-  var chromeSync = createChromeSync()
+  var chromeSync = createChromeSync({ window: window, document: document })
 
   /* 排查 / 冒烟测试用的把手：只读开关，不改变插件行为 */
   try { window.__DSH_STARTUP_CHROME__ = chromeSync } catch (e) { /* noop */ }
@@ -80,6 +75,7 @@ function boot() {
   /** 拆掉当前实例：停时间线、清定时器、停语音、解滚动锁、摘根节点。重播前必须先调它。 */
   function dispose() {
     try { timeline.dispose() } catch (e) { /* noop */ }
+    try { facts.dispose() } catch (e) { /* noop */ }
     dropListeners()
     /* 桌面端：旧实例藏起来的标题栏必须还原，否则它的 60 秒 holdTimer 会
        在新一轮动画播到一半时突然把按钮放出来 */
@@ -185,15 +181,14 @@ function boot() {
     if (clockTimer) { clearInterval(clockTimer); clockTimer = null }
   }
 
-  var stage = createStage({ config: C, facts: FACTS, ui: ui })
+  var stage = createStage({ config: C, facts: initialFacts, ui: ui })
   var root = stage.root
   var restoreAppBackdrop = stage.restoreAppBackdrop
   function q(sel) { return root.querySelector(sel) }
   var facts = createFacts({
     ui: ui,
-    initial: FACTS,
+    initial: initialFacts,
     onApplied: function (next, prevHash) {
-      FACTS = next
       /* 只有指纹变了才重排光场；会话数变化不该让粒子跳一下 */
       if (next.hash && next.hash !== prevHash && ui.field && !ui.field.classList.contains('dsu-in')) {
         try { stopField() } catch (e) { /* noop */ }
@@ -201,10 +196,6 @@ function boot() {
       }
     }
   })
-  facts.paintMeta()
-  facts.paintFacts()
-  facts.buildChecks()
-  facts.buildTrace()
   paintClock()
   clockTimer = setInterval(paintClock, 1000)
 
@@ -226,7 +217,7 @@ function boot() {
       canvas: ui.field,
       root: root,
       config: C,
-      facts: FACTS,
+      facts: facts.current(),
       reduced: REDUCED
     })
     if (!fieldHandle) return
@@ -280,6 +271,7 @@ function boot() {
     ambientOn: ambientOn,
     stale: stale,
     stopField: stopField,
+    stopFacts: facts.dispose,
     stopTrace: facts.stopTrace,
     setChecks: facts.setChecks,
     dropListeners: dropListeners,

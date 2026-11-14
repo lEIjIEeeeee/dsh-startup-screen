@@ -5,9 +5,3 @@ export function el(tag, cls, text) {
   if (text != null) node.textContent = text
   return node
 }
-
-/** 按需加上 / 摘掉一个状态类，默认是 `dsu-in`。 */
-export function setIn(node, on, cls) {
-  if (!node) return
-  node.classList.toggle(cls || 'dsu-in', !!on)
-}

@@ -18,6 +18,8 @@ export function createFacts(options) {
   var ui = options.ui
   var onApplied = options.onApplied || function () {}
   var FACTS = options.initial && typeof options.initial === 'object' ? options.initial : {}
+  var stopped = false
+  var pollTimer = null
 
   function paintMeta() {
     if (!ui || !ui.meta1) return
@@ -140,7 +142,7 @@ export function createFacts(options) {
   }
 
   function applyFacts(f) {
-    if (!f || typeof f !== 'object' || f.ready !== true) return
+    if (stopped || !f || typeof f !== 'object' || f.ready !== true) return
     var prevHash = FACTS.hash
     FACTS = f
     try {
@@ -156,38 +158,53 @@ export function createFacts(options) {
   }
 
   function refreshFacts() {
-    if (typeof fetch !== 'function') return
+    if (stopped || typeof fetch !== 'function') return
     var deadline = Date.now() + 2200
+    function schedule(delay) {
+      if (stopped) return
+      pollTimer = setTimeout(tick, delay)
+    }
     function tick() {
+      if (stopped) return
       try {
         fetch(ROUTES.facts, { headers: { Accept: 'application/json' } })
           .then(function (r) { return r.json() })
           .then(function (j) {
             if (j && j.ok === true && j.facts && j.facts.ready === true) applyFacts(j.facts)
             /* 即使已经 ready 也继续轮询到截止：sessions 可能晚一点才加载出来 */
-            if (Date.now() < deadline) setTimeout(tick, 400)
+            if (Date.now() < deadline) schedule(400)
           })
           .catch(function () {
             /* 离线预览 / 首帧还没就绪：短时间内再试几次 */
-            if (Date.now() < deadline) setTimeout(tick, 600)
+            if (Date.now() < deadline) schedule(600)
           })
       } catch (e) {
-        if (Date.now() < deadline) setTimeout(tick, 600)
+        if (Date.now() < deadline) schedule(600)
       }
     }
     tick()
   }
 
+  /** 停止轮询与波形定时器；揭幕或重播后不再碰已经要移除的 DOM。 */
+  function dispose() {
+    stopped = true
+    if (pollTimer) {
+      clearTimeout(pollTimer)
+      pollTimer = null
+    }
+    stopTrace()
+  }
+
+  paintMeta()
+  paintFacts()
+  buildChecks()
+  buildTrace()
 
   return {
     current: function () { return FACTS },
     refresh: refreshFacts,
-    apply: applyFacts,
-    paintMeta: paintMeta,
-    paintFacts: paintFacts,
-    buildChecks: buildChecks,
     setChecks: setChecks,
     stopTrace: stopTrace,
-    buildTrace: buildTrace
+    dispose: dispose
   }
 }

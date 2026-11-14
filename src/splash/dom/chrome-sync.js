@@ -8,13 +8,16 @@ import { ROOT_ID } from '../core/constants.js'
  * 做法是把桌面版用来取色的隐藏元素改成完全透明，让它把窗口按钮和底色一起藏起来，
  * 动画结束再还原。浏览器和 macOS 下这段不执行，任何一步失败都静默跳过。
  *
+ * @param {{ window?: any, document?: any }} [env] 宿主窗口与文档；不传时用全局对象
  * @returns {{ hide: () => void, show: () => void, isDesktopWin: () => boolean }}
  */
-export function createChromeSync() {
+export function createChromeSync(env) {
+  const win = (env && env.window) || window
+  const doc = (env && env.document) || document
   const CLEAR = 'rgba(0, 0, 0, 0)'
   const VARS = ['--dsw-specific-sidebar-fill', '--dsw-alias-label-primary']
   const MAX_HOLD_MS = 60000 /* 硬上限：万一动画卡住，别把按钮永久藏住 */
-  const rootEl = document.documentElement
+  const rootEl = doc.documentElement
   const state = { applied: false, probe: null, settledHits: 0 }
   const savedVars = {}
   let retryTimers = []
@@ -23,17 +26,13 @@ export function createChromeSync() {
 
   function isDesktopWin() {
     try {
-      const nav =
-        (typeof window !== 'undefined' && window.navigator) ||
-        (typeof navigator !== 'undefined' ? navigator : null)
+      const nav = win.navigator
       if (!nav || !/Win/.test(nav.userAgent || '')) return false
       /* 判据不只认协议字符串：桌面端还会在文档上打 data-windows-titlebar 标记，
          任一个命中即认为是 Windows 桌面端，避免协议改名后整段静默失效 */
-      const loc =
-        (typeof window !== 'undefined' && window.location) ||
-        (typeof location !== 'undefined' ? location : null)
+      const loc = win.location
       if (loc && loc.protocol === 'dsh-app:') return true
-      const de = document.documentElement
+      const de = doc.documentElement
       return !!(de && de.hasAttribute && de.hasAttribute('data-windows-titlebar'))
     } catch (e) {
       return false
@@ -43,12 +42,12 @@ export function createChromeSync() {
   /* 桌面版用来取色的隐藏元素是一个 span，内联背景色的声明值里带这个变量名 */
   function findProbe() {
     try {
-      if (!document.querySelector) return null
-      const node = document.querySelector('span[style*="dsw-specific-sidebar-fill"]')
+      if (!doc.querySelector) return null
+      const node = doc.querySelector('span[style*="dsw-specific-sidebar-fill"]')
       if (node) return node
       /* 兜底：某些实现不把内联样式暴露给属性选择器 */
-      if (!document.querySelectorAll) return null
-      const spans = document.querySelectorAll('span')
+      if (!doc.querySelectorAll) return null
+      const spans = doc.querySelectorAll('span')
       for (let i = 0; i < spans.length; i++) {
         const span = spans[i]
         if (!span.style || typeof span.style.getPropertyValue !== 'function') continue
@@ -64,20 +63,20 @@ export function createChromeSync() {
   /* 在页面里制造一点小改动，让桌面版重新读取窗口颜色；两条路径任一生效即可。 */
   function poke() {
     try {
-      if (document.head) {
-        const style = document.createElement('style')
+      if (doc.head) {
+        const style = doc.createElement('style')
         style.setAttribute('data-dsu-chrome-poke', '1')
         style.textContent = '/*dsu-poke*/'
-        document.head.appendChild(style)
+        doc.head.appendChild(style)
         if (style.parentNode) style.parentNode.removeChild(style)
       }
     } catch (e) {
       /* 兜底不再抛 */
     }
     try {
-      if (document.body && document.body.style) {
-        document.body.style.setProperty('--dsu-chrome-poke', String(Date.now() % 1000000))
-        document.body.style.removeProperty('--dsu-chrome-poke')
+      if (doc.body && doc.body.style) {
+        doc.body.style.setProperty('--dsu-chrome-poke', String(Date.now() % 1000000))
+        doc.body.style.removeProperty('--dsu-chrome-poke')
       }
     } catch (e) {
       /* 兜底不再抛 */
@@ -89,8 +88,11 @@ export function createChromeSync() {
     try {
       const probe = state.probe
       if (!probe || probe.isConnected === false) return false
-      if (typeof getComputedStyle !== 'function') return false
-      return getComputedStyle(probe).backgroundColor === CLEAR
+      const getStyle =
+        win.getComputedStyle ||
+        (typeof getComputedStyle === 'function' ? getComputedStyle : null)
+      if (!getStyle) return false
+      return getStyle(probe).backgroundColor === CLEAR
     } catch (e) {
       return false
     }
@@ -195,8 +197,11 @@ export function createChromeSync() {
     if (observerInstalled) return
     observerInstalled = true
     try {
-      if (typeof MutationObserver !== 'function' || !document.body) return
-      const mo = new MutationObserver(function (mutations) {
+      const MO =
+        win.MutationObserver ||
+        (typeof MutationObserver !== 'undefined' ? MutationObserver : null)
+      if (!MO || !doc.body) return
+      const mo = new MO(function (mutations) {
         for (const mutation of mutations) {
           const nodes = mutation.removedNodes
           for (let i = 0; nodes && i < nodes.length; i++) {
@@ -207,13 +212,13 @@ export function createChromeSync() {
           }
         }
       })
-      mo.observe(document.body, { childList: true })
+      mo.observe(doc.body, { childList: true })
     } catch (e) {
       /* 兜底不再抛 */
     }
   }
-  if (document.body) installObserver()
-  else if (document.addEventListener) document.addEventListener('DOMContentLoaded', installObserver)
+  if (doc.body) installObserver()
+  else if (doc.addEventListener) doc.addEventListener('DOMContentLoaded', installObserver)
 
   return { hide, show, isDesktopWin }
 }

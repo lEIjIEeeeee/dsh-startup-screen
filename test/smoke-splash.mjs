@@ -19,6 +19,8 @@ import { warnIfStale } from './_fresh.mjs'
 
 const BUNDLE = fileURLToPath(new URL('../lib/splash.js', import.meta.url))
 const SPLASH_DIR = fileURLToPath(new URL('../src/splash/', import.meta.url))
+const FIELD_SOURCE = fileURLToPath(new URL('../src/splash/canvas/field.js', import.meta.url))
+const FACTS_SOURCE = fileURLToPath(new URL('../src/splash/core/facts.js', import.meta.url))
 const STYLES_DIR = fileURLToPath(new URL('../src/splash/styles/', import.meta.url))
 const CSS_INDEX = fileURLToPath(new URL('../src/splash/styles/index.css', import.meta.url))
 const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.js', import.meta.url))
@@ -38,8 +40,9 @@ const SOURCE_TEXT = SOURCES.map((file) => fs.readFileSync(file, 'utf8')).join('\
 
 /* CSS 断言读拆分后的源码，按 index.css 的 @import 顺序拼接；构建产物会被 esbuild 重排 */
 const CSS_SOURCES = []
-for (const match of fs.readFileSync(CSS_INDEX, 'utf8').matchAll(/@import\s+'([^']+)'/g)) {
-  CSS_SOURCES.push(path.join(STYLES_DIR, match[1]))
+const CSS_IMPORT_RE = /@import\s+(?:url\(\s*)?(?:'([^']+)'|"([^"]+)"|([^'")\s]+))\s*\)?/g
+for (const match of fs.readFileSync(CSS_INDEX, 'utf8').matchAll(CSS_IMPORT_RE)) {
+  CSS_SOURCES.push(path.join(STYLES_DIR, match[1] || match[2] || match[3]))
 }
 const CSS_TEXT = CSS_SOURCES.map((file) => fs.readFileSync(file, 'utf8')).join('\n')
 
@@ -697,7 +700,8 @@ console.log('\n[18] 光场与氛围层')
   check('reduced-motion 停止氛围动画', /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,500}\.dsu-atmo::before/.test(css))
   check('仍然没有引入 color-mix', !/color-mix\(/.test(css))
   check('光场用 QIF 强度（150 / dpr 1.75）', /limit = 150/.test(src) && /Math\.min\(1\.75/.test(src))
-  check('光场种子读取 facts', /FACTS\.hash/.test(src) && /FACTS\.profile/.test(src) && /FACTS\.bundleCount/.test(src))
+  const fieldSrc = fs.readFileSync(FIELD_SOURCE, 'utf8')
+  check('光场种子读取 facts', /facts\.hash/.test(fieldSrc) && /facts\.profile/.test(fieldSrc) && /facts\.bundleCount/.test(fieldSrc))
   check('finish / dispose 会停光场', /function releaseAll\(\)[\s\S]{0,160}stopField\(\)/.test(src))
 
   const on = run(true)
@@ -758,9 +762,14 @@ console.log('\n[20] 电影细节 / 准星 / 金属鲸鱼 / facts')
   check('鲸鱼有金属渐变', /linearGradient/.test(src) && /metalSeq/.test(src))
   check('REV 行读取真实 facts', /paintMeta\(\)/.test(src) && /REV ' \+ factText\(FACTS\.version\)/.test(src))
   check('facts 异步刷新', /function refreshFacts\(/.test(src) && /ROUTES\.facts/.test(src))
-  check('facts 未就绪会重试', /setTimeout\(tick, 400\)/.test(src) && /setTimeout\(tick, 600\)/.test(src))
+  check('facts 未就绪会重试', /schedule\(400\)/.test(src) && /schedule\(600\)/.test(src))
   check('facts 就绪后仍继续轮询', /即使已经 ready 也继续轮询/.test(src))
   check('会话变化不重排光场', /hash !== prevHash/.test(src))
+
+  const factsSrc = fs.readFileSync(FACTS_SOURCE, 'utf8')
+  check('dispose 会停掉 facts 轮询', /function dispose\(\)[\s\S]{0,300}stopped = true/.test(factsSrc))
+  check('轮询与更新会检查 stopped', /if \(stopped \|\| typeof fetch/.test(factsSrc) && /if \(stopped \|\| !f/.test(factsSrc))
+  check('揭幕会停掉 facts 轮询', /stopFacts\(\)/.test(src))
 
   run(true)
   const plainMeta = lookup('.dsu-meta-1')
