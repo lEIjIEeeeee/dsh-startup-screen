@@ -79,6 +79,110 @@ export function factsSnapshot(cache) {
 }
 
 /**
+ * 用户资料与已加载插件数。
+ * @param {HostContext} ctx
+ * @param {Facts} facts
+ */
+function readProfile(ctx, facts) {
+  try {
+    const pc = service(ctx, 'profileContext') || {}
+    facts.profile = pc.name ? String(pc.name).toUpperCase() : null
+    facts.bundleCount = Array.isArray(pc.startedBundles) ? pc.startedBundles.length : null
+  } catch (err) {
+    /* noop */
+  }
+}
+
+/**
+ * 沙箱默认模式；没有默认值时向策略要一次解析结果。
+ * @param {HostContext} ctx
+ * @param {Facts} facts
+ */
+function readSandbox(ctx, facts) {
+  try {
+    const sp = service(ctx, 'sandboxPolicy')
+    let mode = sp && sp.defaultMode
+    if (!mode && sp && typeof sp.resolve === 'function') {
+      const r = sp.resolve()
+      mode = r && r.mode
+    }
+    facts.sandbox = mode ? String(mode) : null
+  } catch (err) {
+    /* noop */
+  }
+}
+
+/**
+ * 当前会话选用的模型。
+ * @param {HostContext} ctx
+ * @param {Facts} facts
+ */
+async function readModel(ctx, facts) {
+  try {
+    const md = service(ctx, 'agentDefaultModel')
+    if (md && typeof md.currentSelection === 'function') {
+      const sel = await md.currentSelection()
+      facts.model = sel && sel.model ? String(sel.model) : null
+    }
+  } catch (err) {
+    /* noop */
+  }
+}
+
+/**
+ * 插件清单：总数，以及 dsh-base（或第一个插件）的版本。
+ * @param {HostContext} ctx
+ * @param {Facts} facts
+ */
+async function readBundles(ctx, facts) {
+  try {
+    const pm = service(ctx, 'pluginManager')
+    if (pm && typeof pm.listBundles === 'function') {
+      const list = await pm.listBundles()
+      if (Array.isArray(list) && list.length) {
+        facts.bundleCount = list.length
+        const base = list.find((b) => b && /dsh-base$/.test(String(b.name || '')))
+        const core = base || list[0]
+        if (core && core.version) facts.version = String(core.version).replace(/^v/, '')
+      }
+    }
+  } catch (err) {
+    /* noop */
+  }
+}
+
+/**
+ * 会话数；不同版本的 sessions.list 返回形状不同。
+ * @param {HostContext} ctx
+ * @param {Facts} facts
+ */
+async function readSessions(ctx, facts) {
+  try {
+    const s = service(ctx, 'sessions')
+    if (s && typeof s.list === 'function') {
+      const r = await s.list()
+      if (Array.isArray(r)) facts.sessions = r.length
+      else if (r && Array.isArray(r.items)) facts.sessions = r.items.length
+      else if (r && Array.isArray(r.sessions)) facts.sessions = r.sessions.length
+    }
+  } catch (err) {
+    /* noop */
+  }
+}
+
+/**
+ * 只取"这台机器上稳定"的项；会话数会变，不参与指纹。
+ * @param {Facts} facts
+ */
+function factsHash(facts) {
+  return shortHash(
+    [facts.profile, facts.version, facts.model, facts.sandbox, facts.bundleCount]
+      .map((x) => (x === null || x === undefined ? '-' : String(x)))
+      .join('|'),
+  )
+}
+
+/**
  * @param {HostContext} ctx
  * @param {FactsCache} cache
  * @returns {Facts}
@@ -91,69 +195,13 @@ export function collectFacts(ctx, cache) {
   cache.value = facts
 
   ;(async () => {
-    try {
-      const pc = service(ctx, 'profileContext') || {}
-      facts.profile = pc.name ? String(pc.name).toUpperCase() : null
-      facts.bundleCount = Array.isArray(pc.startedBundles) ? pc.startedBundles.length : null
-    } catch (err) {
-      /* noop */
-    }
-
-    try {
-      const sp = service(ctx, 'sandboxPolicy')
-      let mode = sp && sp.defaultMode
-      if (!mode && sp && typeof sp.resolve === 'function') {
-        const r = sp.resolve()
-        mode = r && r.mode
-      }
-      facts.sandbox = mode ? String(mode) : null
-    } catch (err) {
-      /* noop */
-    }
-
-    try {
-      const md = service(ctx, 'agentDefaultModel')
-      if (md && typeof md.currentSelection === 'function') {
-        const sel = await md.currentSelection()
-        facts.model = sel && sel.model ? String(sel.model) : null
-      }
-    } catch (err) {
-      /* noop */
-    }
-
-    try {
-      const pm = service(ctx, 'pluginManager')
-      if (pm && typeof pm.listBundles === 'function') {
-        const list = await pm.listBundles()
-        if (Array.isArray(list) && list.length) {
-          facts.bundleCount = list.length
-          const base = list.find((b) => b && /dsh-base$/.test(String(b.name || '')))
-          const core = base || list[0]
-          if (core && core.version) facts.version = String(core.version).replace(/^v/, '')
-        }
-      }
-    } catch (err) {
-      /* noop */
-    }
-
-    try {
-      const s = service(ctx, 'sessions')
-      if (s && typeof s.list === 'function') {
-        const r = await s.list()
-        if (Array.isArray(r)) facts.sessions = r.length
-      }
-    } catch (err) {
-      /* noop */
-    }
-
+    readProfile(ctx, facts)
+    readSandbox(ctx, facts)
+    await readModel(ctx, facts)
+    await readBundles(ctx, facts)
+    await readSessions(ctx, facts)
     Object.assign(facts, readRegistryCounts(ctx))
-
-    /* 只取"这台机器上稳定"的项；会话数会变，不参与指纹 */
-    facts.hash = shortHash(
-      [facts.profile, facts.version, facts.model, facts.sandbox, facts.bundleCount]
-        .map((x) => (x === null || x === undefined ? '-' : String(x)))
-        .join('|'),
-    )
+    facts.hash = factsHash(facts)
     facts.ready = true
   })().catch(() => {
     facts.ready = true
@@ -171,16 +219,6 @@ export function collectFacts(ctx, cache) {
 export async function refreshSessions(ctx, cache) {
   const facts = cache.value
   if (!facts) return
-  try {
-    const s = service(ctx, 'sessions')
-    if (s && typeof s.list === 'function') {
-      const r = await s.list()
-      if (Array.isArray(r)) facts.sessions = r.length
-      else if (r && Array.isArray(r.items)) facts.sessions = r.items.length
-      else if (r && Array.isArray(r.sessions)) facts.sessions = r.sessions.length
-    }
-  } catch (err) {
-    /* noop */
-  }
+  await readSessions(ctx, facts)
   Object.assign(facts, readRegistryCounts(ctx))
 }

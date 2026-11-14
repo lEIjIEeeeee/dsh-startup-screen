@@ -42,7 +42,7 @@ export function createConfig(configFile, logger) {
       text = fs.readFileSync(configFile, 'utf8')
     } catch (err) {
       /* 首次运行没有文件是正常的，不用提示 */
-      const code = (/** @type {any} */ (err) || {}).code
+      const code = /** @type {any} */ (err || {}).code
       if (code !== 'ENOENT' && !readWarned) {
         readWarned = true
         warn('读取配置失败，本次使用默认配置：' + messageOf(err))
