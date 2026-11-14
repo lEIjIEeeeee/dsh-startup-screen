@@ -6,7 +6,7 @@
  * @param {number} hi
  * @returns {number}
  */
-export function clamp01(v, lo, hi) {
+export function clamp(v, lo, hi) {
   const n = Number(v)
   return isFinite(n) ? Math.min(hi, Math.max(lo, n)) : lo
 }

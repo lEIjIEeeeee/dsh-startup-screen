@@ -1,27 +1,16 @@
-import { DEFAULTS } from '../../shared/defaults.js'
-import { IDENTITY_MAX, normalizeIdentityId } from '../../shared/schema.js'
+import { normalize } from '../../shared/schema.js'
 
 /**
- * 把页面上的原始配置和默认值合并成一份可用的配置。
- * 不直接读 window：调用方把对象传进来，方便测试。
+ * 页面上的原始配置：字段校验统一交给 shared/schema，这里只补一个运行时字段。
+ * 宿主会把 facts 快照塞在配置对象里一起注入，它不是配置项，所以不进 normalize。
  *
  * @param {any} raw
  * @returns {Record<string, any>}
  */
-export function normalizeStartupConfig(raw) {
+export function readStartupConfig(raw) {
   const source = raw && typeof raw === 'object' ? raw : {}
-  const out = {}
-  for (const key in DEFAULTS) {
-    if (Object.prototype.hasOwnProperty.call(DEFAULTS, key)) out[key] = DEFAULTS[key]
-  }
-  for (const key in source) {
-    if (Object.prototype.hasOwnProperty.call(source, key) && source[key] !== undefined && source[key] !== null) {
-      out[key] = source[key]
-    }
-  }
-  out.speed = Math.min(3, Math.max(0.35, Number(out.speed) || 1))
-  out.identity = String(out.identity || DEFAULTS.identity).slice(0, IDENTITY_MAX)
-  out.identityId = normalizeIdentityId(out.identityId, out.identity)
+  const out = normalize(source)
+  if (source.facts && typeof source.facts === 'object') out.facts = source.facts
   return out
 }
 
