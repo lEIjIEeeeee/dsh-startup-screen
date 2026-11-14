@@ -1,0 +1,106 @@
+/* ── 交互区 ─────────────────────────────────────────────────────────────── */
+.dsu-action {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 60%;
+  z-index: 26;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms ease;
+}
+.dsu-action.dsu-in {
+  opacity: 1;
+  pointer-events: auto;
+}
+.dsu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 26px;
+  border: 1.5px solid var(--dsu-ink);
+  background: transparent;
+  color: var(--dsu-ink);
+  font-family: var(--dsu-din);
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: color 220ms ease, border-color 220ms ease;
+}
+.dsu-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--dsu-ink);
+  transform: translateX(-101%);
+  transition: transform 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+.dsu-btn:hover::before { transform: none; }
+.dsu-btn:hover { color: var(--dsu-box-ink); }
+.dsu-btn:hover .dsu-btn-en { color: var(--dsu-box-ink); opacity: 1; }
+.dsu-btn > * { position: relative; z-index: 1; }
+.dsu-btn:active { transform: translateY(1px); }
+.dsu-btn-zh { font-family: var(--dsu-zh); font-weight: 500; }
+.dsu-btn-en { font-family: var(--dsu-mono); font-size: 11px; letter-spacing: 0.24em; opacity: 0.62; }
+.dsu-btn.dsu-pulse { animation: dsu-pulse 1.9s ease-in-out infinite; }
+@keyframes dsu-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 117, 0, 0); }
+  50% { box-shadow: 0 0 0 7px rgba(255, 117, 0, 0.14); }
+}
+.dsu-hint {
+  font-family: var(--dsu-zh);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--dsu-muted);
+}
+.dsu-hint kbd {
+  font-family: var(--dsu-mono);
+  border: 1px solid var(--dsu-hair);
+  padding: 1px 5px;
+  margin: 0 3px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+/* 身份卡（第二步）：纯中文标签 + 数字，去掉了英文双写与竖排表头，尽量干净 */
+.dsu-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 300px;
+  padding: 2px 0;
+  border-top: 1px solid var(--dsu-hair);
+  border-bottom: 1px solid var(--dsu-hair);
+}
+/* 作者样式里的 display:flex 会盖掉 [hidden] 的 UA display:none，必须显式补一条，
+   否则第一步（只要按钮、不要卡片）会露出一条空的边框 */
+.dsu-card[hidden] { display: none; }
+.dsu-card-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 34px;
+  padding: 8px 2px;
+  font-family: var(--dsu-zh);
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
+  color: var(--dsu-muted);
+}
+.dsu-card-row + .dsu-card-row {
+  border-top: 1px solid var(--dsu-hair-soft);
+}
+.dsu-card-row b {
+  font-family: var(--dsu-din);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--dsu-ink);
+}
+.dsu-card-row b.dsu-zhname { font-family: var(--dsu-zh); letter-spacing: 0.1em; }
+

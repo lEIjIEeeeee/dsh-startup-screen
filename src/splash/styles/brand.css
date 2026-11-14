@@ -1,0 +1,216 @@
+/* ── 品牌块（左上角）──────────────────────────────────────────────────── */
+/* 黑幕结束后统一"滑到位"：左侧文字从 -22px 滑入，右侧元素从 +18px 滑入，
+   按 60ms 一档错开；不再用裁剪式擦除 */
+.dsu-brand {
+  position: absolute;
+  left: 46px;
+  top: 44px;
+  z-index: 20;
+  color: var(--dsu-ink);
+}
+.dsu-brand-1,
+.dsu-brand-2,
+.dsu-brand-3 {
+  opacity: 0;
+  transform: translateX(-22px);
+  transition: opacity 560ms cubic-bezier(0.16, 0.84, 0.24, 1),
+    transform 560ms cubic-bezier(0.16, 0.84, 0.24, 1);
+}
+.dsu-brand-1 {
+  font-size: 33px;
+  font-weight: 700;
+  letter-spacing: 0.012em;
+  line-height: 0.98;
+}
+.dsu-brand-2 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.012em;
+  margin-top: 3px;
+}
+.dsu-brand-3 {
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: 0.012em;
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+.dsu-brand-3 b { font-weight: 700; }
+.dsu-brand.dsu-in .dsu-brand-1 { opacity: 1; transform: none; transition-delay: 60ms; }
+.dsu-brand.dsu-in .dsu-brand-2 { opacity: 1; transform: none; transition-delay: 150ms; }
+.dsu-brand.dsu-in .dsu-brand-3 { opacity: 1; transform: none; transition-delay: 240ms; }
+
+/* 中央状态区 */
+.dsu-center {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 47%;
+  transform: translateY(-50%);
+  z-index: 22;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  pointer-events: none;
+  transition: opacity 340ms ease;
+}
+/* 终幕时整块中央区（状态行 / 分隔线 / 鲸鱼 / 虚线）必须整体退场，
+   否则会和 WELCOME 版式叠在一起 */
+.dsu-center.dsu-off { opacity: 0; }
+
+.dsu-status {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-family: var(--dsu-zh);
+  font-size: clamp(48px, 4.7vw, 72px);
+  font-weight: 500;
+  font-synthesis: none;
+  letter-spacing: 0.135em;
+  color: var(--dsu-ink);
+  opacity: 0;
+  transition: opacity 300ms ease;
+  white-space: nowrap;
+  /* 清晰度优先：只给主字打开次像素抗锯齿，不动根节点，避免小字和玻璃背景一起变样 */
+  -webkit-font-smoothing: auto;
+  text-rendering: auto;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.055), 0 20px 54px rgba(0, 0, 0, 0.46);
+}
+.dsu-status.dsu-in { opacity: 1; }
+/* 字距补偿必须加在文字子项上：flex 容器上的 text-indent 不生效，否则整行会偏右 */
+.dsu-status-zh { text-indent: 0.135em; }
+.dsu-status.dsu-zhline {
+  font-family: var(--dsu-zh);
+  font-weight: 500;
+  letter-spacing: 0.135em;
+  font-size: clamp(48px, 4.7vw, 72px);
+}
+#dsh-startup-root:not(.dsu-dark) .dsu-status {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.82), 0 13px 32px rgba(66, 54, 40, 0.16);
+}
+/* 分隔圆点单独提亮：整句因此有一个视觉锚 */
+.dsu-status .dsu-sep {
+  color: var(--dsu-accent);
+  text-shadow: 0 0 18px var(--dsu-accent-glow, rgba(255, 117, 0, 0.42));
+}
+/* 护城河：只准星步骤启用，避免玻璃背景下每句字都带一圈常驻光晕 */
+#dsh-startup-root .dsu-status.dsu-shield,
+#dsh-startup-root .dsu-sub-en.dsu-shield {
+  text-shadow: 0 0 14px var(--dsu-bg-2), 0 0 5px var(--dsu-bg-2),
+    0 1px 0 rgba(255, 255, 255, 0.055), 0 20px 54px rgba(0, 0, 0, 0.46);
+}
+#dsh-startup-root:not(.dsu-dark) .dsu-status.dsu-shield,
+#dsh-startup-root:not(.dsu-dark) .dsu-sub-en.dsu-shield {
+  text-shadow: 0 0 14px var(--dsu-bg-2), 0 0 5px var(--dsu-bg-2),
+    0 1px 0 rgba(255, 255, 255, 0.82), 0 13px 32px rgba(66, 54, 40, 0.16);
+}
+.dsu-caret {
+  display: inline-block;
+  width: 0;
+  height: 4px;
+  margin-left: 0;
+  background: var(--dsu-accent);
+  transform: translateY(3px);
+  opacity: 0;
+  transition: width 180ms ease, margin-left 180ms ease, opacity 180ms ease;
+}
+.dsu-caret.dsu-on {
+  width: 15px;
+  margin-left: 14px;
+  opacity: 1;
+  animation: dsu-blink 1s steps(1, end) infinite;
+}
+@keyframes dsu-blink { 50% { opacity: 0; } }
+
+.dsu-sub-en {
+  margin-top: 16px;
+  font-family: var(--dsu-mono);
+  font-size: 12.5px;
+  font-weight: 400;
+  letter-spacing: 0.46em;
+  text-indent: 0.46em;
+  color: var(--dsu-ink-soft);
+  opacity: 0;
+  white-space: nowrap;
+  -webkit-font-smoothing: auto;
+  text-rendering: auto;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.38);
+}
+.dsu-sub-en.dsu-in { opacity: 1; }
+#dsh-startup-root:not(.dsu-dark) .dsu-sub-en {
+  color: #464b4a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.dsu-rule {
+  margin-top: 22px;
+  height: 1px;
+  width: 0;
+  background: var(--dsu-hair);
+  transition: width 620ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+.dsu-rule.dsu-in { width: min(560px, 42vw); }
+
+/* 中央标识（鲸鱼）装配区 */
+.dsu-logo {
+  margin-top: 26px;
+  height: 0;
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: opacity 420ms ease, height 420ms ease, margin-top 420ms ease;
+}
+.dsu-logo.dsu-in {
+  opacity: 1;
+  height: 118px;
+}
+.dsu-logo svg {
+  width: 84px;
+  height: 84px;
+  color: var(--dsu-ink);
+}
+.dsu-logolabel {
+  margin-top: 10px;
+  font-family: var(--dsu-mono);
+  font-size: 10px;
+  letter-spacing: 0.58em;
+  text-indent: 0.58em;
+  color: var(--dsu-ink-soft);
+}
+.dsu-dots {
+  margin-top: 9px;
+  height: 2px;
+  width: 96px;
+  background-image: radial-gradient(circle, var(--dsu-ink) 40%, transparent 42%);
+  background-size: 12px 2px;
+  background-repeat: repeat-x;
+  opacity: 0.5;
+}
+
+/* 右下角等宽信息行（对应参考片 "· ID CONFIRMED : JOYC"）
+   挂在页脚正上方、右边缘与页脚对齐（页脚 right:46px / bottom:52px），
+   和左下角的声纹条左右对称。原定位紧贴居中大标题右侧，身份编号一长或窗口一窄
+   就会和版心文字叠字，只能靠 @media 在窄窗口整行藏掉 —— 挪出版心后，碰撞在
+   几何上不再可能，窄窗口也就不必再牺牲这条读数。 */
+.dsu-idline {
+  position: absolute;
+  right: 46px;
+  bottom: 104px;
+  transform: translateX(16px);
+  z-index: 22;
+  text-align: right;
+  font-family: var(--dsu-mono);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--dsu-ink-soft);
+  opacity: 0;
+  transition: opacity 520ms ease, transform 520ms cubic-bezier(0.16, 0.84, 0.24, 1);
+  transition-delay: 520ms;
+  white-space: nowrap;
+}
+.dsu-idline.dsu-in { opacity: 1; transform: none; }
+

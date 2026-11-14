@@ -1,0 +1,279 @@
+/* ── 底板 ───────────────────────────────────────────────────────────────── */
+.dsu-plate {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 78% 12%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(168deg, var(--dsu-bg-2) 0%, var(--dsu-bg) 42%, var(--dsu-bg) 100%);
+  opacity: 0;
+  transform-origin: 50% 45%;
+  transition: transform 3.4s cubic-bezier(0.16, 0.84, 0.24, 1);
+}
+
+.dsu-dark .dsu-plate {
+  background:
+    radial-gradient(120% 90% at 78% 12%, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(168deg, var(--dsu-bg-2) 0%, var(--dsu-bg) 42%, var(--dsu-bg) 100%);
+}
+
+/* 底板上固定的斜向掠光：金属面被顶灯照到的读法 */
+.dsu-plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(103deg,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.055) 46%,
+    rgba(255, 255, 255, 0) 62%);
+}
+
+/* 背景里若隐若现的档案面板（参考片右侧极淡的方块群） */
+.dsu-watermark {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: 50% 45%;
+  transition: transform 4.6s cubic-bezier(0.16, 0.84, 0.24, 1);
+}
+.dsu-wm {
+  position: absolute;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  border: 1px solid var(--dsu-hair-soft);
+}
+.dsu-dark .dsu-wm {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0));
+}
+/* 水印三层景深：远 / 中 / 近 */
+.dsu-wm-far { filter: blur(2.6px) saturate(0.8); opacity: 0.32; }
+.dsu-wm-mid { filter: blur(1.1px) saturate(0.9); opacity: 0.55; }
+.dsu-wm-near { filter: blur(0.3px); opacity: 0.85; }
+
+/* A4 镜头推进：底板 1.035× / 水印 1.06× 视差 */
+#dsh-startup-root.dsu-cam .dsu-plate { transform: scale(1.035); }
+#dsh-startup-root.dsu-cam .dsu-watermark { transform: scale(1.06) translateY(-0.6%); }
+
+@media (prefers-reduced-motion: reduce) {
+  #dsh-startup-root.dsu-cam .dsu-plate,
+  #dsh-startup-root.dsu-cam .dsu-watermark { transform: none; transition: none; }
+}
+
+/* ── 活体背景层：氛围光 / 体积光 / 地面反光 / Canvas 光场 ─────────────── */
+.dsu-atmo,
+.dsu-beams,
+.dsu-floor,
+.dsu-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* A1 大气层：右上暖光 / 左下冷光，缓慢漂移 */
+.dsu-atmo {
+  z-index: 8;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 1400ms ease;
+}
+.dsu-atmo.dsu-in { opacity: 1; }
+.dsu-atmo::before,
+.dsu-atmo::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  /* 不用 filter: blur()：68vw 的大面积模糊每帧都要重算，和液态玻璃叠加时
+     60fps 会掉到 ~49。径向渐变本身已经是软边，去掉模糊观感几乎不变。 */
+  will-change: transform;
+}
+.dsu-atmo::before {
+  width: 68vw;
+  height: 68vw;
+  right: -18vw;
+  top: -30vw;
+  background: radial-gradient(circle, rgba(255, 166, 88, 0.22) 0%, rgba(255, 166, 88, 0.06) 42%, rgba(255, 166, 88, 0) 68%);
+  animation: dsu-atmo-a 26s ease-in-out infinite alternate;
+}
+.dsu-atmo::after {
+  width: 62vw;
+  height: 62vw;
+  left: -20vw;
+  bottom: -30vw;
+  background: radial-gradient(circle, rgba(72, 186, 214, 0.16) 0%, rgba(72, 186, 214, 0.04) 46%, rgba(72, 186, 214, 0) 70%);
+  animation: dsu-atmo-b 34s ease-in-out infinite alternate;
+}
+.dsu-dark .dsu-atmo::before {
+  background: radial-gradient(circle, rgba(255, 150, 60, 0.16) 0%, rgba(255, 150, 60, 0) 66%);
+}
+.dsu-dark .dsu-atmo::after {
+  background: radial-gradient(circle, rgba(60, 170, 210, 0.13) 0%, rgba(60, 170, 210, 0) 68%);
+}
+@keyframes dsu-atmo-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-3vw, 2vh, 0) scale(1.08); }
+}
+@keyframes dsu-atmo-b {
+  from { transform: translate3d(0, 0, 0) scale(1.04); }
+  to { transform: translate3d(3vw, -2vh, 0) scale(1); }
+}
+
+/* A2 体积光：两道极淡的斜向光柱 */
+.dsu-beams {
+  z-index: 9;
+  overflow: hidden;
+  opacity: 0;
+  mix-blend-mode: screen;
+  transition: opacity 1200ms ease;
+}
+.dsu-beams.dsu-in { opacity: 1; }
+#dsh-startup-root:not(.dsu-dark) .dsu-beams { mix-blend-mode: soft-light; }
+.dsu-beams::before,
+.dsu-beams::after {
+  content: "";
+  position: absolute;
+  top: -30%;
+  width: 16%;
+  height: 160%;
+  background: linear-gradient(90deg,
+    rgba(255, 238, 210, 0) 0%,
+    rgba(255, 238, 210, 0.10) 42%,
+    rgba(255, 250, 240, 0.16) 50%,
+    rgba(255, 238, 210, 0.10) 58%,
+    rgba(255, 238, 210, 0) 100%);
+  transform: rotate(15deg);
+  /* 同上：光柱的线性渐变已经有软边，不再叠 blur() */
+  animation: dsu-beam 14s ease-in-out infinite alternate;
+}
+.dsu-beams::before { left: 8%; }
+.dsu-beams::after {
+  left: 62%;
+  width: 10%;
+  opacity: 0.55;
+  animation-duration: 19s;
+  animation-delay: -6s;
+}
+@keyframes dsu-beam {
+  from { transform: translateX(-6vw) rotate(15deg); opacity: 0.45; }
+  to { transform: translateX(6vw) rotate(15deg); opacity: 0.8; }
+}
+
+/* A3 地面反射：底部极弱的地平线与暖色反光 */
+.dsu-floor {
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 1600ms ease 300ms;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 56%, rgba(255, 255, 255, 0.02) 68%, rgba(255, 255, 255, 0.06) 72%, rgba(255, 255, 255, 0) 84%),
+    radial-gradient(70% 30% at 50% 100%, rgba(255, 190, 120, 0.08), rgba(255, 190, 120, 0) 70%);
+}
+.dsu-floor.dsu-in { opacity: 1; }
+.dsu-floor::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 22%;
+  height: 1px;
+  opacity: 0.5;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), var(--dsu-hair) 20%, var(--dsu-hair) 80%, rgba(255, 255, 255, 0));
+}
+
+/* A4 Canvas 光场：星尘 / 贝塞尔流光 / 边缘数据雨 / 底部水线 */
+.dsu-field {
+  z-index: 11;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  mix-blend-mode: screen;
+  transition: opacity 1500ms cubic-bezier(0.22, 0.68, 0.2, 1) 160ms;
+}
+#dsh-startup-root:not(.dsu-dark) .dsu-field { mix-blend-mode: multiply; }
+.dsu-field.dsu-in { opacity: 0.72; }
+#dsh-startup-root:not(.dsu-dark) .dsu-field.dsu-in { opacity: 0.58; }
+/* 玻璃模式：光场叠在磨砂层上，降一档避免发灰 */
+#dsh-startup-root.dsu-glass .dsu-field.dsu-in { opacity: 0.55; }
+#dsh-startup-root.dsu-glass:not(.dsu-dark) .dsu-field.dsu-in { opacity: 0.45; }
+
+/* A5 洗白掠光：底板被"洗"出来时，一道高光横掠过去 */
+.dsu-sheen {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: 0;
+  width: 46%;
+  z-index: 14;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transform: translateX(-72%);
+  background: linear-gradient(100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.10) 34%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.10) 66%,
+    rgba(255, 255, 255, 0) 100%);
+}
+.dsu-dark .dsu-sheen {
+  background: linear-gradient(100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.045) 34%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.045) 66%,
+    rgba(255, 255, 255, 0) 100%);
+}
+.dsu-sheen.dsu-go { animation: dsu-sheen 1250ms cubic-bezier(0.32, 0, 0.68, 1) 1 forwards; }
+@keyframes dsu-sheen {
+  0% { opacity: 0; transform: translateX(-72%); }
+  12% { opacity: 1; }
+  78% { opacity: 0.85; }
+  100% { opacity: 0; transform: translateX(232%); }
+}
+
+/* 终幕撕裂带：色散层做"字在抖"，这一层做"画面在撕" */
+.dsu-tear {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  z-index: 62;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 16%,
+    var(--dsu-glitch-a) 46%,
+    var(--dsu-glitch-b) 58%,
+    rgba(255, 255, 255, 0) 100%);
+}
+.dsu-tear.dsu-go { animation: dsu-tear 880ms cubic-bezier(0.45, 0, 0.6, 1) 1 forwards; }
+@keyframes dsu-tear {
+  0% { opacity: 0; transform: translate(0, 6vh); }
+  10% { opacity: 0.95; }
+  40% { transform: translate(2.2vw, 42vh); }
+  68% { transform: translate(-1.6vw, 70vh); }
+  100% { opacity: 0; transform: translate(0, 98vh); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsu-atmo::before,
+  .dsu-atmo::after,
+  .dsu-beams::before,
+  .dsu-beams::after { animation: none; }
+  .dsu-field { transition: none; }
+  .dsu-sheen.dsu-go,
+  .dsu-tear.dsu-go { animation: none; opacity: 0; }
+}
+
+/* 细颗粒噪点，让大色块不"塑料" */
+.dsu-grain {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.05;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/></filter><rect width='120' height='120' filter='url(%23n)' opacity='0.6'/></svg>");
+}
+

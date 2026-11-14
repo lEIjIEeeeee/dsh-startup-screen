@@ -1,0 +1,330 @@
+/* ── 真实数据：左侧两行读数 / 右侧自检清单 / 底部波形 ─────────────────── */
+.dsu-facts {
+  position: absolute;
+  left: 46px;
+  z-index: 20;
+  font-family: var(--dsu-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.145em;
+  color: var(--dsu-muted);
+  opacity: 0;
+  transform: translateX(-18px);
+  transition: opacity 520ms ease, transform 520ms cubic-bezier(0.16, 0.84, 0.24, 1);
+  transition-delay: 620ms;
+  white-space: nowrap;
+}
+.dsu-facts.dsu-in { opacity: 1; transform: none; }
+.dsu-facts b { color: var(--dsu-accent); font-weight: 400; }
+.dsu-facts-1 { top: 240px; }
+.dsu-facts-2 { top: 258px; }
+
+.dsu-checks {
+  position: absolute;
+  right: 46px;
+  top: 50%;
+  z-index: 21;
+  width: 270px;
+  padding: 16px 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: var(--dsu-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  opacity: 0;
+  transform: translate(18px, -50%);
+  transition: opacity 620ms ease, transform 620ms cubic-bezier(0.16, 0.84, 0.24, 1);
+  transition-delay: 520ms;
+  border: 1px solid rgba(10, 10, 10, 0.16);
+  border-left: 2px solid var(--dsu-accent);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 24px 60px rgba(56, 46, 34, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  overflow: hidden;
+}
+.dsu-dark .dsu-checks {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(10, 12, 14, 0.55);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+.dsu-checks.dsu-in { opacity: 1; transform: translate(0, -50%); }
+.dsu-checks-h {
+  padding-bottom: 7px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--dsu-hair);
+  color: var(--dsu-muted);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+}
+.dsu-live {
+  color: var(--dsu-accent);
+  animation: dsu-live-pulse 2.4s ease-in-out infinite;
+}
+@keyframes dsu-live-pulse {
+  0%, 100% { opacity: 0.46; }
+  50% { opacity: 1; }
+}
+.dsu-check {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--dsu-hair-soft);
+  color: var(--dsu-muted);
+}
+.dsu-check-k { width: 82px; flex: none; font-size: 10.5px; }
+.dsu-check-v {
+  flex: 1;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  color: var(--dsu-ink-soft);
+}
+.dsu-check i {
+  width: 4px;
+  height: 4px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--dsu-hair);
+  transform: translateY(-1px);
+}
+.dsu-check.dsu-on { color: var(--dsu-ink); }
+.dsu-check.dsu-on .dsu-check-v { color: var(--dsu-ink); }
+.dsu-check.dsu-on i {
+  background: var(--dsu-accent);
+  box-shadow: 0 0 8px var(--dsu-accent);
+}
+.dsu-check.dsu-past i {
+  background: var(--dsu-accent-2);
+  box-shadow: 0 0 6px var(--dsu-accent-2);
+  opacity: 0.75;
+}
+.dsu-check::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 0;
+  height: 1px;
+  background: var(--dsu-accent);
+  transition: width 420ms cubic-bezier(0.3, 0.9, 0.25, 1);
+}
+.dsu-check.dsu-on::after { width: 100%; }
+/* 窄屏：面板留在右侧，压紧并上移到 SKIP 下面，避开最长标题；
+   右侧十六进制瀑布在窄屏让位。 */
+@media (max-width: 1400px) and (min-width: 1180px) {
+  .dsu-checks {
+    left: auto;
+    right: 20px;
+    top: 50%;
+    width: 230px;
+    padding: 12px 14px 8px;
+    transform: translate(18px, -50%);
+  }
+  .dsu-checks.dsu-in { transform: translate(0, -50%); }
+  .dsu-checks-h { padding-bottom: 5px; margin-bottom: 2px; font-size: 8.5px; }
+  .dsu-check { padding: 4px 0; }
+  .dsu-check-k { width: 72px; font-size: 10px; }
+  .dsu-check-v { font-size: 10.5px; }
+  .dsu-hex { display: none; }
+}
+@media (max-width: 1179px) { .dsu-checks { display: none; } }
+
+.dsu-trace {
+  position: absolute;
+  left: 50%;
+  bottom: 17%;
+  width: min(520px, 44vw);
+  height: 46px;
+  transform: translateX(-50%);
+  z-index: 18;
+  opacity: 0;
+  transition: opacity 700ms ease;
+  pointer-events: none;
+}
+.dsu-trace.dsu-in { opacity: 0.74; }
+.dsu-trace svg { width: 100%; height: 100%; overflow: visible; }
+.dsu-trace-base { stroke: var(--dsu-hair); stroke-width: 1; opacity: 0.55; }
+.dsu-trace-tick { stroke: var(--dsu-hair); stroke-width: 1; opacity: 0.45; }
+.dsu-trace-line {
+  fill: none;
+  stroke: var(--dsu-accent-2);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 4px rgba(44, 122, 138, 0.45));
+}
+#dsh-startup-root:not(.dsu-dark) .dsu-trace-line { opacity: 0.62; }
+.dsu-trace-cursor {
+  stroke: var(--dsu-accent);
+  stroke-width: 1;
+  opacity: 0.8;
+  transform-box: view-box;
+  animation: dsu-trace-scan 4.6s linear infinite;
+}
+@keyframes dsu-trace-scan {
+  from { transform: translateX(0); }
+  to { transform: translateX(520px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dsu-trace-cursor,
+  .dsu-live { animation: none; }
+}
+
+/* ── 环形准星（验证通过）───────────────────────────────────────────────── */
+/* 照原片：环居中、直径约 66vw，状态字就落在环心里，两者是一个整体。
+   主字放大到 48–72px 后，环同步提到 66vw，长句才不会压到环上。
+   关键是把两段弧的缺口都留在正下方 6 点钟方向，底部字幕永远不会被压到。 */
+.dsu-reticle {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: min(66vw, 94vh, 1180px);
+  height: min(66vw, 94vh, 1180px);
+  transform: translate(-50%, -50%);
+  z-index: 16;
+  opacity: 0;
+  transition: opacity 500ms ease;
+  pointer-events: none;
+  filter: drop-shadow(0 0 36px rgba(0, 0, 0, 0.35));
+}
+.dsu-reticle::before {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(111, 211, 232, 0) 54%, rgba(111, 211, 232, 0.07) 68%, rgba(111, 211, 232, 0) 76%);
+  filter: blur(8px);
+}
+.dsu-reticle.dsu-in { opacity: 1; }
+.dsu-reticle svg { width: 100%; height: 100%; overflow: visible; }
+.dsu-ret-rot-a { transform-origin: 50% 50%; animation: dsu-spin 18s linear infinite; }
+.dsu-ret-rot-b { transform-origin: 50% 50%; animation: dsu-spin 11s linear infinite reverse; }
+@keyframes dsu-spin { to { transform: rotate(360deg); } }
+.dsu-reticle .dsu-ring-a { fill: none; stroke: var(--dsu-ink); stroke-width: 1.6; opacity: 0.72; }
+.dsu-reticle .dsu-ring-b { fill: none; stroke: var(--dsu-box-ink); stroke-width: 1; opacity: 0.38; }
+.dsu-reticle .dsu-dot-a { fill: var(--dsu-ink); }
+.dsu-reticle .dsu-dot-b { fill: var(--dsu-box-ink); }
+.dsu-reticle .dsu-dot-o { fill: var(--dsu-accent); }
+.dsu-reticle .dsu-bracket {
+  fill: none;
+  stroke: var(--dsu-ink);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+/* 刻度环：48 格沿环逐格点亮一圈（仪表自检），读完停在暗态 */
+.dsu-reticle .dsu-tick {
+  stroke: var(--dsu-ink);
+  stroke-width: 1;
+  opacity: 0.16;
+  animation: dsu-tick-on 520ms ease-out both;
+}
+.dsu-reticle .dsu-tick-major { stroke-width: 1.7; opacity: 0.24; }
+@keyframes dsu-tick-on {
+  0% { stroke: var(--dsu-accent); opacity: 1; }
+  55% { stroke: var(--dsu-accent); opacity: 0.8; }
+  100% { stroke: var(--dsu-ink); opacity: 0.16; }
+}
+
+/* 雷达扫描扇区：conic 渐变 + 环形遮罩，只在中环那一圈扫 */
+.dsu-ret-scan {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(from 0deg,
+    rgba(255, 117, 0, 0) 0deg,
+    var(--dsu-accent-soft, rgba(255, 117, 0, 0.10)) 15deg,
+    var(--dsu-accent-strong, rgba(255, 117, 0, 0.72)) 19deg,
+    rgba(255, 117, 0, 0) 20.5deg);
+  -webkit-mask-image: radial-gradient(circle closest-side at 50% 50%,
+    transparent 0 56%, #000 57% 73%, transparent 74.5%);
+  mask-image: radial-gradient(circle closest-side at 50% 50%,
+    transparent 0 56%, #000 57% 73%, transparent 74.5%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  will-change: transform;
+  animation: dsu-ret-sweep 3.2s linear infinite;
+}
+@keyframes dsu-ret-sweep { to { transform: rotate(360deg); } }
+
+/* 咬合：环出现那一下先收 3.5% 再弹回 */
+.dsu-reticle.dsu-lock { animation: dsu-ret-lock 860ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes dsu-ret-lock {
+  0% { transform: translate(-50%, -50%) scale(1.03); }
+  16% { transform: translate(-50%, -50%) scale(0.965); }
+  34% { transform: translate(-50%, -50%) scale(1.012); }
+  60% { transform: translate(-50%, -50%) scale(1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* 彗星弧 / 数据环 / 锁定冲击波 */
+.dsu-ret-comet {
+  fill: none;
+  stroke: var(--dsu-accent-2);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  opacity: 0.9;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: dsu-spin 6.8s linear infinite;
+}
+.dsu-tick-data {
+  stroke: var(--dsu-accent-2);
+  stroke-width: 0.8;
+  opacity: 0.14;
+}
+.dsu-tick-data.dsu-lit { opacity: 0.9; }
+.dsu-ping {
+  fill: none;
+  stroke: var(--dsu-accent);
+  stroke-width: 1.2;
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+}
+.dsu-reticle.dsu-lock .dsu-ping { animation: dsu-ping 1200ms cubic-bezier(0.2, 0.8, 0.2, 1) 1; }
+@keyframes dsu-ping {
+  0% { opacity: 0.65; transform: scale(0.94); }
+  70% { opacity: 0.16; }
+  100% { opacity: 0; transform: scale(1.16); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dsu-reticle .dsu-tick,
+  .dsu-ret-scan,
+  .dsu-ret-comet,
+  .dsu-reticle.dsu-lock,
+  .dsu-reticle.dsu-lock .dsu-ping { animation: none; }
+}
+
+/* 读取阶段的十六进制瀑布：放到原片里最空的上右区，不去和主体挤中间 */
+.dsu-hex {
+  position: absolute;
+  right: 46px;
+  top: 22%;
+  width: 236px;
+  height: 148px;
+  overflow: hidden;
+  z-index: 19;
+  font-family: var(--dsu-mono);
+  font-size: 10px;
+  line-height: 1.55;
+  letter-spacing: 0.06em;
+  color: var(--dsu-ink-soft);
+  opacity: 0;
+  transition: opacity 320ms ease;
+  text-align: right;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 74%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 22%, #000 74%, transparent);
+}
+.dsu-hex.dsu-in { opacity: 0.6; }
+

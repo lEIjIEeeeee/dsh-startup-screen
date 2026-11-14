@@ -1,0 +1,323 @@
+/* ── 页脚 / 字幕 / 进度条 ───────────────────────────────────────────────── */
+.dsu-foot {
+  position: absolute;
+  right: 46px;
+  bottom: 52px;
+  z-index: 24;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--dsu-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--dsu-ink);
+  opacity: 0;
+  transform: translateX(18px);
+  transition: opacity 560ms ease, transform 560ms cubic-bezier(0.16, 0.84, 0.24, 1);
+  transition-delay: 300ms;
+}
+.dsu-foot.dsu-in { opacity: 1; transform: none; }
+.dsu-foot i {
+  display: block;
+  width: 0;
+  height: 7px;
+  background: var(--dsu-ink);
+  transition: width 720ms cubic-bezier(0.2, 0.9, 0.2, 1) 460ms;
+}
+.dsu-foot.dsu-in i { width: 26px; }
+
+.dsu-subtitle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 50px;
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.dsu-sub-zh {
+  font-family: var(--dsu-zh);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  color: var(--dsu-ink-soft);
+  text-shadow: var(--dsu-sub-glow);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 420ms ease, transform 420ms cubic-bezier(0.16, 0.84, 0.24, 1);
+}
+.dsu-sub-zh.dsu-in { opacity: 1; transform: none; }
+.dsu-sub-en2 {
+  font-family: var(--dsu-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--dsu-muted);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 420ms ease, transform 420ms cubic-bezier(0.16, 0.84, 0.24, 1);
+}
+.dsu-sub-en2.dsu-in { opacity: 0.85; transform: none; }
+
+/* 底部进度：照原片收成中间一小段，不再横贯整屏跟字幕抢注意力 */
+.dsu-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 11px;
+  width: min(420px, 32vw);
+  height: 3px;
+  transform: translateX(-50%);
+  z-index: 26;
+  background: var(--dsu-hair-soft);
+}
+.dsu-progress::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 3px;
+  height: 5px;
+  background-image: repeating-linear-gradient(90deg, var(--dsu-hair) 0 1px, transparent 1px 30px);
+  background-size: auto 5px;
+  background-position: 0 100%;
+  background-repeat: repeat-x;
+  opacity: 0.8;
+}
+.dsu-progress i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--dsu-ink);
+  box-shadow: inset -2px 0 0 var(--dsu-accent);
+  transition: width 460ms cubic-bezier(0.3, 0.9, 0.25, 1);
+}
+.dsu-progress.dsu-accent i { background: var(--dsu-accent); }
+
+/* 阶段计数（左下） */
+.dsu-stepcount {
+  position: absolute;
+  left: 46px;
+  bottom: 52px;
+  z-index: 24;
+  font-family: var(--dsu-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--dsu-muted);
+  opacity: 0;
+  transform: translateX(-18px);
+  transition: opacity 560ms ease, transform 560ms cubic-bezier(0.16, 0.84, 0.24, 1);
+  transition-delay: 400ms;
+}
+.dsu-stepcount.dsu-in { opacity: 1; transform: none; }
+
+/* 跳过 */
+.dsu-skip {
+  position: absolute;
+  right: 46px;
+  top: 48px;
+  z-index: 30;
+  font-family: var(--dsu-mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  color: var(--dsu-muted);
+  border: 1px solid transparent;
+  padding: 5px 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 400ms ease, color 200ms ease, border-color 200ms ease;
+}
+.dsu-skip.dsu-in { opacity: 1; }
+.dsu-skip:hover { color: var(--dsu-ink); border-color: var(--dsu-hair); }
+.dsu-skip[hidden] { display: none; }
+
+/* ── 机框装饰层（照原片的疏密：只贴边，不占中间）──────────────────────── */
+/* 四角定位标记 / 一次性扫描线 / 品牌块下单行小字（含时钟）/ 六个阶段格 */
+.dsu-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 17;
+  pointer-events: none;
+}
+/* 完整矩形机框：四角连通，不做切角 */
+.dsu-frame::before {
+  content: "";
+  position: absolute;
+  inset: 22px;
+  border: 1px solid var(--dsu-hair);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 0 rgba(0, 0, 0, 0.30),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  transition: opacity 780ms ease;
+}
+.dsu-frame.dsu-in::before { opacity: 1; }
+.dsu-frame::after {
+  content: "";
+  position: absolute;
+  inset: 22px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 900ms ease;
+  background-image:
+    repeating-linear-gradient(90deg, var(--dsu-hair) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, var(--dsu-hair) 0 1px, transparent 1px 24px);
+  background-size: 100% 5px, 100% 5px;
+  background-position: 0 0, 0 100%;
+  background-repeat: no-repeat, no-repeat;
+}
+.dsu-frame.dsu-in::after { opacity: 0.5; }
+
+.dsu-corner {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  opacity: 0;
+  transition: opacity 640ms ease, transform 640ms cubic-bezier(0.16, 0.84, 0.24, 1);
+}
+.dsu-corner::before,
+.dsu-corner::after { content: ""; position: absolute; background: var(--dsu-hair); opacity: 0.62; }
+.dsu-corner::before { width: 100%; height: 1px; }
+.dsu-corner::after { width: 1px; height: 100%; }
+.dsu-c-tl { left: 26px; top: 26px; transform: translate(-10px, -10px); }
+.dsu-c-tl::before { top: 0; left: 0; }
+.dsu-c-tl::after { top: 0; left: 0; }
+.dsu-c-tr { right: 26px; top: 26px; transform: translate(10px, -10px); }
+.dsu-c-tr::before { top: 0; right: 0; }
+.dsu-c-tr::after { top: 0; right: 0; }
+.dsu-c-bl { left: 26px; bottom: 26px; transform: translate(-10px, 10px); }
+.dsu-c-bl::before { bottom: 0; left: 0; }
+.dsu-c-bl::after { bottom: 0; left: 0; }
+.dsu-c-br { right: 26px; bottom: 26px; transform: translate(10px, 10px); }
+.dsu-c-br::before { bottom: 0; right: 0; }
+.dsu-c-br::after { bottom: 0; right: 0; }
+.dsu-frame.dsu-in .dsu-corner { opacity: 1; transform: none; }
+.dsu-frame.dsu-in .dsu-c-tr { transition-delay: 90ms; }
+.dsu-frame.dsu-in .dsu-c-br { transition-delay: 180ms; }
+.dsu-frame.dsu-in .dsu-c-bl { transition-delay: 270ms; }
+
+/* 一次性扫描线：底板洗白之后自上而下扫一遍，验准时再扫一次 */
+.dsu-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -14%;
+  height: 96px;
+  opacity: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.045) 58%,
+    rgba(0, 0, 0, 0.1) 86%,
+    rgba(0, 0, 0, 0.16) 97%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+.dsu-dark .dsu-scanline {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 58%,
+    rgba(255, 255, 255, 0.11) 86%,
+    rgba(255, 255, 255, 0.18) 97%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+.dsu-scanline.dsu-go { animation: dsu-scan 2600ms cubic-bezier(0.42, 0, 0.58, 1) 1; }
+@keyframes dsu-scan {
+  0% { top: -14%; opacity: 0; }
+  10% { opacity: 1; }
+  86% { opacity: 1; }
+  100% { top: 102%; opacity: 0; }
+}
+
+/* 品牌块下方的一行小字：版本 + 实时时钟（时钟点亮主题橙） */
+.dsu-meta {
+  position: absolute;
+  left: 46px;
+  top: 170px;
+  z-index: 20;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--dsu-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--dsu-muted);
+  opacity: 0;
+  transform: translateX(-18px);
+  transition: opacity 560ms ease, transform 560ms cubic-bezier(0.16, 0.84, 0.24, 1);
+  transition-delay: 330ms;
+}
+.dsu-meta.dsu-in { opacity: 1; transform: none; }
+.dsu-meta-2 { color: var(--dsu-accent); }
+
+/* 六个阶段格：横排在左栏小字下面，走过的压暗、当前的点亮并拉长 */
+.dsu-slats {
+  position: absolute;
+  left: 46px;
+  top: 196px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0;
+  transform: translateX(-18px);
+  transition: opacity 560ms ease, transform 560ms cubic-bezier(0.16, 0.84, 0.24, 1);
+  transition-delay: 420ms;
+}
+.dsu-slats.dsu-in { opacity: 1; transform: none; }
+.dsu-slat {
+  width: 20px;
+  height: 2px;
+  background: var(--dsu-hair);
+  transition: width 460ms cubic-bezier(0.3, 0.9, 0.25, 1), background-color 320ms ease,
+    opacity 320ms ease;
+}
+.dsu-slat.dsu-past { background: var(--dsu-ink); opacity: 0.3; }
+.dsu-slat.dsu-on { width: 34px; background: var(--dsu-accent); opacity: 1; }
+
+/* 女声播报指示条：出声时点亮主题橙并跳动（对应参考片里女声念状态行的时刻） */
+.dsu-voice {
+  position: absolute;
+  left: 46px;
+  bottom: 96px;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
+  opacity: 0;
+  transition: opacity 560ms ease;
+  transition-delay: 480ms;
+}
+.dsu-voice.dsu-in { opacity: 1; }
+.dsu-voice i {
+  width: 2px;
+  height: 20%;
+  background: var(--dsu-hair);
+  transition: height 140ms ease, background-color 240ms ease;
+}
+.dsu-voice.dsu-on i {
+  background: var(--dsu-accent);
+  animation: dsu-voice 560ms ease-in-out infinite;
+}
+.dsu-voice i:nth-child(1) { animation-delay: 0ms; }
+.dsu-voice i:nth-child(2) { animation-delay: 90ms; }
+.dsu-voice i:nth-child(3) { animation-delay: 180ms; }
+.dsu-voice i:nth-child(4) { animation-delay: 60ms; }
+.dsu-voice i:nth-child(5) { animation-delay: 140ms; }
+@keyframes dsu-voice {
+  0%, 100% { height: 20%; }
+  50% { height: 100%; }
+}
+
+/* 无障碍：尊重系统"减少动态效果" */
+@media (prefers-reduced-motion: reduce) {
+  #dsh-startup-root .dsu-ret-rot-a,
+  #dsh-startup-root .dsu-ret-rot-b { animation: none; }
+  #dsh-startup-root .dsu-scanline.dsu-go { animation: none; }
+}
+

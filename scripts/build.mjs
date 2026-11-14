@@ -71,8 +71,14 @@ async function main() {
   try {
     copy(path.join(SRC, 'assets'), path.join(OUT, 'assets'))
 
-    /* 样式先原样复制；拆分与合并留到样式重构时再做 */
-    copy(path.join(SRC, 'splash', 'styles', 'index.css'), path.join(OUT, 'splash.css'))
+    /* 样式按分区拆在 styles/ 下，由 index.css @import，构建时合并成一个文件 */
+    await build({
+      entryPoints: [path.join(SRC, 'splash', 'styles', 'index.css')],
+      outfile: path.join(OUT, 'splash.css'),
+      bundle: true,
+      charset: 'utf8',
+      legalComments: 'none',
+    })
 
     /* 宿主和共享模块一起打包；import.meta.url 在 lib/index.js 里仍指向 lib/ */
     await build({

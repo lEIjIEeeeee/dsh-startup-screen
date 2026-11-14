@@ -19,7 +19,8 @@ import { warnIfStale } from './_fresh.mjs'
 
 const BUNDLE = fileURLToPath(new URL('../lib/splash.js', import.meta.url))
 const SPLASH_DIR = fileURLToPath(new URL('../src/splash/', import.meta.url))
-const CSS_SOURCE = fileURLToPath(new URL('../src/splash/styles/index.css', import.meta.url))
+const STYLES_DIR = fileURLToPath(new URL('../src/splash/styles/', import.meta.url))
+const CSS_INDEX = fileURLToPath(new URL('../src/splash/styles/index.css', import.meta.url))
 const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.js', import.meta.url))
 
 /* 源码断言跨多个模块：把 splash 目录下的 JS 全拼起来再匹配 */
@@ -35,7 +36,14 @@ function collectSources(dir) {
 const SOURCES = collectSources(SPLASH_DIR)
 const SOURCE_TEXT = SOURCES.map((file) => fs.readFileSync(file, 'utf8')).join('\n')
 
-warnIfStale(BUNDLE, [...SOURCES, CSS_SOURCE, DEFAULTS_SOURCE])
+/* CSS 断言读拆分后的源码，按 index.css 的 @import 顺序拼接；构建产物会被 esbuild 重排 */
+const CSS_SOURCES = []
+for (const match of fs.readFileSync(CSS_INDEX, 'utf8').matchAll(/@import\s+'([^']+)'/g)) {
+  CSS_SOURCES.push(path.join(STYLES_DIR, match[1]))
+}
+const CSS_TEXT = CSS_SOURCES.map((file) => fs.readFileSync(file, 'utf8')).join('\n')
+
+warnIfStale(BUNDLE, [...SOURCES, ...CSS_SOURCES, DEFAULTS_SOURCE])
 
 let pass = 0
 let fail = 0
@@ -387,7 +395,7 @@ console.log('\n[8] 终幕用 line-6 欢迎语（自制落幕词，3.73 秒）')
 
 console.log('\n[9] 右下角身份读数：不压版心、窄窗口不丢、第 3 幕随身份核验退场')
 {
-  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const css = CSS_TEXT
   const src = SOURCE_TEXT
   const idlineRule = (css.match(/\.dsu-idline\s*\{[^}]*\}/) || [''])[0]
   check('.dsu-idline 用 right/bottom 锚定（脱离居中版心）', /right:\s*46px/.test(idlineRule) && /bottom:\s*104px/.test(idlineRule), idlineRule.slice(0, 80))
@@ -589,7 +597,7 @@ console.log('\n[14] 液态玻璃：透出背景，但主体素材保持不透明
   check('饱和度被夹到 100%', edge.root.style.getPropertyValue('--dsu-glass-sat') === '100%', edge.root.style.getPropertyValue('--dsu-glass-sat'))
 
   /* 样式表里必须有真正的磨砂与半透明规则，而不是只改了变量 */
-  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const css = CSS_TEXT
   check('CSS 有 backdrop-filter 磨砂', /backdrop-filter:\s*blur\(var\(--dsu-glass-blur/.test(css))
   check('CSS 让底板半透明（用 alpha 变量）', /\.dsu-glass \.dsu-plate[\s\S]{0,400}var\(--dsu-glass-alpha/.test(css))
   check('CSS 首帧黑幕实心（玻璃不穿透）', /\.dsu-glass \.dsu-black[\s\S]{0,200}background: #04060a/.test(css))
@@ -614,7 +622,7 @@ console.log('\n[15] 背景模糊：独立图层，不与任何素材绑定')
   const clamp = run(true, { glass: true, glassBackdropBlur: 999 })
   check('背景模糊被夹到 80px', clamp.root.style.getPropertyValue('--dsu-backdrop-blur') === '80px', clamp.root.style.getPropertyValue('--dsu-backdrop-blur'))
 
-  const css2 = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const css2 = CSS_TEXT
   check('CSS 有 .dsu-backdrop 图层', /\.dsu-backdrop\s*\{[\s\S]{0,400}backdrop-filter:\s*blur\(var\(--dsu-backdrop-blur/.test(css2))
   check('CSS 里已没有壁纸层 .dsu-wall', !/\.dsu-wall/.test(css2))
   check('壁纸路由已移除（splash.js 不再请求）', !SOURCE_TEXT.includes('/dsh-startup/wallpaper'))
@@ -629,7 +637,7 @@ console.log('\n[16b] 启动期不得露出 DSH 白底（0.2.1 起 body 被强制
 
 console.log('\n[16] 背景模糊必须真的生效（contain:paint 回归防线）')
 {
-  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const css = CSS_TEXT
   const src = SOURCE_TEXT
 
   /* contain:paint 会把根节点变成 backdrop 根，backdrop-filter 只能采自己内部 → 表现是「只透不糊」 */
@@ -646,7 +654,7 @@ console.log('\n[16] 背景模糊必须真的生效（contain:paint 回归防线�
 
 console.log('\n[17] P0 中文清晰度与逐字解码')
 {
-  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const css = CSS_TEXT
   const src = SOURCE_TEXT
 
   const zhLine = (css.match(/--dsu-zh:[^;]+;/) || [''])[0]
@@ -680,7 +688,7 @@ console.log('\n[17] P0 中文清晰度与逐字解码')
 
 console.log('\n[18] 光场与氛围层')
 {
-  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const css = CSS_TEXT
   const src = SOURCE_TEXT
 
   check('CSS 有光场图层（z 11）', /\.dsu-field\s*\{[\s\S]{0,400}z-index:\s*11/.test(css))
@@ -709,7 +717,7 @@ console.log('\n[18] 光场与氛围层')
 
 console.log('\n[19] 性能防线（玻璃 + 光效叠加不掉帧）')
 {
-  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const css = CSS_TEXT
   const cssNoComments = css.replace(/\/\*[\s\S]*?\*\//g, '')
   const src = SOURCE_TEXT
 
@@ -734,7 +742,7 @@ console.log('\n[19] 性能防线（玻璃 + 光效叠加不掉帧）')
 
 console.log('\n[20] 电影细节 / 准星 / 金属鲸鱼 / facts')
 {
-  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const css = CSS_TEXT
   const src = SOURCE_TEXT
 
   check('有洗白掠光层（z 14）', /\.dsu-sheen\s*\{[\s\S]{0,300}z-index:\s*14/.test(css))
@@ -769,7 +777,7 @@ console.log('\n[20] 电影细节 / 准星 / 金属鲸鱼 / facts')
 
 console.log('\n[21] 数据面板 / 首帧实心 / 细环 / 双语解码')
 {
-  const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
+  const css = CSS_TEXT
   const src = SOURCE_TEXT
   const host = fs.readFileSync(fileURLToPath(new URL('../src/host/facts.js', import.meta.url)), 'utf8')
   const defaults = fs.readFileSync(DEFAULTS_SOURCE, 'utf8')
