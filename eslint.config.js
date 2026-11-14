@@ -83,6 +83,35 @@ export default [
   },
 
   {
+    // 规模预算：软上限只作目标，这里只卡硬上限（见 docs/architecture-refactor-design.md 6.3）。
+    // 注释和空行不计入，避免文档密度高的模块被迫拆散。
+    files: ['src/**/*.{js,jsx}'],
+    rules: {
+      'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['error', { max: 120, skipBlankLines: true, skipComments: true }],
+      complexity: ['error', 20],
+      'max-params': ['error', 6],
+    },
+  },
+
+  {
+    // React 组件比普通模块更碎：一个组件文件只放一个组件的渲染与局部状态。
+    files: ['src/client/**/*.jsx'],
+    rules: {
+      'max-lines': ['error', { max: 250, skipBlankLines: true, skipComments: true }],
+    },
+  },
+
+  {
+    // 唯一豁免：桌面端标题栏同步要同时盯着初始快照、MutationObserver 和窗口事件，
+    // 拆开只会让同一份「当前是否已同步」状态散到几个闭包里。上限即设计文档的例外值。
+    files: ['src/splash/dom/chrome-sync.js'],
+    rules: {
+      'max-lines-per-function': ['error', { max: 180, skipBlankLines: true, skipComments: true }],
+    },
+  },
+
+  {
     files: ['src/client/**/*.{js,jsx}', 'src/splash/**/*.{js,jsx}'],
     languageOptions: {
       globals: { ...globals.browser },
@@ -99,20 +128,6 @@ export default [
     rules: {
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-    },
-  },
-
-  {
-    // 迁移豁免：splash 还是搬迁前的代码，重写（Phase 6）前不套新风格规则。
-    files: ['src/splash/**/*.{js,jsx}'],
-    rules: {
-      'no-var': 'off',
-      'prefer-const': 'off',
-      'object-shorthand': 'off',
-      eqeqeq: 'off',
-      'no-empty': 'off',
-      'no-unused-vars': 'off',
-      'no-useless-escape': 'off',
     },
   },
 

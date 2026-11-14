@@ -2,12 +2,12 @@
 
 本插件同时支持两种 DSH：
 
-| | web profile | desktop profile |
-|---|---|---|
-| 载体 | `dsh web` 起的本地服务 | DeepSeek Harness Desktop（Electron 桌面端） |
-| profile 目录 | `%USERPROFILE%\.dsh\profiles\web` | `%USERPROFILE%\.dsh\profiles\desktop` |
-| 安装 | `dsh plugin --profile web add …` | `dsh plugin --profile desktop add …` |
-| 重启方式 | 关掉启动器窗口再重新双击 | 完全退出桌面端再打开 |
+|              | web profile                       | desktop profile                             |
+| ------------ | --------------------------------- | ------------------------------------------- |
+| 载体         | `dsh web` 起的本地服务            | DeepSeek Harness Desktop（Electron 桌面端） |
+| profile 目录 | `%USERPROFILE%\.dsh\profiles\web` | `%USERPROFILE%\.dsh\profiles\desktop`       |
+| 安装         | `dsh plugin --profile web add …`  | `dsh plugin --profile desktop add …`        |
+| 重启方式     | 关掉启动器窗口再重新双击          | 完全退出桌面端再打开                        |
 
 插件本体是**同一份代码**，不需要两个包。桌面端适配是在 1.1.0 完成的，
 原有 web 用法、设置项、素材全部不变。
@@ -48,10 +48,10 @@ then fully quit it before running dsh plugin --profile desktop.
 
 区别只在「首屏注入」这一步：
 
-| | web | desktop |
-|---|---|---|
+|          | web                                      | desktop                                             |
+| -------- | ---------------------------------------- | --------------------------------------------------- |
 | 注入方式 | `ctx.webServer.tapIndex` 改写 index.html | 同上；若该载体不提供 index 注入，则由浏览器半侧自举 |
-| 首屏黑幕 | 应用挂载前就盖住，无白闪 | 走 index 注入时同 web；走自举时会有极短白闪（见下） |
+| 首屏黑幕 | 应用挂载前就盖住，无白闪                 | 走 index 注入时同 web；走自举时会有极短白闪（见下） |
 
 ### 桌面端标题栏（Windows）
 
@@ -73,8 +73,8 @@ then fully quit it before running dsh plugin --profile desktop.
 
 1. **Host 半侧允许降级**（`lib/index.js`）
    以前 `webServer` 缺失会直接抛异常 → 整颗 fiber 失败。现在取不到可用
-   `webServer`（`dsh-host-webserver` 的注释明确写了 *"Electron uses file://
-   plus IPC instead"*）时，Host 半侧只打一条 warn 并跳过路由注册，**插件依然
+   `webServer`（`dsh-host-webserver` 的注释明确写了 _"Electron uses file://
+   plus IPC instead"_）时，Host 半侧只打一条 warn 并跳过路由注册，**插件依然
    正常 APPLIED**，页面交给浏览器半侧。
 
 2. **浏览器半侧可以自举**（`lib/client.js`）
@@ -83,15 +83,15 @@ then fully quit it before running dsh plugin --profile desktop.
    > **三个都来自 Host 半侧注册的路由**，所以它只覆盖「webServer 在、但 `tapIndex` 的
    > index 注入没生效」这一种形态。要是整个 webServer 都缺，自举也拿不到素材。
    > 想覆盖那种形态，得让 Host 把 CSS/JS 内联进注入的 HTML。
-   Host 的 index 注入没生效时，浏览器半侧自己建 `#dsh-startup-root`、加样式、
-   挂 `splash.js` 并把启动动画放起来。判定全在 window 上，不猜宿主类型：
+   > Host 的 index 注入没生效时，浏览器半侧自己建 `#dsh-startup-root`、加样式、
+   > 挂 `splash.js` 并把启动动画放起来。判定全在 window 上，不猜宿主类型：
 
-   | 标记 | 含义 |
-   |---|---|
-   | `__DSH_STARTUP_BOOT__ = 'index'` | Host 已经注入过 → 半侧什么都不做 |
-   | `__DSH_STARTUP_BOOT__ = 'client'` | 浏览器半侧已经自举过 |
-   | `__DSH_STARTUP__` | 配置已就位 |
-   | `__DSH_STARTUP_SKIP__` | Host 兜底脚本已判定「这次不播」 |
+   | 标记                              | 含义                             |
+   | --------------------------------- | -------------------------------- |
+   | `__DSH_STARTUP_BOOT__ = 'index'`  | Host 已经注入过 → 半侧什么都不做 |
+   | `__DSH_STARTUP_BOOT__ = 'client'` | 浏览器半侧已经自举过             |
+   | `__DSH_STARTUP__`                 | 配置已就位                       |
+   | `__DSH_STARTUP_SKIP__`            | Host 兜底脚本已判定「这次不播」  |
 
    自举时遵循和 Host 完全相同的判定：`enabled=false` 不播、`session` 本会话
    播过不播、`daily` 今天播过不播，并把同款持久化标记回填到
@@ -117,14 +117,14 @@ then fully quit it before running dsh plugin --profile desktop.
 
 ## 四、验证情况
 
-| 验证项 | 状态 |
-|---|---|
-| 四套冒烟测试（336 项断言） | ✅ 通过 |
-| 真实 `dist/index.html` 上的注入产物 | ✅ 通过（隔离环境实测） |
-| 隔离 DSH 实例的真实 HTTP 全链路（index 注入 / 三条路由 / 7 段音频素材 / 配置读写 / 401 信任栅栏） | ✅ 通过 |
-| 没有 `webServer` 的降级路径不抛异常 | ✅ 通过 |
-| 浏览器半侧自举逻辑（DOM stub 跑真代码） | ✅ 通过 65 项断言 |
-| **桌面端实机**（真实 Electron 里看到完整动画） | ✅ **通过** |
+| 验证项                                                                                            | 状态                    |
+| ------------------------------------------------------------------------------------------------- | ----------------------- |
+| 四套冒烟测试（336 项断言）                                                                        | ✅ 通过                 |
+| 真实 `dist/index.html` 上的注入产物                                                               | ✅ 通过（隔离环境实测） |
+| 隔离 DSH 实例的真实 HTTP 全链路（index 注入 / 三条路由 / 7 段音频素材 / 配置读写 / 401 信任栅栏） | ✅ 通过                 |
+| 没有 `webServer` 的降级路径不抛异常                                                               | ✅ 通过                 |
+| 浏览器半侧自举逻辑（DOM stub 跑真代码）                                                           | ✅ 通过 65 项断言       |
+| **桌面端实机**（真实 Electron 里看到完整动画）                                                    | ✅ **通过**             |
 
 桌面端实测（DeepSeek Harness Desktop，内核 `0.2.0-rc.2`）：
 
@@ -140,7 +140,7 @@ then fully quit it before running dsh plugin --profile desktop.
 两条路在用户侧表现一致，差异只在一个标记上。桌面端开发者工具 Console 里读：
 
 ```js
-window.__DSH_STARTUP_BOOT__   // 'index' = Host 的 tapIndex 注入；'client' = 浏览器半侧自举
+window.__DSH_STARTUP_BOOT__ // 'index' = Host 的 tapIndex 注入；'client' = 浏览器半侧自举
 ```
 
 旁证：`document.getElementById('dsh-startup-critical')` 与 `window.__DSH_STARTUP_VERSION__`
@@ -181,8 +181,8 @@ npm test     # host + splash + client + desktop 四套，336 项断言
 
 三处刻意没做，原因写在下面（不是遗漏）：
 
-| 项 | 现状 | 为什么这样 |
-|---|---|---|
-| `peerDependencies` | 未声明 | DSH 的兼容性闸门只认 `peerDependencies` 里的 `@deepseek-ai/dsh*`。但当前内核版本号是 **预发布**（如 `0.2.1-rc.3`），semver 规定预发布版本只有在比较符里出现**同一 major.minor.patch 的预发布**时才匹配 —— 写成 `^0.2.0-rc.2` 会把 `0.2.1-rc.3` 判为不兼容，直接挡住安装。等内核发正式版再补这一条更稳。 |
-| 路由用绝对路径 `/dsh-startup/...` | 保留 | DSH 自己的 app 路由是 document-relative 的，但改成相对路径会在 SPA 深链接（`/c/<id>`）下解析到错误的位置。要两者兼得得先定清楚部署形态（是否挂反代子路径），目前按「根路径部署」处理：挂在 `/sub/` 下会 404。 |
-| `connection` 声明为硬依赖 | 保留 | 信任栅栏（`rejected()`）是「有就用、没有就放行」的软依赖，代码里保留了兜底分支；但把它声明成硬依赖能保证栅栏在第一个请求时就可用 —— 安全优先于「声明与容错一致」的形式美。 |
+| 项                                | 现状   | 为什么这样                                                                                                                                                                                                                                                                                              |
+| --------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `peerDependencies`                | 未声明 | DSH 的兼容性闸门只认 `peerDependencies` 里的 `@deepseek-ai/dsh*`。但当前内核版本号是 **预发布**（如 `0.2.1-rc.3`），semver 规定预发布版本只有在比较符里出现**同一 major.minor.patch 的预发布**时才匹配 —— 写成 `^0.2.0-rc.2` 会把 `0.2.1-rc.3` 判为不兼容，直接挡住安装。等内核发正式版再补这一条更稳。 |
+| 路由用绝对路径 `/dsh-startup/...` | 保留   | DSH 自己的 app 路由是 document-relative 的，但改成相对路径会在 SPA 深链接（`/c/<id>`）下解析到错误的位置。要两者兼得得先定清楚部署形态（是否挂反代子路径），目前按「根路径部署」处理：挂在 `/sub/` 下会 404。                                                                                           |
+| `connection` 声明为硬依赖         | 保留   | 信任栅栏（`rejected()`）是「有就用、没有就放行」的软依赖，代码里保留了兜底分支；但把它声明成硬依赖能保证栅栏在第一个请求时就可用 —— 安全优先于「声明与容错一致」的形式美。                                                                                                                              |
