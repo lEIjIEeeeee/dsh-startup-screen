@@ -6,7 +6,6 @@ releases/
 # 迁移过来的旧代码保持原样，重写时再统一格式化。
 src/index.js
 src/splash/
-src/client/
 
 # 第三方产物与锁文件
 node_modules/

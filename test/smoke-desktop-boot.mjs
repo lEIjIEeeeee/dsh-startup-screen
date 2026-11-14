@@ -155,17 +155,22 @@ function boot(opts) {
   vm.createContext(sandbox)
   vm.runInContext(CODE, sandbox, { filename: 'client.js' })
 
+  const jsxStub = (type, props, key) =>
+    ({ type, props: Object.assign({}, props || {}, key == null ? {} : { key }) })
   const React = {
     createElement(type, props, ...children) {
       const kids = children.length === 0 ? undefined : children.length === 1 ? children[0] : children
       return { type, props: Object.assign({}, props || {}, { children: kids }) }
     },
+    jsx: jsxStub,
+    jsxs: jsxStub,
     useState: (v) => (typeof v === 'function' ? [v(), () => {}] : [v, () => {}]),
     useEffect: () => {},
     useRef: () => ({ current: null }),
   }
   const mod = win.__loaded.factory((name) => {
     if (name === 'react') return React
+    if (name === 'react/jsx-runtime') return { jsx: jsxStub, jsxs: jsxStub, Fragment: 'Fragment' }
     throw new Error('unexpected require: ' + name)
   })
   const registrations = []

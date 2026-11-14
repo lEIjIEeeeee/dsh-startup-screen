@@ -5,6 +5,7 @@
  * 用法：node test/smoke-client.mjs
  * ========================================================================== */
 import fs from 'node:fs'
+import path from 'node:path'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 import { warnIfStale } from './_fresh.mjs'
@@ -88,11 +89,16 @@ class AbortControllerStub {
   abort() { this.signal.aborted = true }
 }
 const CLIENT_BUNDLE = fileURLToPath(new URL('../lib/client.js', import.meta.url))
-const CLIENT_SOURCE = fileURLToPath(new URL('../src/client/index.jsx', import.meta.url))
+const CLIENT_DIR = fileURLToPath(new URL('../src/client/', import.meta.url))
+const CLIENT_SOURCES = fs
+  .readdirSync(CLIENT_DIR, { recursive: true })
+  .filter((f) => /\.(js|jsx)$/.test(f))
+  .sort()
+  .map((f) => path.join(CLIENT_DIR, f))
 const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.js', import.meta.url))
-warnIfStale(CLIENT_BUNDLE, [CLIENT_SOURCE, DEFAULTS_SOURCE])
+warnIfStale(CLIENT_BUNDLE, [...CLIENT_SOURCES, DEFAULTS_SOURCE])
 const code = fs.readFileSync(CLIENT_BUNDLE, 'utf8')
-const SOURCE = fs.readFileSync(CLIENT_SOURCE, 'utf8')
+const SOURCE = CLIENT_SOURCES.map((f) => fs.readFileSync(f, 'utf8')).join('\n')
 const DEFAULTS_TEXT = fs.readFileSync(DEFAULTS_SOURCE, 'utf8')
 const sandbox = {
   window: windowStub, document: documentStub, fetch: fetchStub,
@@ -108,8 +114,11 @@ check('注册 id 等于 loader entry 名（否则会报 loaded without registeri
 check('提供了 factory', loaded && typeof loaded.factory === 'function')
 
 console.log('\n[2] factory 导出形状')
+const jsxStub = (type, props, key) =>
+  ({ type, props: Object.assign({}, props || {}, key == null ? {} : { key }) })
 const requireStub = (name) => {
   if (name === 'react') return React
+  if (name === 'react/jsx-runtime') return { jsx: jsxStub, jsxs: jsxStub, Fragment: 'Fragment' }
   throw new Error('unexpected require: ' + name)
 }
 const mod = loaded.factory(requireStub)
@@ -247,8 +256,8 @@ console.log('\n[7] 面板与 README 对齐（音效来源 / 故障色 / 单一�
 
 console.log('\n[8] 「立即预览」入口必须永远有反应（回归防线）')
 {
-  check('preview 里 catch 了 replay 抛错', /try \{ api\.replay\(\) \} catch/.test(SOURCE))
-  check('replay 之后有兜底刷新（1.2 秒看根节点 / RUNNING）', /__DSH_STARTUP_RUNNING__/.test(SOURCE) && /setTimeout\(function \(\)/.test(SOURCE))
+  check('preview 里 catch 了 replay 抛错', /api\.replay\(\)[\s\S]{0,60}catch/.test(SOURCE))
+  check('replay 之后有兜底刷新（1.2 秒看根节点 / RUNNING）', /__DSH_STARTUP_RUNNING__/.test(SOURCE) && /setTimeout\(/.test(SOURCE))
   check('重挂失败时退回 location.reload()', /window\.location\.reload\(\)/.test(SOURCE))
 }
 
@@ -290,7 +299,7 @@ console.log('\n[10] 设置页：左侧导航 + 分页 + 固定底栏')
 
   const groups = ['play', 'identity', 'interact', 'voice', 'visual', 'text']
   check('六个设置分组仍保留', groups.every((g) => SOURCE.indexOf('__ss_group_' + g) !== -1), groups.join(','))
-  check('分组节点都挂了 id 锚点', (SOURCE.match(/id: '__ss_group_/g) || []).length === 6, String((SOURCE.match(/id: '__ss_group_/g) || []).length))
+  check('分组节点都挂了 id 锚点', (SOURCE.match(/id(?:=|:)\s*['"]__ss_group_/g) || []).length === 6, String((SOURCE.match(/id(?:=|:)\s*['"]__ss_group_/g) || []).length))
 
   const t2 = renderPanel()
   const ids = []

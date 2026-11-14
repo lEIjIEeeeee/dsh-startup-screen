@@ -106,6 +106,7 @@ async function main() {
       format: 'cjs',
       platform: 'browser',
       target: 'es2019',
+      jsx: 'automatic',
       charset: 'utf8',
       external: CLIENT_EXTERNALS,
       define: DEFINE,
