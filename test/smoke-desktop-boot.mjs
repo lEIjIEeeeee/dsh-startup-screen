@@ -23,8 +23,13 @@ import { makeJsxStub, makePrimitivesStub } from './_stubs.mjs'
 let pass = 0
 let fail = 0
 function check(label, ok, extra) {
-  if (ok) { pass++; console.log('  ok   ' + label) }
-  else { fail++; console.log('  FAIL ' + label + (extra !== undefined ? '  → ' + extra : '')) }
+  if (ok) {
+    pass++
+    console.log('  ok   ' + label)
+  } else {
+    fail++
+    console.log('  FAIL ' + label + (extra !== undefined ? '  → ' + extra : ''))
+  }
 }
 
 const CLIENT_BUNDLE = fileURLToPath(new URL('../lib/client.js', import.meta.url))
@@ -44,8 +49,14 @@ class Elem {
     this._className = ''
     this.classList = {
       _set: new Set(),
-      add: (c) => { this.classList._set.add(c); this._className = syncClass(this) },
-      remove: (c) => { this.classList._set.delete(c); this._className = syncClass(this) },
+      add: (c) => {
+        this.classList._set.add(c)
+        this._className = syncClass(this)
+      },
+      remove: (c) => {
+        this.classList._set.delete(c)
+        this._className = syncClass(this)
+      },
       contains: (c) => this.classList._set.has(c),
       toggle: (c, on) => (on ? this.classList.add(c) : this.classList.remove(c)),
     }
@@ -54,7 +65,9 @@ class Elem {
     this._className = String(v)
     this.classList._set = new Set(this._className.split(/\s+/).filter(Boolean))
   }
-  get className() { return this._className }
+  get className() {
+    return this._className
+  }
   appendChild(child) {
     if (child && child.parentNode) child.parentNode.removeChild(child)
     child.parentNode = this
@@ -72,18 +85,29 @@ class Elem {
     /* getElementById 只认 id 属性，这里单独兜一下 */
     if (k === 'id') this.id = String(v)
   }
-  getAttribute(k) { return k in this.attrs ? this.attrs[k] : null }
-  addEventListener(type, fn) { (this._listeners[type] || (this._listeners[type] = [])).push(fn) }
+  getAttribute(k) {
+    return k in this.attrs ? this.attrs[k] : null
+  }
+  addEventListener(type, fn) {
+    ;(this._listeners[type] || (this._listeners[type] = [])).push(fn)
+  }
   /* 测试里手动触发 load / error */
-  emit(type) { for (const fn of this._listeners[type] || []) fn({ type }) }
+  emit(type) {
+    for (const fn of this._listeners[type] || []) fn({ type })
+  }
 }
-function syncClass(el) { return [...el.classList._set].join(' ') }
+function syncClass(el) {
+  return [...el.classList._set].join(' ')
+}
 
 /* 遍历器要同时认两种「孩子」：DOM 节点的 .children 和 React 元素的 .props.children */
 function walk(node, out = []) {
   if (node === null || node === undefined) return out
   if (typeof node !== 'object') return out
-  if (Array.isArray(node)) { node.forEach((n) => walk(n, out)); return out }
+  if (Array.isArray(node)) {
+    node.forEach((n) => walk(n, out))
+    return out
+  }
   out.push(node)
   for (const c of node.children || []) walk(c, out)
   for (const c of (node.props && node.props.children) || []) walk(c, out)
@@ -95,8 +119,12 @@ function makeStorage(seed) {
   return {
     map,
     getItem: (k) => (map.has(k) ? map.get(k) : null),
-    setItem: (k, v) => { map.set(k, String(v)) },
-    removeItem: (k) => { map.delete(k) },
+    setItem: (k, v) => {
+      map.set(k, String(v))
+    },
+    removeItem: (k) => {
+      map.delete(k)
+    },
   }
 }
 
@@ -112,24 +140,49 @@ function boot(opts) {
   const timers = []
 
   const documentStub = {
-    head, body, documentElement: html,
+    head,
+    body,
+    documentElement: html,
     querySelector: () => null,
-    createElement: (tag) => { const e = new Elem(tag); all.push(e); return e },
-    getElementById: (id) => walk(html).concat(walk(head), walk(body))
-      .find((e) => e.attrs.id === id || (e.id && e.id === id)) || null,
+    createElement: (tag) => {
+      const e = new Elem(tag)
+      all.push(e)
+      return e
+    },
+    getElementById: (id) =>
+      walk(html)
+        .concat(walk(head), walk(body))
+        .find((e) => e.attrs.id === id || (e.id && e.id === id)) || null,
   }
   /* 根节点按 id 挂载：createElement 之后设 .id，这里补一个查找口径 */
   const realGetById = documentStub.getElementById
-  documentStub.getElementById = (id) => realGetById(id) || walk(head).concat(walk(body)).find((e) => e.id === id) || null
+  documentStub.getElementById = (id) =>
+    realGetById(id) ||
+    walk(head)
+      .concat(walk(body))
+      .find((e) => e.id === id) ||
+    null
 
   const win = {
-    __ModuleLoader__: { load: (entry) => { win.__loaded = entry } },
-    location: { href: 'http://127.0.0.1:3080/', reload() { win.__reloaded = true } },
+    __ModuleLoader__: {
+      load: (entry) => {
+        win.__loaded = entry
+      },
+    },
+    location: {
+      href: 'http://127.0.0.1:3080/',
+      reload() {
+        win.__reloaded = true
+      },
+    },
     addEventListener() {},
     sessionStorage: makeStorage(o.session),
     localStorage: makeStorage(o.local),
     speechSynthesis: undefined,
-    setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length },
+    setTimeout: (fn, ms) => {
+      timers.push({ fn, ms })
+      return timers.length
+    },
     clearTimeout: () => {},
   }
   win.window = win
@@ -140,18 +193,40 @@ function boot(opts) {
     if (o.fetchFails) return Promise.reject(new Error('boom'))
     return Promise.resolve({
       ok: true,
-      json: () => Promise.resolve(o.apiResponse !== undefined
-        ? o.apiResponse
-        : { ok: true, config: o.config || { enabled: true, mode: 'session', speed: 1 }, defaults: {}, file: 'X' }),
+      json: () =>
+        Promise.resolve(
+          o.apiResponse !== undefined
+            ? o.apiResponse
+            : {
+                ok: true,
+                config: o.config || { enabled: true, mode: 'session', speed: 1 },
+                defaults: {},
+                file: 'X',
+              },
+        ),
       text: () => Promise.resolve(''),
     })
   }
 
   const sandbox = {
-    window: win, document: documentStub, fetch: fetchStub,
+    window: win,
+    document: documentStub,
+    fetch: fetchStub,
     console: { log() {}, warn: (...a) => warnings.push(a.map(String).join(' ')), error() {} },
-    Promise, Object, Array, JSON, String, Number, Math, Date, Error, Symbol, isFinite, RegExp,
-    setTimeout: win.setTimeout, clearTimeout: win.clearTimeout,
+    Promise,
+    Object,
+    Array,
+    JSON,
+    String,
+    Number,
+    Math,
+    Date,
+    Error,
+    Symbol,
+    isFinite,
+    RegExp,
+    setTimeout: win.setTimeout,
+    clearTimeout: win.clearTimeout,
   }
   sandbox.globalThis = sandbox
   vm.createContext(sandbox)
@@ -160,7 +235,8 @@ function boot(opts) {
   const jsxStub = makeJsxStub()
   const React = {
     createElement(type, props, ...children) {
-      const kids = children.length === 0 ? undefined : children.length === 1 ? children[0] : children
+      const kids =
+        children.length === 0 ? undefined : children.length === 1 ? children[0] : children
       return { type, props: Object.assign({}, props || {}, { children: kids }) }
     },
     jsx: jsxStub,
@@ -185,7 +261,10 @@ function boot(opts) {
   const ctx = {
     slots: {
       inject: (slot, fn) => fn(),
-      register: (options, render) => { registrations.push({ options, render }); return { dispose() {} } },
+      register: (options, render) => {
+        registrations.push({ options, render })
+        return { dispose() {} }
+      },
     },
   }
   let applied = false
@@ -195,22 +274,45 @@ function boot(opts) {
     mod.apply(ctx)
   }
 
-  return { win, head, body, html, requested, warnings, timers, registrations, document: documentStub, apply: doApply }
+  return {
+    win,
+    head,
+    body,
+    html,
+    requested,
+    warnings,
+    timers,
+    registrations,
+    document: documentStub,
+    apply: doApply,
+  }
 }
 
 const tags = (sandbox, pred) => walk(sandbox.head).concat(walk(sandbox.body)).filter(pred)
 const rootOf = (sandbox) => sandbox.document.getElementById('dsh-startup-root')
 const flush = () => new Promise((r) => process.nextTick(r))
-async function settle(n = 8) { for (let i = 0; i < n; i++) await flush() }
+async function settle(n = 8) {
+  for (let i = 0; i < n; i++) await flush()
+}
 
-/** 面板 render 返回的是 h(Panel, {}) 这个元素，要真正调用 Panel 才拿得到树。 */
+/** 递归展开函数组件（Panel → PanelNav → VersionLine 这类分层），只保留最终元素树。 */
+function expand(node) {
+  if (Array.isArray(node)) return node.map(expand)
+  if (!node || typeof node !== 'object') return node
+  if (typeof node.type === 'function') return expand(node.type(node.props || {}))
+  const props = node.props || {}
+  return { ...node, props: { ...props, children: expand(props.children) } }
+}
+/** 面板 render 返回的是 h(Panel, {}) 这个元素，要真正调用组件才拿得到树。 */
 function panelTree(sandbox) {
   const el = sandbox.registrations[0].render({})
-  return el && typeof el.type === 'function' ? el.type(el.props || {}) : el
+  return expand(el)
 }
 /** 把设置面板真渲染一次，收集其中的字符串（用来验顶部那行版本号）。 */
 function panelTexts(sandbox) {
-  return walk(panelTree(sandbox)).filter((n) => typeof n.props.children === 'string').map((n) => n.props.children)
+  return walk(panelTree(sandbox))
+    .filter((n) => typeof n.props.children === 'string')
+    .map((n) => n.props.children)
 }
 /** 找出版本号节点（className 恒为 __ss_version）。 */
 function versionText(sandbox) {
@@ -222,103 +324,190 @@ function versionText(sandbox) {
 console.log('\n[1] Host 没注入（桌面端 file:// + IPC 形态）→ 自举')
 {
   const s = boot()
-  check('仅加载 bundle 时不抢跑（apply 之前没有任何标记）', s.win.__DSH_STARTUP_BOOT__ === undefined, String(s.win.__DSH_STARTUP_BOOT__))
+  check(
+    '仅加载 bundle 时不抢跑（apply 之前没有任何标记）',
+    s.win.__DSH_STARTUP_BOOT__ === undefined,
+    String(s.win.__DSH_STARTUP_BOOT__),
+  )
   s.apply()
   check('apply() 里先自举，settings.section 照样注册', s.registrations.length === 1)
   await settle()
-  check('打了 __DSH_STARTUP_BOOT__ = client', s.win.__DSH_STARTUP_BOOT__ === 'client', String(s.win.__DSH_STARTUP_BOOT__))
-  check('读了 Host 配置接口 /dsh-startup/config', s.requested.some((r) => r.url === '/dsh-startup/config'), s.requested.map((r) => r.url).join(','))
+  check(
+    '打了 __DSH_STARTUP_BOOT__ = client',
+    s.win.__DSH_STARTUP_BOOT__ === 'client',
+    String(s.win.__DSH_STARTUP_BOOT__),
+  )
+  check(
+    '读了 Host 配置接口 /dsh-startup/config',
+    s.requested.some((r) => r.url === '/dsh-startup/config'),
+    s.requested.map((r) => r.url).join(','),
+  )
   const root = rootOf(s)
   check('建了 #dsh-startup-root', !!root)
-  check('根节点带 dsu-boot（首屏黑幕态）', root && root.className.indexOf('dsu-boot') !== -1, root && root.className)
+  check(
+    '根节点带 dsu-boot（首屏黑幕态）',
+    root && root.className.indexOf('dsu-boot') !== -1,
+    root && root.className,
+  )
   check('锁住了 <html> 滚动（dsu-lock）', s.html.classList.contains('dsu-lock'))
   const link = tags(s, (e) => e.tagName === 'LINK' && e.href === '/dsh-startup/splash.css')[0]
   check('挂了 splash.css 样式表', !!link, link && link.href)
-  const script = tags(s, (e) => e.tagName === 'SCRIPT' && String(e.src || '').indexOf('/dsh-startup/splash.js') === 0)[0]
+  const script = tags(
+    s,
+    (e) => e.tagName === 'SCRIPT' && String(e.src || '').indexOf('/dsh-startup/splash.js') === 0,
+  )[0]
   check('挂了 splash.js 运行时', !!script, script && script.src)
-  check('splash.js 带时间戳绕缓存', script && /splash\.js\?t=\d+$/.test(String(script.src)), script && script.src)
-  check('配置先落 window（splash.js 直接读它）', s.win.__DSH_STARTUP__ && s.win.__DSH_STARTUP__.identity === undefined && s.win.__DSH_STARTUP__.enabled === true, JSON.stringify(s.win.__DSH_STARTUP__))
-  check('加载完成前不写已播标记（失败还能重试）', s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null)
+  check(
+    'splash.js 带时间戳绕缓存',
+    script && /splash\.js\?t=\d+$/.test(String(script.src)),
+    script && script.src,
+  )
+  check(
+    '配置先落 window（splash.js 直接读它）',
+    s.win.__DSH_STARTUP__ &&
+      s.win.__DSH_STARTUP__.identity === undefined &&
+      s.win.__DSH_STARTUP__.enabled === true,
+    JSON.stringify(s.win.__DSH_STARTUP__),
+  )
+  check(
+    '加载完成前不写已播标记（失败还能重试）',
+    s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null,
+  )
   /* 样式与脚本都 load 成功之后也不由自举写标记：播完 / 跳过由运行时自己记 */
   link.emit && link.emit('load')
   script.emit && script.emit('load')
   await settle()
-  check('自举不写已播标记（播完或跳过时由运行时写）', s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null)
-  check('挂了 9 秒自愈定时器', s.timers.some((t) => t.ms === 9000), s.timers.map((t) => t.ms).join(','))
+  check(
+    '自举不写已播标记（播完或跳过时由运行时写）',
+    s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null,
+  )
+  check(
+    '挂了 9 秒自愈定时器',
+    s.timers.some((t) => t.ms === 9000),
+    s.timers.map((t) => t.ms).join(','),
+  )
 }
 
 console.log('\n[2] Host 已经注入过 → 一律不动手')
 {
-  const s = boot({ given: { __DSH_STARTUP_BOOT__: 'index', __DSH_STARTUP__: { enabled: true, mode: 'session' } } }); s.apply()
+  const s = boot({
+    given: { __DSH_STARTUP_BOOT__: 'index', __DSH_STARTUP__: { enabled: true, mode: 'session' } },
+  })
+  s.apply()
   await settle()
-  check('没碰 BOOT 标记', s.win.__DSH_STARTUP_BOOT__ === 'index', String(s.win.__DSH_STARTUP_BOOT__))
+  check(
+    '没碰 BOOT 标记',
+    s.win.__DSH_STARTUP_BOOT__ === 'index',
+    String(s.win.__DSH_STARTUP_BOOT__),
+  )
   check('没有建根节点', rootOf(s) === null)
-  check('没有请求配置接口', !s.requested.some((r) => r.url === '/dsh-startup/config'), s.requested.map((r) => r.url).join(','))
+  check(
+    '没有请求配置接口',
+    !s.requested.some((r) => r.url === '/dsh-startup/config'),
+    s.requested.map((r) => r.url).join(','),
+  )
   check('没有挂 splash.js', tags(s, (e) => e.tagName === 'SCRIPT').length === 0)
 }
 {
   /* 只有配置、没有 BOOT 标记（老版本 Host 注入）：同样当作已接管 */
-  const s = boot({ given: { __DSH_STARTUP__: { enabled: true, mode: 'session' } } }); s.apply()
+  const s = boot({ given: { __DSH_STARTUP__: { enabled: true, mode: 'session' } } })
+  s.apply()
   await settle()
-  check('只有 __DSH_STARTUP__ 时也不重复自举', rootOf(s) === null && s.win.__DSH_STARTUP_BOOT__ === undefined)
+  check(
+    '只有 __DSH_STARTUP__ 时也不重复自举',
+    rootOf(s) === null && s.win.__DSH_STARTUP_BOOT__ === undefined,
+  )
 }
 {
-  const s = boot({ given: { __DSH_STARTUP_SKIP__: true, __DSH_STARTUP_BOOT__: 'index' } }); s.apply()
+  const s = boot({ given: { __DSH_STARTUP_SKIP__: true, __DSH_STARTUP_BOOT__: 'index' } })
+  s.apply()
   await settle()
   check('Host 判定跳过时不抢播', rootOf(s) === null)
 }
 
 console.log('\n[3] 不播的几种情况')
 {
-  const s = boot({ config: { enabled: false, mode: 'session' } }); s.apply()
+  const s = boot({ config: { enabled: false, mode: 'session' } })
+  s.apply()
   await settle()
   check('enabled=false → 不建根节点', rootOf(s) === null)
-  check('enabled=false → 不写已播标记', s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null)
-  check('enabled=false → 仍挂运行时，设置页「立即预览」可用',
-    s.win.__DSH_STARTUP_SKIP__ === true && tags(s, (e) => e.tagName === 'SCRIPT').length === 1)
+  check(
+    'enabled=false → 不写已播标记',
+    s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null,
+  )
+  check(
+    'enabled=false → 仍挂运行时，设置页「立即预览」可用',
+    s.win.__DSH_STARTUP_SKIP__ === true && tags(s, (e) => e.tagName === 'SCRIPT').length === 1,
+  )
 }
 {
   const s = boot({
     config: { enabled: true, mode: 'session' },
     session: { 'dsh-startup-screen:shown': '1' },
-  }); s.apply()
+  })
+  s.apply()
   await settle()
   check('session 模式本会话已播过 → 不重播', rootOf(s) === null)
-  check('session 已播 → 仍挂运行时，设置页「立即预览」可用',
-    s.win.__DSH_STARTUP_SKIP__ === true && tags(s, (e) => e.tagName === 'SCRIPT').length === 1)
-  check('跳过时配置仍在 window 上（预览在它上面合并草稿）',
-    !!s.win.__DSH_STARTUP__ && s.win.__DSH_STARTUP__.mode === 'session')
+  check(
+    'session 已播 → 仍挂运行时，设置页「立即预览」可用',
+    s.win.__DSH_STARTUP_SKIP__ === true && tags(s, (e) => e.tagName === 'SCRIPT').length === 1,
+  )
+  check(
+    '跳过时配置仍在 window 上（预览在它上面合并草稿）',
+    !!s.win.__DSH_STARTUP__ && s.win.__DSH_STARTUP__.mode === 'session',
+  )
 }
 {
   const s = boot({
     config: { enabled: true, mode: 'daily' },
     local: { 'dsh-startup-screen:day': localDayKey() },
-  }); s.apply()
+  })
+  s.apply()
   await settle()
   check('daily 模式今天已播过 → 不重播', rootOf(s) === null)
 }
 {
-  const s = boot({ config: { enabled: true, mode: 'always' }, session: { 'dsh-startup-screen:shown': '1' } }); s.apply()
+  const s = boot({
+    config: { enabled: true, mode: 'always' },
+    session: { 'dsh-startup-screen:shown': '1' },
+  })
+  s.apply()
   await settle()
   check('always 模式无视已播标记 → 照播', !!rootOf(s))
-  check('always 模式不写 session 标记', s.win.sessionStorage.getItem('dsh-startup-screen:shown') === '1', '（应保持原值 1）')
+  check(
+    'always 模式不写 session 标记',
+    s.win.sessionStorage.getItem('dsh-startup-screen:shown') === '1',
+    '（应保持原值 1）',
+  )
 }
 {
-  const s = boot({ config: { enabled: true, mode: 'daily' } }); s.apply()
+  const s = boot({ config: { enabled: true, mode: 'daily' } })
+  s.apply()
   await settle()
-  check('daily 首次播放：加载完成前不写日期', s.win.localStorage.getItem('dsh-startup-screen:day') === null, s.win.localStorage.getItem('dsh-startup-screen:day'))
+  check(
+    'daily 首次播放：加载完成前不写日期',
+    s.win.localStorage.getItem('dsh-startup-screen:day') === null,
+    s.win.localStorage.getItem('dsh-startup-screen:day'),
+  )
   const dLink = tags(s, (e) => e.tagName === 'LINK')[0]
   const dScript = tags(s, (e) => e.tagName === 'SCRIPT')[0]
   dLink.emit && dLink.emit('load')
   dScript.emit && dScript.emit('load')
   await settle()
-  check('自举不写日期（播完或跳过时由运行时写）', s.win.localStorage.getItem('dsh-startup-screen:day') === null)
-  check('daily 模式不写 session 标记', s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null)
+  check(
+    '自举不写日期（播完或跳过时由运行时写）',
+    s.win.localStorage.getItem('dsh-startup-screen:day') === null,
+  )
+  check(
+    'daily 模式不写 session 标记',
+    s.win.sessionStorage.getItem('dsh-startup-screen:shown') === null,
+  )
 }
 
 console.log('\n[4] 自举失败 → 把页面还回去')
 {
-  const s = boot(); s.apply()
+  const s = boot()
+  s.apply()
   await settle()
   const root = rootOf(s)
   const script = tags(s, (e) => e.tagName === 'SCRIPT')[0]
@@ -328,10 +517,15 @@ console.log('\n[4] 自举失败 → 把页面还回去')
   check('脚本载入失败 → 移除根节点', rootOf(s) === null)
   check('脚本载入失败 → 解开滚动锁', !s.html.classList.contains('dsu-lock'), s.html.className)
   check('脚本载入失败 → 亮 FAILED 标记', s.win.__DSH_STARTUP_FAILED__ === true)
-  check('脚本载入失败 → 打了警告日志', s.warnings.some((w) => w.indexOf('自举失败') !== -1), s.warnings.join(' | '))
+  check(
+    '脚本载入失败 → 打了警告日志',
+    s.warnings.some((w) => w.indexOf('自举失败') !== -1),
+    s.warnings.join(' | '),
+  )
 }
 {
-  const s = boot(); s.apply()
+  const s = boot()
+  s.apply()
   await settle()
   const root = rootOf(s)
   root.className = 'dsu-root dsu-boot'
@@ -342,44 +536,62 @@ console.log('\n[4] 自举失败 → 把页面还回去')
   check('自愈触发 → 解开滚动锁', !s.html.classList.contains('dsu-lock'))
 }
 {
-  const s = boot({ fetchFails: true }); s.apply()
+  const s = boot({ fetchFails: true })
+  s.apply()
   await settle()
   check('配置接口不可达 → 按默认（启用/session）照播，不留白', !!rootOf(s))
   check('配置接口不可达 → 不抛异常（apply 已跑完）', s.registrations.length === 1)
 }
 {
-  const s = boot({ apiResponse: { ok: false, error: 'nope' } }); s.apply()
+  const s = boot({ apiResponse: { ok: false, error: 'nope' } })
+  s.apply()
   await settle()
   check('配置接口返回 ok:false → 走默认配置照播', !!rootOf(s))
 }
 {
   /* 唯一明确"不播"的信号是配置里 enabled=false，见 [3] */
-  const s = boot({ fetchFails: true, session: { 'dsh-startup-screen:shown': '1' } }); s.apply()
+  const s = boot({ fetchFails: true, session: { 'dsh-startup-screen:shown': '1' } })
+  s.apply()
   await settle()
   check('session 已播 + 配置接口不可达 → 宁可不播（不重复打扰）', rootOf(s) === null)
 }
 
 console.log('\n[5] 自举与设置面板互不干扰')
 {
-  const s = boot(); s.apply()
+  const s = boot()
+  s.apply()
   await settle()
-  check('settings.section 注册成功且 id/order 正确',
-    s.registrations[0].options.name === 'settings.section' && s.registrations[0].options.id === 'startup-screen',
-    JSON.stringify(s.registrations[0].options))
+  check(
+    'settings.section 注册成功且 id/order 正确',
+    s.registrations[0].options.name === 'settings.section' &&
+      s.registrations[0].options.id === 'startup-screen',
+    JSON.stringify(s.registrations[0].options),
+  )
   check('自举后仍暴露设置面板 render', typeof s.registrations[0].render === 'function')
 }
 
 console.log('\n[6] 设置面板顶部的版本号（桌面端 / 旧 Host 的兜底链）')
 {
-  const pkgVersion = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version
+  const pkgVersion = JSON.parse(
+    fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+  ).version
   /* Host 没注入版本、配置接口也没回版本 —— 面板显示本地兜底常量 */
-  const s = boot(); s.apply()
+  const s = boot()
+  s.apply()
   await settle()
   const injected = s.win.__DSH_STARTUP_VERSION__
   const text = versionText(s)
   check('没有版本来源时仍显示版本号（不出现 undefined）', /^版本 v\d+\.\d+\.\d+/.test(text), text)
-  check('构建期版本号与 package.json 一致（防两处漂移）', text === '版本 v' + pkgVersion, text + ' vs ' + pkgVersion)
-  check('顶部那行确实是版本号，不是原来那段说明', !panelTexts(s).some((t) => String(t).includes('启动界面：')), '')
+  check(
+    '构建期版本号与 package.json 一致（防两处漂移）',
+    text === '版本 v' + pkgVersion,
+    text + ' vs ' + pkgVersion,
+  )
+  check(
+    '顶部那行确实是版本号，不是原来那段说明',
+    !panelTexts(s).some((t) => String(t).includes('启动界面：')),
+    '',
+  )
   check('host 没注入版本时 window.__DSH_STARTUP_VERSION__ 为空', !injected, String(injected))
 }
 

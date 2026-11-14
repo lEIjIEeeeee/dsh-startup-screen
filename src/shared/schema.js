@@ -35,12 +35,15 @@ export const BOOL_KEYS = [
   'glass',
 ]
 
+/* 语音提示音之后留白的上限；设置页滑条和运行时夹取共用。 */
+export const VOICE_LEAD_MAX = 1200
+
 /** 数值字段的合法区间（越界即夹取）。 @type {Record<string, number[]>} */
 export const RANGES = {
   speed: [0.35, 3],
   soundVolume: [0, 1],
   voiceRate: [0.5, 2],
-  voiceLead: [0, 1200],
+  voiceLead: [0, VOICE_LEAD_MAX],
   voicePitch: [0, 2],
   voiceVolume: [0, 1],
   glassOpacity: [0.15, 0.95],
@@ -55,6 +58,14 @@ export const IDENTITY_MAX = 48
 export const IDENTITY_ID_MAX = 12
 /* 其余文案字段的通用上限。 */
 export const TEXT_MAX = 64
+/* 音色名来自系统语音列表，比手写文案长得多（常见 "Microsoft ... Online (Natural)"），按 128 位截断。 */
+export const VOICE_NAME_MAX = 128
+/* 左上副标题只有一行，40 位是排版能容纳的上限。 */
+export const BRAND2_MAX = 40
+
+/* 各文案字段的实际上限；没列出的走 TEXT_MAX。 */
+/** @type {Record<string, number>} */
+const TEXT_LIMITS = { identity: IDENTITY_MAX, voiceName: VOICE_NAME_MAX, brand2: BRAND2_MAX }
 
 /**
  * 身份编号只保留字母和数字：动画里的等宽排版放不下符号，
@@ -97,7 +108,7 @@ export function normalize(input) {
       const s = String(value).trim()
       out[key] = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(s) ? s : DEFAULTS[key]
     } else if (TEXT_KEYS.includes(key)) {
-      out[key] = String(value).slice(0, key === 'identity' ? IDENTITY_MAX : TEXT_MAX)
+      out[key] = String(value).slice(0, TEXT_LIMITS[key] || TEXT_MAX)
     } else {
       out[key] = value
     }

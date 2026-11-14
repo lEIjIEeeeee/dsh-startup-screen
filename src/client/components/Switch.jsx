@@ -1,7 +1,13 @@
 export function Switch({ label, hint, checked, onChange }) {
   return (
     <label className="__ss_check">
-      <input type="checkbox" checked={!!checked} onChange={(e) => onChange(e.target.checked)} />
+      <input
+        type="checkbox"
+        role="switch"
+        aria-checked={!!checked}
+        checked={!!checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
       <span className="__ss_switch" aria-hidden="true">
         <i />
       </span>

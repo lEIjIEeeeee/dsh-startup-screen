@@ -7,8 +7,10 @@
 
 /** jsx / jsxs 的最小实现：只保留 type / props / key。 */
 export function makeJsxStub() {
-  return (type, props, key) =>
-    ({ type, props: Object.assign({}, props || {}, key == null ? {} : { key }) })
+  return (type, props, key) => ({
+    type,
+    props: Object.assign({}, props || {}, key == null ? {} : { key }),
+  })
 }
 
 /** 宿主界面控件：Button 渲染成原生按钮，Input 的类名落在外层 span。 */
