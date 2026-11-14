@@ -12,15 +12,30 @@
  * 用法：node test/smoke-splash.mjs
  * ========================================================================== */
 import fs from 'node:fs'
+import path from 'node:path'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 import { warnIfStale } from './_fresh.mjs'
 
 const BUNDLE = fileURLToPath(new URL('../lib/splash.js', import.meta.url))
-const SOURCE = fileURLToPath(new URL('../src/splash/index.js', import.meta.url))
+const SPLASH_DIR = fileURLToPath(new URL('../src/splash/', import.meta.url))
 const CSS_SOURCE = fileURLToPath(new URL('../src/splash/styles/index.css', import.meta.url))
 const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.js', import.meta.url))
-warnIfStale(BUNDLE, [SOURCE, CSS_SOURCE, DEFAULTS_SOURCE])
+
+/* 源码断言跨多个模块：把 splash 目录下的 JS 全拼起来再匹配 */
+function collectSources(dir) {
+  const out = []
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) out.push(...collectSources(full))
+    else if (entry.name.endsWith('.js')) out.push(full)
+  }
+  return out.sort()
+}
+const SOURCES = collectSources(SPLASH_DIR)
+const SOURCE_TEXT = SOURCES.map((file) => fs.readFileSync(file, 'utf8')).join('\n')
+
+warnIfStale(BUNDLE, [...SOURCES, CSS_SOURCE, DEFAULTS_SOURCE])
 
 let pass = 0
 let fail = 0
@@ -360,7 +375,7 @@ check('按跳过时才真的掐断（cancel 1 次）', speech.cancelCalls === 1,
 
 console.log('\n[8] 终幕用 line-6 欢迎语（自制落幕词，3.73 秒）')
 {
-  const src = fs.readFileSync(SOURCE, 'utf8')
+  const src = SOURCE_TEXT
   check('全程没有 voice.tts( 调用（不再用 TTS 念白）', !/voice\.tts\(/.test(src))
   check('终幕挂了 line-6 素材', /voice\.line\(null, null, 'line-6'\)/.test(src))
   check('五步念白用各自素材', /voice\.line\(step\.say, step\.zh, step\.audio\)/.test(src))
@@ -373,7 +388,7 @@ console.log('\n[8] 终幕用 line-6 欢迎语（自制落幕词，3.73 秒）')
 console.log('\n[9] 右下角身份读数：不压版心、窄窗口不丢、第 3 幕随身份核验退场')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
-  const src = fs.readFileSync(SOURCE, 'utf8')
+  const src = SOURCE_TEXT
   const idlineRule = (css.match(/\.dsu-idline\s*\{[^}]*\}/) || [''])[0]
   check('.dsu-idline 用 right/bottom 锚定（脱离居中版心）', /right:\s*46px/.test(idlineRule) && /bottom:\s*104px/.test(idlineRule), idlineRule.slice(0, 80))
   check('.dsu-idline 不再用 left: calc(50% + 190px)', !/left:\s*calc\(50% \+ 190px\)/.test(idlineRule))
@@ -467,7 +482,7 @@ console.log('\n[11] 终幕欢迎语：素材完整性与时序')
   const zhLeft = fs.readdirSync(assetDir).filter((n) => n.endsWith('-zh.mp3'))
   check('不含中文素材（已移除）', zhLeft.length === 0, zhLeft.join(',') || '无')
 
-  const src = fs.readFileSync(SOURCE, 'utf8')
+  const src = SOURCE_TEXT
   const reveal = src.indexOf("ui.welcome.classList.add('dsu-in')")
   const play = src.indexOf('welcome = voice.line(')
   check('终幕人声在欢迎文案亮起之后才开念', reveal >= 0 && play > reveal, 'reveal=' + reveal + ' play=' + play)
@@ -477,10 +492,10 @@ console.log('\n[11] 终幕欢迎语：素材完整性与时序')
 
 console.log('\n[12] 卡死防线与重播隔离（外部审查发现的坑）')
 {
-  const src = fs.readFileSync(SOURCE, 'utf8')
+  const src = SOURCE_TEXT
 
   /* ① 停滞看门狗：不能只防「脚本没跑起来」，还要防「跑起来了但卡在中间」 */
-  check('有停滞看门狗（STALL_MS 常量）', /var STALL_MS = \d+/.test(src), /var STALL_MS = (\d+)/.exec(src)?.[1])
+  check('有停滞看门狗（STALL_MS 常量）', /STALL_MS = \d+/.test(src), /STALL_MS = (\d+)/.exec(src)?.[1])
   check('看门狗在 run() 里上弦', /function run\(\)[\s\S]{0,200}armStall\(\)/.test(src))
   check('每推进一幕重新上弦', /function stepLoop\(\)[\s\S]{0,400}armStall\(\)/.test(src))
   check('等用户操作时下弦（不踢走正在犹豫的人）', /function waitAction\(\)[\s\S]{0,300}disarmStall\(\)/.test(src))
@@ -559,7 +574,7 @@ console.log('\n[14] 液态玻璃：透出背景，但主体素材保持不透明
   check('--dsu-glass-blur 生效', g.root.style.getPropertyValue('--dsu-glass-blur') === '24px', g.root.style.getPropertyValue('--dsu-glass-blur'))
   check('--dsu-glass-sat 生效', g.root.style.getPropertyValue('--dsu-glass-sat') === '170%', g.root.style.getPropertyValue('--dsu-glass-sat'))
   check('开玻璃时不立即置透明（会露出应用启动白底）', g.root.style.background !== 'transparent', String(g.root.style.background))
-  check('源码里透明是在底板 opacity=1 之后才设置', /ui\.plate\.style\.opacity = '1'[\s\S]{0,400}root\.style\.background = 'transparent'/.test(fs.readFileSync(SOURCE, 'utf8')))
+  check('源码里透明是在底板 opacity=1 之后才设置', /ui\.plate\.style\.opacity = '1'[\s\S]{0,400}root\.style\.background = 'transparent'/.test(SOURCE_TEXT))
 
   const off = run(true)
   check('默认不开启玻璃', !off.root.classList.contains('dsu-glass'), off.root._cls)
@@ -602,7 +617,7 @@ console.log('\n[15] 背景模糊：独立图层，不与任何素材绑定')
   const css2 = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
   check('CSS 有 .dsu-backdrop 图层', /\.dsu-backdrop\s*\{[\s\S]{0,400}backdrop-filter:\s*blur\(var\(--dsu-backdrop-blur/.test(css2))
   check('CSS 里已没有壁纸层 .dsu-wall', !/\.dsu-wall/.test(css2))
-  check('壁纸路由已移除（splash.js 不再请求）', !fs.readFileSync(SOURCE, 'utf8').includes('/dsh-startup/wallpaper'))
+  check('壁纸路由已移除（splash.js 不再请求）', !SOURCE_TEXT.includes('/dsh-startup/wallpaper'))
 }
 
 console.log('\n[16b] 启动期不得露出 DSH 白底（0.2.1 起 body 被强制 #fff）')
@@ -615,7 +630,7 @@ console.log('\n[16b] 启动期不得露出 DSH 白底（0.2.1 起 body 被强制
 console.log('\n[16] 背景模糊必须真的生效（contain:paint 回归防线）')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
-  const src = fs.readFileSync(SOURCE, 'utf8')
+  const src = SOURCE_TEXT
 
   /* contain:paint 会把根节点变成 backdrop 根，backdrop-filter 只能采自己内部 → 表现是「只透不糊」 */
   const cssNoComment = css.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -632,7 +647,7 @@ console.log('\n[16] 背景模糊必须真的生效（contain:paint 回归防线�
 console.log('\n[17] P0 中文清晰度与逐字解码')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
-  const src = fs.readFileSync(SOURCE, 'utf8')
+  const src = SOURCE_TEXT
 
   const zhLine = (css.match(/--dsu-zh:[^;]+;/) || [''])[0]
   check('中文优先 Noto Sans SC', zhLine.indexOf('"Noto Sans SC"') !== -1 &&
@@ -666,7 +681,7 @@ console.log('\n[17] P0 中文清晰度与逐字解码')
 console.log('\n[18] 光场与氛围层')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
-  const src = fs.readFileSync(SOURCE, 'utf8')
+  const src = SOURCE_TEXT
 
   check('CSS 有光场图层（z 11）', /\.dsu-field\s*\{[\s\S]{0,400}z-index:\s*11/.test(css))
   check('氛围层都不拦截点击', /\.dsu-atmo,\s*\.dsu-beams,\s*\.dsu-floor,\s*\.dsu-field\s*\{[\s\S]{0,200}pointer-events:\s*none/.test(css))
@@ -696,7 +711,7 @@ console.log('\n[19] 性能防线（玻璃 + 光效叠加不掉帧）')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
   const cssNoComments = css.replace(/\/\*[\s\S]*?\*\//g, '')
-  const src = fs.readFileSync(SOURCE, 'utf8')
+  const src = SOURCE_TEXT
 
   check('应用本体已模糊时关掉底板冗余 backdrop-filter',
     /\.dsu-glass-appblur \.dsu-plate[\s\S]{0,200}backdrop-filter:\s*none/.test(css))
@@ -720,7 +735,7 @@ console.log('\n[19] 性能防线（玻璃 + 光效叠加不掉帧）')
 console.log('\n[20] 电影细节 / 准星 / 金属鲸鱼 / facts')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
-  const src = fs.readFileSync(SOURCE, 'utf8')
+  const src = SOURCE_TEXT
 
   check('有洗白掠光层（z 14）', /\.dsu-sheen\s*\{[\s\S]{0,300}z-index:\s*14/.test(css))
   check('有终幕撕裂带（z 62）', /\.dsu-tear\s*\{[\s\S]{0,300}z-index:\s*62/.test(css))
@@ -755,7 +770,7 @@ console.log('\n[20] 电影细节 / 准星 / 金属鲸鱼 / facts')
 console.log('\n[21] 数据面板 / 首帧实心 / 细环 / 双语解码')
 {
   const css = fs.readFileSync(fileURLToPath(new URL('../lib/splash.css', import.meta.url)), 'utf8')
-  const src = fs.readFileSync(SOURCE, 'utf8')
+  const src = SOURCE_TEXT
   const host = fs.readFileSync(fileURLToPath(new URL('../src/host/facts.js', import.meta.url)), 'utf8')
   const defaults = fs.readFileSync(DEFAULTS_SOURCE, 'utf8')
 

@@ -7,10 +7,16 @@
  *
  * 配置来自 window.__DSH_STARTUP__，也可以用 window.__DSH_STARTUP_API__.replay() 重播。
  * ========================================================================== */
-import { DEFAULTS } from '../shared/defaults.js'
 import { localDayKey } from '../shared/day.js'
 import { ROUTES } from '../shared/routes.js'
-import { IDENTITY_MAX, normalizeIdentityId } from '../shared/schema.js'
+import { factText, isAmbientOn, normalizeStartupConfig } from './core/config.js'
+import { ROOT_ID, STALL_MS } from './core/constants.js'
+import { hexToRgba } from './core/color.js'
+import { createDecoder } from './core/decode.js'
+import { el, setIn } from './core/dom.js'
+import { createWhaleSvg } from './core/whale.js'
+import { STEPS } from './data/steps.js'
+import { createChromeSync } from './dom/chrome-sync.js'
 
 /* 顶层守卫收进 boot()：构建时外面再套一层立即执行，同一份脚本重复加载也只跑一遍。 */
 function boot() {
@@ -19,153 +25,7 @@ function boot() {
   if (window.__DSH_STARTUP_LOADED__) return
   window.__DSH_STARTUP_LOADED__ = true
 
-  var ROOT_ID = 'dsh-startup-root'
-
-  /* ── DeepSeek 官方鲸鱼标识（取自 DSH 自带 favicon.svg 的路径数据）──────── */
-  var WHALE_PATH =
-    'M48.8354 10.0479C48.3232 9.79199 48.1025 10.2798 47.8032 10.5278C47.7007 10.6079 ' +
-    '47.6143 10.7119 47.5273 10.8076C46.7793 11.624 45.9048 12.1597 44.7622 12.0957C43.0923 ' +
-    '12 41.666 12.5356 40.4058 13.8398C40.1377 12.2319 39.2476 11.272 37.8926 10.6558C37.1836 ' +
-    '10.3359 36.4668 10.0156 35.9702 9.31982C35.6235 8.82373 35.5293 8.27197 35.356 ' +
-    '7.72754C35.2456 7.3999 35.1353 7.06396 34.7651 7.00781C34.3633 6.94385 34.2056 7.2876 ' +
-    '34.0479 7.57568C33.418 8.75195 33.1733 10.0479 33.1973 11.3599C33.2524 14.312 34.4736 ' +
-    '16.6641 36.8999 18.3359C37.1758 18.5278 37.2466 18.7197 37.1597 19C36.9946 19.5757 ' +
-    '36.7974 20.1357 36.624 20.7119C36.5137 21.0801 36.3486 21.1597 35.9624 21C34.6309 ' +
-    '20.4321 33.481 19.5918 32.4644 18.5757C30.7393 16.8721 29.1792 14.9917 27.2334 ' +
-    '13.52C26.7764 13.1758 26.3193 12.856 25.8467 12.5518C23.8618 10.584 26.1069 8.96777 ' +
-    '26.627 8.77588C27.1704 8.57568 26.8159 7.8877 25.0591 7.896C23.3022 7.90381 21.6953 ' +
-    '8.50391 19.647 9.30371C19.3477 9.42383 19.0322 9.51172 18.7095 9.58398C16.8501 9.22363 ' +
-    '14.9199 9.14355 12.9033 9.37598C9.10596 9.80762 6.07275 11.6396 3.84326 14.7681C1.16455 ' +
-    '18.5278 0.53418 22.7998 1.30664 27.2559C2.11768 31.9521 4.46582 35.8398 8.07373 ' +
-    '38.8799C11.8159 42.0322 16.1255 43.5762 21.041 43.2803C24.0269 43.104 27.3516 42.6963 ' +
-    '31.1016 39.4561C32.0469 39.936 33.0396 40.1279 34.686 40.272C35.9546 40.3921 37.1758 ' +
-    '40.208 38.1211 40.0078C39.6021 39.688 39.4995 38.2881 38.9639 38.0322C34.623 35.9678 ' +
-    '35.5762 36.8081 34.71 36.1279C36.9155 33.4639 40.2402 30.6958 41.54 21.728C41.6426 ' +
-    '21.0161 41.5557 20.5679 41.54 19.9917C41.5322 19.6396 41.6108 19.5039 42.0049 ' +
-    '19.4639C43.0923 19.3359 44.1479 19.0317 45.1167 18.4878C47.9292 16.9199 49.064 14.3438 ' +
-    '49.3315 11.2559C49.3711 10.7837 49.3237 10.2959 48.8354 10.0479ZM24.3262 ' +
-    '37.8398C20.1196 34.4639 18.0791 33.3521 17.2358 33.3999C16.4482 33.4482 16.5898 ' +
-    '34.3682 16.7632 34.9678C16.9443 35.5601 17.1812 35.9683 17.5117 36.4878C17.7402 ' +
-    '36.832 17.8979 37.3442 17.2832 37.728C15.9282 38.584 13.5728 37.4399 13.4624 ' +
-    '37.3838C10.7207 35.7358 8.42822 33.5601 6.81348 30.584C5.25342 27.7197 4.34766 ' +
-    '24.6479 4.19775 21.3677C4.1582 20.5757 4.38672 20.2959 5.15869 20.1519C6.17529 ' +
-    '19.96 7.22314 19.9199 8.23926 20.0718C12.5327 20.7119 16.1885 22.6719 19.2529 ' +
-    '25.7759C21.002 27.5439 22.3252 29.6558 23.6885 31.7202C25.1377 33.9121 26.6978 36 ' +
-    '28.6831 37.7119C29.3843 38.312 29.9434 38.7681 30.479 39.104C28.8643 39.2881 26.1699 ' +
-    '39.3281 24.3262 37.8398ZM26.3433 24.6001C26.3433 24.248 26.6191 23.9678 26.9658 ' +
-    '23.9678C27.0444 23.9678 27.1152 23.9839 27.1782 24.0078C27.2651 24.04 27.3438 ' +
-    '24.0879 27.4067 24.1602C27.5171 24.272 27.5801 24.4321 27.5801 24.6001C27.5801 ' +
-    '24.9521 27.3042 25.2319 26.9575 25.2319C26.6108 25.2319 26.3433 24.9521 26.3433 ' +
-    '24.6001ZM32.6064 27.8799C32.2046 28.0479 31.8027 28.1919 31.4165 28.208C30.8179 ' +
-    '28.2397 30.1641 27.9922 29.8096 27.688C29.2583 27.2158 28.8643 26.9521 28.6987 ' +
-    '26.1279C28.6279 25.7759 28.6675 25.2319 28.7305 24.9199C28.8721 24.248 28.7144 ' +
-    '23.8159 28.2495 23.4238C27.8716 23.104 27.3911 23.0161 26.8633 23.0161C26.666 ' +
-    '23.0161 26.4849 22.9277 26.3511 22.856C26.1304 22.7441 25.9492 22.4639 26.1226 ' +
-    '22.1201C26.1777 22.0078 26.4458 21.7358 26.5088 21.688C27.2256 21.272 28.0527 ' +
-    '21.4077 28.8169 21.7197C29.5259 22.0161 30.0615 22.5601 30.834 23.3281C31.6216 ' +
-    '24.2559 31.7632 24.5117 32.2124 25.208C32.5669 25.752 32.8901 26.312 33.1104 ' +
-    '26.9521C33.2446 27.3521 33.0713 27.6802 32.6064 27.8799Z'
-
-  /* ── 序列脚本：中文主字 + 英文等宽字幕 + 底部日志 ───────────────────────
-     `say` 是专门给语音播报用的自然语句（照着参考片里女声念状态行的节奏，
-     正好卡在各自文字出现的时间点上）。 */
-  /* ── 序列脚本 ──────────────────────────────────────────────────────────
-     文字与真声素材一一对应（来自你给的音频）：
-       line-1.mp3 = V1 需要访问许可
-       line-2.mp3 = V2 身份资料确认
-       line-3.mp3 = V4 接收访问需求
-       line-4.mp3 = V5 开始读取权限
-       line-5.mp3 = V6 读取完毕 · 核验通过
-     V3 是用户名字独白，按你的要求不用。
-     `say` 是素材拿不到时的 TTS 兜底文本；`audio` 是素材文件名（不含扩展名）。 */
-  var STEPS = [
-    {
-      zh: '需要访问许可',
-      en: 'ACCESS PERMISSION REQUIRED',
-      say: 'Access permission required.',
-      audio: 'line-1',
-      log: '等待用户授权…',
-      logEn: 'AWAITING OPERATOR CONSENT',
-      badge: 'AUTHORIZATION',
-      action: 'grant',
-      btnZh: '授予访问权限',
-      btnEn: 'GRANT ACCESS',
-      hold: 900,
-      progress: 0.34
-    },
-    {
-      zh: '身份资料确认',
-      en: 'IDENTITY VERIFICATION',
-      say: 'Identity verification.',
-      audio: 'line-2',
-      log: '核对身份资料…',
-      logEn: 'MATCHING OPERATOR RECORD',
-      badge: 'IDENTITY',
-      action: 'confirm',
-      btnZh: '确认身份',
-      btnEn: 'CONFIRM IDENTITY',
-      hold: 700,
-      progress: 0.5
-    },
-    {
-      zh: '接收访问需求',
-      en: 'ACCESS REQUEST RECEIVED',
-      say: 'Access request received.',
-      audio: 'line-3',
-      log: '接收访问需求，建立会话通道…',
-      logEn: 'HANDSHAKE ESTABLISHED',
-      badge: 'REQUEST',
-      action: 'auto',
-      hold: 1200,
-      progress: 0.66,
-      assembleLogo: true
-    },
-    {
-      zh: '开始读取权限',
-      en: 'PERMISSION READ STARTED',
-      say: 'Beginning permission read.',
-      audio: 'line-4',
-      log: '开始读取权限，索引工作区与会话…',
-      logEn: 'READING PERMISSION SET',
-      badge: 'READ',
-      action: 'auto',
-      hold: 1200,
-      progress: 0.8,
-      hex: true
-    },
-    {
-      zh: '读取完毕 · 核验通过',
-      en: 'READ COMPLETE · VERIFIED',
-      say: 'Read complete. Verification passed.',
-      audio: 'line-5',
-      log: '读取完毕，核验通过，权限已授予',
-      logEn: 'PERMISSION AUTHORIZED',
-      badge: 'VERIFY',
-      action: 'auto',
-      hold: 1600,
-      progress: 0.93,
-      reticle: true
-    }
-  ]
-
-  function cfg() {
-    var raw = (window.__DSH_STARTUP__ && typeof window.__DSH_STARTUP__ === 'object')
-      ? window.__DSH_STARTUP__
-      : {}
-    var out = {}
-    for (var k in DEFAULTS) if (Object.prototype.hasOwnProperty.call(DEFAULTS, k)) out[k] = DEFAULTS[k]
-    for (var k2 in raw) {
-      if (Object.prototype.hasOwnProperty.call(raw, k2) && raw[k2] !== undefined && raw[k2] !== null) {
-        out[k2] = raw[k2]
-      }
-    }
-    out.speed = Math.min(3, Math.max(0.35, Number(out.speed) || 1))
-    out.identity = String(out.identity || DEFAULTS.identity).slice(0, IDENTITY_MAX)
-    out.identityId = normalizeIdentityId(out.identityId, out.identity)
-    return out
-  }
-
-  var C = cfg()
+  var C = normalizeStartupConfig(window.__DSH_STARTUP__)
 
   /* 系统"减少动态效果"：解码动画与后续光场都按静态处理 */
   var REDUCED = (function () {
@@ -176,11 +36,7 @@ function boot() {
 
   /* 真实信息由宿主注入；没有时全部走回退值，不影响动画 */
   var FACTS = (C.facts && typeof C.facts === 'object') ? C.facts : {}
-  function ambientOn() { return C.ambient !== false }
-
-  function factText(v) {
-    return (v === null || v === undefined || v === '') ? '—' : String(v)
-  }
+  function ambientOn() { return isAmbientOn(C) }
 
   function paintMeta() {
     if (!ui || !ui.meta1) return
@@ -350,181 +206,7 @@ function boot() {
      一块和主题同色的方块：黑幕时是一条亮带，暖白底板上又显得刺眼。
      做法是把桌面版用来取色的隐藏元素改成完全透明，让它把窗口按钮和底色一起藏起来，
      动画结束再还原。浏览器和 macOS 下这段不执行，任何一步失败都静默跳过。 */
-  var chromeSync = (function () {
-    var CLEAR = 'rgba(0, 0, 0, 0)'
-    var VARS = ['--dsw-specific-sidebar-fill', '--dsw-alias-label-primary']
-    var MAX_HOLD_MS = 60000          /* 硬上限：万一动画卡住，别把按钮永久藏住 */
-    var rootEl = document.documentElement
-    var state = { applied: false, probe: null, settledHits: 0 }
-    var savedVars = {}
-    var retryTimers = []
-    var keepAlive = null
-    var holdTimer = null
-
-    function isDesktopWin() {
-      try {
-        var nav = (typeof window !== 'undefined' && window.navigator) ||
-          (typeof navigator !== 'undefined' ? navigator : null)
-        if (!nav || !/Win/.test(nav.userAgent || '')) return false
-        /* 判据不只认协议字符串：桌面端还会在文档上打 data-windows-titlebar 标记，
-           任一个命中即认为是 Windows 桌面端，避免协议改名后整段静默失效 */
-        var loc = (typeof window !== 'undefined' && window.location) ||
-          (typeof location !== 'undefined' ? location : null)
-        if (loc && loc.protocol === 'dsh-app:') return true
-        var de = document.documentElement
-        return !!(de && de.hasAttribute && de.hasAttribute('data-windows-titlebar'))
-      } catch (e) { return false }
-    }
-
-    /* 桌面版用来取色的隐藏元素是一个 span，内联背景色的声明值里带这个变量名 */
-    function findProbe() {
-      try {
-        if (!document.querySelector) return null
-        var el = document.querySelector('span[style*="dsw-specific-sidebar-fill"]')
-        if (el) return el
-        /* 兜底：某些实现不把内联样式暴露给属性选择器 */
-        if (!document.querySelectorAll) return null
-        var spans = document.querySelectorAll('span')
-        for (var i = 0; i < spans.length; i++) {
-          var s = spans[i]
-          if (!s.style || typeof s.style.getPropertyValue !== 'function') continue
-          var bg = s.style.getPropertyValue('background-color')
-          if (bg && bg.indexOf('--dsw-specific-sidebar-fill') !== -1) return s
-        }
-      } catch (e) { /* 兜底不再抛 */ }
-      return null
-    }
-
-    /* 在页面里制造一点小改动，让桌面版重新读取窗口颜色；两条路径任一生效即可。 */
-    function poke() {
-      try {
-        if (document.head) {
-          var st = document.createElement('style')
-          st.setAttribute('data-dsu-chrome-poke', '1')
-          st.textContent = '/*dsu-poke*/'
-          document.head.appendChild(st)
-          if (st.parentNode) st.parentNode.removeChild(st)
-        }
-      } catch (e) { /* 兜底不再抛 */ }
-      try {
-        if (document.body && document.body.style) {
-          document.body.style.setProperty('--dsu-chrome-poke', String(Date.now() % 1000000))
-          document.body.style.removeProperty('--dsu-chrome-poke')
-        }
-      } catch (e) { /* 兜底不再抛 */ }
-    }
-
-    /** 检测元素是否已经真的透明；读不到样式就当作还没生效，继续重试。 */
-    function settled() {
-      try {
-        var p = state.probe
-        if (!p || p.isConnected === false) return false
-        if (typeof getComputedStyle !== 'function') return false
-        return getComputedStyle(p).backgroundColor === CLEAR
-      } catch (e) { return false }
-    }
-
-    function apply() {
-      try {
-        /* 检测元素可能被应用重新挂载（切换主题、热更新）：节点一旦离开页面就重新找，
-           否则会对着已删除的节点操作，标题栏会在动画中途突然回到主题色 */
-        var probe = state.probe
-        if (!probe || probe.isConnected === false) probe = state.probe = findProbe()
-        if (probe) {
-          probe.style.setProperty('background-color', CLEAR)
-          probe.style.setProperty('color', CLEAR)
-        }
-        if (rootEl) for (var j = 0; j < VARS.length; j++) rootEl.style.setProperty(VARS[j], CLEAR)
-        poke()
-      } catch (e) { /* 兜底不再抛 */ }
-    }
-
-    function stopTimers() {
-      for (var r = 0; r < retryTimers.length; r++) clearTimeout(retryTimers[r])
-      retryTimers = []
-      if (keepAlive) { clearInterval(keepAlive); keepAlive = null }
-      if (holdTimer) { clearTimeout(holdTimer); holdTimer = null }
-    }
-
-    function hide() {
-      if (!isDesktopWin()) return
-      try {
-        if (!state.applied) {
-          state.applied = true
-          state.settledHits = 0
-          for (var i = 0; i < VARS.length; i++) savedVars[VARS[i]] = rootEl.style.getPropertyValue(VARS[i])
-          state.probe = findProbe()
-          /* 万一动画卡住不揭幕，到点强制还原，绝不把三个按钮永久藏住 */
-          holdTimer = setTimeout(show, MAX_HOLD_MS)
-        }
-        apply()
-        /* 脚本可能比桌面版准备好得更早，所以多试几次 */
-        for (var r = 0; r < retryTimers.length; r++) clearTimeout(retryTimers[r])
-        retryTimers = []
-        var delays = [140, 520, 1400]
-        for (var d = 0; d < delays.length; d++) retryTimers.push(setTimeout(apply, delays[d]))
-        /* 自动恢复：应用挂载过程中如果自己又改回来，这里再拉回透明；
-           连续两次确认透明后停止，不要一直空转 */
-        if (!keepAlive) {
-          keepAlive = setInterval(function () {
-            if (!state.applied) return
-            if (settled()) {
-              if (++state.settledHits >= 2) { clearInterval(keepAlive); keepAlive = null }
-              return
-            }
-            state.settledHits = 0
-            apply()
-          }, 600)
-        }
-      } catch (e) { /* 兜底不再抛 */ }
-    }
-
-    function show() {
-      if (!state.applied) return
-      state.applied = false
-      try {
-        stopTimers()
-        var probe = state.probe
-        if (probe) {
-          probe.style.removeProperty('background-color')
-          probe.style.removeProperty('color')
-        }
-        if (rootEl) {
-          for (var k = 0; k < VARS.length; k++) {
-            if (savedVars[VARS[k]]) rootEl.style.setProperty(VARS[k], savedVars[VARS[k]])
-            else rootEl.style.removeProperty(VARS[k])
-          }
-        }
-        poke()
-        state.probe = null
-        state.settledHits = 0
-      } catch (e) { /* 兜底不再抛 */ }
-    }
-
-    /* 兜底：无论从哪条路退出（揭幕、跳过、启动失败、9 秒超时），
-       根节点一被移除就还原标题栏 */
-    var observerInstalled = false
-    function installObserver() {
-      if (observerInstalled) return
-      observerInstalled = true
-      try {
-        if (typeof MutationObserver !== 'function' || !document.body) return
-        var mo = new MutationObserver(function (muts) {
-          for (var m = 0; m < muts.length; m++) {
-            var nodes = muts[m].removedNodes
-            for (var n = 0; nodes && n < nodes.length; n++) {
-              if (nodes[n] && nodes[n].nodeType === 1 && nodes[n].id === ROOT_ID) { show(); return }
-            }
-          }
-        })
-        mo.observe(document.body, { childList: true })
-      } catch (e) { /* 兜底不再抛 */ }
-    }
-    if (document.body) installObserver()
-    else if (document.addEventListener) document.addEventListener('DOMContentLoaded', installObserver)
-
-    return { hide: hide, show: show, isDesktopWin: isDesktopWin }
-  })()
+  var chromeSync = createChromeSync()
 
   /* 排查 / 冒烟测试用的把手：只读开关，不改变插件行为 */
   try { window.__DSH_STARTUP_CHROME__ = chromeSync } catch (e) { /* noop */ }
@@ -553,7 +235,6 @@ function boot() {
 
   /* 超时保护：任意一幕卡住（音频不返回、切换设备、音频被挂起）都要放行。
      每推进一步重新计时；等用户操作时暂停计时，不把正在犹豫的人踢出去。 */
-  var STALL_MS = 15000
   var stallTimer = null
   /* 揭幕后 900ms 才摘根节点、广播 done；重播必须能取消它，否则旧实例的定时器
      会踩掉新实例的 RUNNING 状态 */
@@ -664,145 +345,11 @@ function boot() {
     } catch (e) { /* 兜底本身不许再抛 */ }
   }, 9000)
 
-  /* ── 小工具 ───────────────────────────────────────────────────────────── */
-  function el(tag, cls, text) {
-    var n = document.createElement(tag)
-    if (cls) n.className = cls
-    if (text != null) n.textContent = text
-    return n
-  }
-
-  var metalSeq = 0
-  function svgWhale(cls) {
-    var ns = 'http://www.w3.org/2000/svg'
-    var svg = document.createElementNS(ns, 'svg')
-    svg.setAttribute('viewBox', '0 0 50 50')
-    svg.setAttribute('aria-hidden', 'true')
-    if (cls) svg.setAttribute('class', cls)
-
-    /* 金属感：实心底 + 同形状的渐变高光。不要给整个形状调半透明 ——
-       浅色主题下深色形状被调淡就是发灰、无神，不像金属。 */
-    var gid = 'dsu-metal-' + (++metalSeq)
-    var defs = document.createElementNS(ns, 'defs')
-    var lg = document.createElementNS(ns, 'linearGradient')
-    lg.setAttribute('id', gid)
-    lg.setAttribute('x1', '0.10'); lg.setAttribute('y1', '0')
-    lg.setAttribute('x2', '0.62'); lg.setAttribute('y2', '1')
-    var stops = [
-      [0, '#ffffff', '0.24'],
-      [0.40, '#ffffff', '0'],
-      [0.62, '#000000', '0'],
-      [1, '#000000', '0.20']
-    ]
-    for (var i = 0; i < stops.length; i++) {
-      var st = document.createElementNS(ns, 'stop')
-      st.setAttribute('offset', String(stops[i][0]))
-      st.setAttribute('stop-color', stops[i][1])
-      st.setAttribute('stop-opacity', stops[i][2])
-      lg.appendChild(st)
-    }
-    defs.appendChild(lg)
-    svg.appendChild(defs)
-
-    var p = document.createElementNS(ns, 'path')
-    p.setAttribute('d', WHALE_PATH)
-    p.setAttribute('fill-rule', 'nonzero')
-    svg.appendChild(p)
-
-    var shine = document.createElementNS(ns, 'path')
-    shine.setAttribute('d', WHALE_PATH)
-    shine.setAttribute('fill-rule', 'nonzero')
-    shine.style.fill = 'url(#' + gid + ')'
-    svg.appendChild(shine)
-    return svg
-  }
-
-  /** 逐字写入。fade=淡入上移；decode=先落随机字形再锁定真字（只给中文主字） */
-  function typeIn(host, text, stagger, mode) {
-    host.textContent = ''
-    var frag = document.createDocumentFragment()
-    var slots = []
-    var n = 0
-    var decode = mode === 'decode' && !REDUCED
-    for (var i = 0; i < text.length; i++) {
-      var ch = text.charAt(i)
-      if (ch === ' ') {
-        frag.appendChild(document.createTextNode('\u00a0'))
-        continue
-      }
-      var sep = ch === '·'
-      var s = el('span', sep ? 'dsu-ch dsu-sep' : 'dsu-ch', (decode && !sep) ? glyphFor(ch) : ch)
-      s.style.transitionDelay = Math.round(n * stagger) + 'ms'
-      if (decode && !sep) slots.push({ node: s, text: ch, delay: Math.round(n * stagger) })
-      frag.appendChild(s)
-      n++
-    }
-    host.appendChild(frag)
-    return slots
-  }
-
-  /* 全角片假名（1em 宽）+ 半角 hex —— 两组都和目标字同宽。
-     中文用片假名：笔画密度与汉字接近，且所有中文字体都覆盖；
-     换成数字/拉丁或康熙部首会出现密度太稀、字宽不一致或豆腐块。 */
-  var GLYPH_WIDE = 'アイウエオカキクケコ' +
-    'サシスセソタチツテトナニヌネノ'
-  var GLYPH_NARROW = '0123456789ABCDEF'
-  function glyphFor(ch) {
-    var wide = ch.charCodeAt(0) > 0x2e7f
-    var pool = wide ? GLYPH_WIDE : GLYPH_NARROW
-    return pool.charAt(Math.floor(Math.random() * pool.length))
-  }
-
-  /* 解码调度：所有字共用一个 55ms 的 interval，而不是每个字一个 timer */
-  var decodeTimer = null
-  var decodePending = []
-  var DECODE_TICK = 55
-
-  function startDecode(slots) {
-    stopDecode()
-    if (!slots || !slots.length) return
-    for (var i = 0; i < slots.length; i++) {
-      decodePending.push({
-        node: slots[i].node,
-        text: slots[i].text,
-        lockAt: slots[i].delay + 100 + Math.random() * 180
-      })
-    }
-    var t0 = Date.now()
-    decodeTimer = setInterval(function () {
-      var now = Date.now() - t0
-      var rest = []
-      for (var j = 0; j < decodePending.length; j++) {
-        var d = decodePending[j]
-        if (now >= d.lockAt) d.node.textContent = d.text
-        else { d.node.textContent = glyphFor(d.text); rest.push(d) }
-      }
-      decodePending = rest
-      if (!decodePending.length) stopDecode()
-    }, DECODE_TICK)
-  }
-
-  /** 停掉解码并把还没锁定的字强制写成真字（跳过 / 揭幕 / dispose 时必须调） */
-  function stopDecode() {
-    if (decodeTimer) { clearInterval(decodeTimer); decodeTimer = null }
-    for (var i = 0; i < decodePending.length; i++) {
-      decodePending[i].node.textContent = decodePending[i].text
-    }
-    decodePending = []
-  }
-
-  function hexToRgba(hex, alpha) {
-    var h = String(hex || '').replace(/^#/, '')
-    if (h.length === 3) h = h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2)
-    var n = parseInt(h, 16)
-    if (!isFinite(n) || h.length !== 6) return 'rgba(255, 117, 0, ' + alpha + ')'
-    return 'rgba(' + ((n >> 16) & 255) + ', ' + ((n >> 8) & 255) + ', ' + (n & 255) + ', ' + alpha + ')'
-  }
-
-  function setIn(node, on, cls) {
-    if (!node) return
-    node.classList.toggle(cls || 'dsu-in', !!on)
-  }
+  /* 逐字写入与解码动画：一次播放共用一个实例 */
+  var decoder = createDecoder(REDUCED)
+  var typeIn = decoder.typeIn
+  var startDecode = decoder.startDecode
+  var stopDecode = decoder.stopDecode
 
   /* ── DOM 搭建 ─────────────────────────────────────────────────────────── */
   var root = document.getElementById(ROOT_ID)
@@ -1039,7 +586,7 @@ function boot() {
 
   ;(function blackStage() {
     var inner = ui.blackInner
-    var whale = svgWhale('dsu-whale')
+    var whale = createWhaleSvg('dsu-whale')
     inner.appendChild(whale)
     inner.appendChild(el('div', 'dsu-black-zh', C.orgZh))
     var en = el('div', 'dsu-black-en', C.orgEn)
@@ -1049,12 +596,12 @@ function boot() {
   })()
 
   ;(function logoStage() {
-    ui.logo.appendChild(svgWhale())
+    ui.logo.appendChild(createWhaleSvg())
     ui.logo.appendChild(el('div', 'dsu-logolabel', 'D E E P S E E K'))
   })()
 
   ;(function welcomeLogo() {
-    ui.w3.appendChild(svgWhale())
+    ui.w3.appendChild(createWhaleSvg())
     ui.w3.appendChild(el('span', 'dsu-w3label', 'D E E P S E E K  ·  H A R N E S S'))
   })()
 
