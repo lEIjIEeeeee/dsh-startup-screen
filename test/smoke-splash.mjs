@@ -519,13 +519,13 @@ console.log('\n[12] 卡死防线与重播隔离（外部审查发现的坑）')
   check('正常播完也会摘掉全局监听器', /function finish\(\)[\s\S]{0,900}dropListeners\(\)/.test(src))
   check('dispose 会取消揭幕后的收尾定时器', /function dispose\(\)[\s\S]{0,400}clearTimeout\(finishTimer\)/.test(src))
   check('收尾定时器登记在案并检查代际', /finishTimer = setTimeout\(function \(\)[\s\S]{0,300}stale\(\)/.test(src))
-  check('音频关闭后不再新建上下文', /var closed = false[\s\S]{0,200}if \(closed\) return null/.test(src))
+  check('音频关闭后不再新建上下文', /(?:var|let|const) closed = false[\s\S]{0,200}if \(closed\) return null/.test(src))
   check('close 会置位 closed 标志', /function close\(\)[\s\S]{0,120}closed = true/.test(src))
   check('有代际号，旧链能自行失效', /__DSH_STARTUP_GEN__/.test(src) && /function stale\(\)/.test(src))
   check('步骤链开头检查代际', /if \(finished \|\| stale\(\)\) return/.test(src))
 
   /* ⑤ confirm 只能定义一次（旧实现被第二份覆盖，真素材分支成死代码） */
-  check('audio.confirm 只定义一次', (src.match(/confirm: function \(\)/g) || []).length === 1, String((src.match(/confirm: function \(\)/g) || []).length))
+  check('audio.confirm 只定义一次', (src.match(/(?:confirm: function \(\)|confirm\(\) \{)/g) || []).length === 1, String((src.match(/(?:confirm: function \(\)|confirm\(\) \{)/g) || []).length))
 }
 
 console.log('\n[13] 立即预览（replay）必须真的重挂一次运行时')
@@ -688,7 +688,7 @@ console.log('\n[18] 光场与氛围层')
   check('水印在光场之上（z 12）', /\.dsu-watermark\s*\{[\s\S]{0,200}z-index:\s*12/.test(css))
   check('reduced-motion 停止氛围动画', /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,500}\.dsu-atmo::before/.test(css))
   check('仍然没有引入 color-mix', !/color-mix\(/.test(css))
-  check('光场用 QIF 强度（150 / dpr 1.75）', /var limit = 150/.test(src) && /Math\.min\(1\.75/.test(src))
+  check('光场用 QIF 强度（150 / dpr 1.75）', /limit = 150/.test(src) && /Math\.min\(1\.75/.test(src))
   check('光场种子读取 facts', /FACTS\.hash/.test(src) && /FACTS\.profile/.test(src) && /FACTS\.bundleCount/.test(src))
   check('finish / dispose 会停光场', /function releaseAll\(\)[\s\S]{0,160}stopField\(\)/.test(src))
 
