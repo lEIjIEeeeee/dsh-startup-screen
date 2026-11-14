@@ -68,8 +68,6 @@ export const CSS = [
   '.__ss_ok{font-size:12.5px;color:var(--dsw-alias-state-business-primary,#4176e6)}',
   '.__ss_err{font-size:12.5px;color:var(--dsw-alias-state-error-primary,#f85149)}',
   '.__ss_swatch{width:38px;height:26px;padding:0;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.2));border-radius:8px;background:transparent;cursor:pointer}',
-  '.__ss_preview{margin-top:2px;border:1px dashed var(--dsw-alias-border-l2,rgba(127,127,127,.2));border-radius:var(--dsw-radius-md,12px);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}',
-  '.__ss_previewText{font-size:12px;color:var(--dsw-alias-label-tertiary);line-height:1.5}',
 ].join('')
 
 const TAG_ID = 'dsh-startup-screen/main.css'

@@ -18,6 +18,7 @@ import fs from 'node:fs'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 import { localDayKey } from '../src/shared/day.js'
+import { makeJsxStub, makePrimitivesStub } from './_stubs.mjs'
 
 let pass = 0
 let fail = 0
@@ -156,8 +157,7 @@ function boot(opts) {
   vm.createContext(sandbox)
   vm.runInContext(CODE, sandbox, { filename: 'client.js' })
 
-  const jsxStub = (type, props, key) =>
-    ({ type, props: Object.assign({}, props || {}, key == null ? {} : { key }) })
+  const jsxStub = makeJsxStub()
   const React = {
     createElement(type, props, ...children) {
       const kids = children.length === 0 ? undefined : children.length === 1 ? children[0] : children
@@ -174,14 +174,7 @@ function boot(opts) {
     }),
     useContext: () => null,
   }
-  const primitivesStub = {
-    Button({ children, ...rest }) {
-      return React.createElement('button', Object.assign({ type: 'button' }, rest), children)
-    },
-    Input({ _icon, className, ...rest }) {
-      return React.createElement('span', { className }, React.createElement('input', rest))
-    },
-  }
+  const primitivesStub = makePrimitivesStub(React)
   const mod = win.__loaded.factory((name) => {
     if (name === 'react') return React
     if (name === 'react/jsx-runtime') return { jsx: jsxStub, jsxs: jsxStub, Fragment: 'Fragment' }

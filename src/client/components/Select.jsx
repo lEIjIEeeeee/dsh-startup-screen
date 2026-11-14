@@ -11,8 +11,8 @@ export function Select({ value, options, onChange, ...rest }) {
       onChange={(e) => onChange(e.target.value)}
       {...rest}
     >
-      {options.map((o) => (
-        <option key={o[0]} value={o[0]}>
+      {options.map((o, i) => (
+        <option key={o[0] + '|' + o[1] + '|' + i} value={o[0]}>
           {o[1]}
         </option>
       ))}

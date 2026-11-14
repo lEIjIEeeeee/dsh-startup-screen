@@ -9,6 +9,7 @@ import path from 'node:path'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 import { warnIfStale } from './_fresh.mjs'
+import { makeJsxStub, makePrimitivesStub } from './_stubs.mjs'
 
 let pass = 0
 let fail = 0
@@ -119,18 +120,10 @@ check('注册 id 等于 loader entry 名（否则会报 loaded without registeri
 check('提供了 factory', loaded && typeof loaded.factory === 'function')
 
 console.log('\n[2] factory 导出形状')
-const jsxStub = (type, props, key) =>
-  ({ type, props: Object.assign({}, props || {}, key == null ? {} : { key }) })
-/* 宿主的 primitives 由模块加载器注入；这里给同形状的极小实现，
-   让冒烟测试走的是和真机一样的 Button/Input 包装层。 */
-const primitivesStub = {
-  Button({ children, ...rest }) {
-    return React.createElement('button', Object.assign({ type: 'button' }, rest), children)
-  },
-  Input({ _icon, className, ...rest }) {
-    return React.createElement('span', { className }, React.createElement('input', rest))
-  },
-}
+const jsxStub = makeJsxStub()
+/* 宿主的界面控件由模块加载器注入；这里用同形状的极小实现，
+   让冒烟测试走的是和真机一样的 Button / Input 包装层。 */
+const primitivesStub = makePrimitivesStub(React)
 const requireStub = (name) => {
   if (name === 'react') return React
   if (name === 'react/jsx-runtime') return { jsx: jsxStub, jsxs: jsxStub, Fragment: 'Fragment' }
@@ -213,6 +206,7 @@ check('顶部渲染出版本号节点 __ss_version', !!versionNode, versionNode 
 check('版本号取自 /dsh-startup/config 返回的 version', versionNode && versionNode.props.children === '版本 v9.9.9', versionNode && String(versionNode.props.children))
 check('已删除原来那段「启动界面：黑幕…」说明', !JSON.stringify(tree).includes('启动界面：'), '')
 check('已删除 __ss_lead 样式类', !JSON.stringify(tree).includes('__ss_lead'), '')
+check('已删除死样式 __ss_preview', !/__ss_preview/.test(SOURCE))
 check('渲染出「权限等级」字段', texts.includes('权限等级'))
 const idInput = find(tree, (n) => n.type === 'input' && n.props.type === 'text' && n.props.value === 'JOYCE MOORE')
 check('身份名称输入框回填了当前配置', !!idInput, idInput && idInput.props.value)

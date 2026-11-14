@@ -131,6 +131,7 @@ export function Panel() {
 
   function set(key, value) {
     setNotice(null)
+    setError(null)
     setDirty(true)
     setDraft((d) => Object.assign({}, d, { [key]: value }))
   }
