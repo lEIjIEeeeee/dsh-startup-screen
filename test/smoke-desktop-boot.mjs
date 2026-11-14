@@ -168,9 +168,18 @@ function boot(opts) {
     useEffect: () => {},
     useRef: () => ({ current: null }),
   }
+  const primitivesStub = {
+    Button({ children, ...rest }) {
+      return React.createElement('button', Object.assign({ type: 'button' }, rest), children)
+    },
+    Input({ _icon, className, ...rest }) {
+      return React.createElement('span', { className }, React.createElement('input', rest))
+    },
+  }
   const mod = win.__loaded.factory((name) => {
     if (name === 'react') return React
     if (name === 'react/jsx-runtime') return { jsx: jsxStub, jsxs: jsxStub, Fragment: 'Fragment' }
+    if (name === '@deepseek-ai/dsh-client-ui-primitives') return primitivesStub
     throw new Error('unexpected require: ' + name)
   })
   const registrations = []

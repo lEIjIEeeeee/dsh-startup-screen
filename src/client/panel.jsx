@@ -6,8 +6,9 @@ import { Field } from './components/Field.jsx'
 import { Range } from './components/Range.jsx'
 import { Select } from './components/Select.jsx'
 import { Switch } from './components/Switch.jsx'
-import { TextInput } from './components/TextInput.jsx'
 import { VoicePicker } from './components/VoicePicker.jsx'
+import { Button } from './ui/Button.jsx'
+import { Input } from './ui/Input.jsx'
 import { speakSample } from './voice.js'
 
 /* 版本号按可靠性取：先看配置接口返回值，再看页面里注入的值，
@@ -197,12 +198,14 @@ export function Panel() {
     return (
       <div className="__ss_root">
         {versionLine}
-        <div className="__ss_status">{error ? error : '读取配置中…'}</div>
+        <div className="__ss_status" role={error ? 'alert' : 'status'}>
+          {error ? error : '读取配置中…'}
+        </div>
         {error ? (
           <div className="__ss_actions">
-            <button className="__ss_btn" onClick={load}>
+            <Button className="__ss_btn" onClick={load}>
               重试
-            </button>
+            </Button>
           </div>
         ) : null}
       </div>
@@ -256,7 +259,7 @@ export function Panel() {
     <div className="__ss_group" id="__ss_group_identity">
       <div className="__ss_groupTitle">身份资料</div>
       <Field label="身份名称" hint="终幕欢迎语和第二步身份卡上的名字。">
-        <TextInput
+        <Input
           value={draft.identity}
           placeholder="例如：JOYCE MOORE"
           onChange={(v) => set('identity', v)}
@@ -264,10 +267,10 @@ export function Panel() {
       </Field>
       <div className="__ss_two">
         <Field label="身份编号" hint="第二步身份卡上的编号，建议用数字。">
-          <TextInput value={draft.identityId} mono onChange={(v) => set('identityId', v)} />
+          <Input value={draft.identityId} mono onChange={(v) => set('identityId', v)} />
         </Field>
         <Field label="权限等级">
-          <TextInput value={draft.accessLevel} mono onChange={(v) => set('accessLevel', v)} />
+          <Input value={draft.accessLevel} mono onChange={(v) => set('accessLevel', v)} />
         </Field>
       </div>
     </div>
@@ -278,37 +281,37 @@ export function Panel() {
       <div className="__ss_groupTitle">品牌与文案</div>
       <div className="__ss_two">
         <Field label="左上 · 主标题">
-          <TextInput value={draft.brand1} onChange={(v) => set('brand1', v)} />
+          <Input value={draft.brand1} onChange={(v) => set('brand1', v)} />
         </Field>
         <Field label="左上 · 产品行">
           <div className="__ss_row">
-            <TextInput value={draft.brand3a} onChange={(v) => set('brand3a', v)} />
-            <span className="__ss_status">+</span>
-            <TextInput value={draft.brand3b} onChange={(v) => set('brand3b', v)} />
+            <Input value={draft.brand3a} onChange={(v) => set('brand3a', v)} />
+            <span className="__ss_status" aria-hidden="true">+</span>
+            <Input value={draft.brand3b} onChange={(v) => set('brand3b', v)} />
           </div>
         </Field>
       </div>
       <Field label="左上 · 副标题">
-        <TextInput value={draft.brand2} maxLength={40} onChange={(v) => set('brand2', v)} />
+        <Input value={draft.brand2} maxLength={40} onChange={(v) => set('brand2', v)} />
       </Field>
       <div className="__ss_two">
         <Field label="黑幕 · 中文">
-          <TextInput value={draft.orgZh} onChange={(v) => set('orgZh', v)} />
+          <Input value={draft.orgZh} onChange={(v) => set('orgZh', v)} />
         </Field>
         <Field label="黑幕 · 英文">
-          <TextInput value={draft.orgEn} mono onChange={(v) => set('orgEn', v)} />
+          <Input value={draft.orgEn} mono onChange={(v) => set('orgEn', v)} />
         </Field>
       </div>
       <div className="__ss_two">
         <Field label="黑幕 · 小字">
-          <TextInput value={draft.orgSub} mono onChange={(v) => set('orgSub', v)} />
+          <Input value={draft.orgSub} mono onChange={(v) => set('orgSub', v)} />
         </Field>
         <Field label="终幕 · 黑框">
-          <TextInput value={draft.welcomeBox} onChange={(v) => set('welcomeBox', v)} />
+          <Input value={draft.welcomeBox} onChange={(v) => set('welcomeBox', v)} />
         </Field>
       </div>
       <Field label="右下 · 页脚">
-        <TextInput value={draft.footer} mono onChange={(v) => set('footer', v)} />
+        <Input value={draft.footer} mono onChange={(v) => set('footer', v)} />
       </Field>
     </div>
   )
@@ -353,9 +356,8 @@ export function Panel() {
       ) : null}
       {draft.voice ? (
         <div className="__ss_row">
-          <button
+          <Button
             className="__ss_btn"
-            type="button"
             onClick={() => {
               set('voiceRate', 0.88)
               set('voicePitch', 0.85)
@@ -365,7 +367,7 @@ export function Panel() {
             }}
           >
             ↺ 套用「电影旁白」档
-          </button>
+          </Button>
           <span className="__ss_hint">
             语速 0.88 · 音调 0.85（压抑、深沉）· 自动挑神经网络女声 · 提示音 + 开口留白
           </span>
@@ -534,20 +536,20 @@ export function Panel() {
         <Field label="强调色 · 橙">
           <div className="__ss_row">
             <ColorInput value={draft.accent} onChange={(v) => set('accent', v)} />
-            <span className="__ss_status">{draft.accent}</span>
+            <span className="__ss_status" aria-hidden="true">{draft.accent}</span>
           </div>
         </Field>
         <Field label="故障色 · 蓝">
           <div className="__ss_row">
             <ColorInput value={draft.glitchB} onChange={(v) => set('glitchB', v)} />
-            <span className="__ss_status">{draft.glitchB}</span>
+            <span className="__ss_status" aria-hidden="true">{draft.glitchB}</span>
           </div>
         </Field>
       </div>
       <Field label="故障色 · 红">
         <div className="__ss_row">
           <ColorInput value={draft.glitchA || '#ff3b30'} onChange={(v) => set('glitchA', v)} />
-          <span className="__ss_status">{draft.glitchA || '#ff3b30'}</span>
+          <span className="__ss_status" aria-hidden="true">{draft.glitchA || '#ff3b30'}</span>
         </div>
       </Field>
     </div>
@@ -569,41 +571,76 @@ export function Panel() {
   )
 
   const playPage = (
-    <div className="__ss_page" id="__ss_page_play" hidden={tab !== 'play'}>
+    <div
+      className="__ss_page"
+      id="__ss_page_play"
+      role="region"
+      aria-labelledby="__ss_tab_play"
+      hidden={tab !== 'play'}
+    >
       {playGroup}
       {interactGroup}
     </div>
   )
   const appearancePage = (
-    <div className="__ss_page" id="__ss_page_appearance" hidden={tab !== 'appearance'}>
+    <div
+      className="__ss_page"
+      id="__ss_page_appearance"
+      role="region"
+      aria-labelledby="__ss_tab_appearance"
+      hidden={tab !== 'appearance'}
+    >
       {visualGroup}
     </div>
   )
   const soundPage = (
-    <div className="__ss_page" id="__ss_page_sound" hidden={tab !== 'sound'}>
+    <div
+      className="__ss_page"
+      id="__ss_page_sound"
+      role="region"
+      aria-labelledby="__ss_tab_sound"
+      hidden={tab !== 'sound'}
+    >
       {voiceGroup}
     </div>
   )
   const contentPage = (
-    <div className="__ss_page" id="__ss_page_content" hidden={tab !== 'content'}>
+    <div
+      className="__ss_page"
+      id="__ss_page_content"
+      role="region"
+      aria-labelledby="__ss_tab_content"
+      hidden={tab !== 'content'}
+    >
       {identityGroup}
       {textGroup}
     </div>
   )
   const aboutPage = (
-    <div className="__ss_page" id="__ss_page_about" hidden={tab !== 'about'}>
+    <div
+      className="__ss_page"
+      id="__ss_page_about"
+      role="region"
+      aria-labelledby="__ss_tab_about"
+      hidden={tab !== 'about'}
+    >
       {aboutGroup}
     </div>
   )
 
+  /* 导航项保持原生 button：它们的版式完全由 __ss_navItem 控制，
+     套宿主的 Button 会带进胶囊高度/居中排版，反而要写一堆重置。 */
   const nav = (
-    <nav className="__ss_nav">
+    <nav className="__ss_nav" aria-label="启动动画设置">
       <div className="__ss_navTitle">启动动画</div>
       {PAGES.map((p) => (
         <button
           key={p[0]}
+          id={'__ss_tab_' + p[0]}
           type="button"
           className={'__ss_navItem' + (tab === p[0] ? ' __ss_navItemActive' : '')}
+          aria-controls={'__ss_page_' + p[0]}
+          aria-current={tab === p[0] ? 'page' : undefined}
           onClick={() => switchTab(p[0])}
         >
           {p[1]}
@@ -616,21 +653,29 @@ export function Panel() {
   const footer = (
     <div className="__ss_footer">
       <div className="__ss_actions">
-        <button className="__ss_btn __ss_btnPrimary" disabled={busy} onClick={save}>
+        <Button className="__ss_btn __ss_btnPrimary" disabled={busy} onClick={save}>
           {busy ? '处理中…' : '保存'}
-        </button>
-        <button className="__ss_btn" onClick={preview}>
+        </Button>
+        <Button className="__ss_btn" onClick={preview}>
           立即预览
-        </button>
-        <button className="__ss_btn" disabled={busy} onClick={reset}>
+        </Button>
+        <Button className="__ss_btn" disabled={busy} onClick={reset}>
           恢复默认
-        </button>
+        </Button>
       </div>
       <div className="__ss_barHint">
         关闭弹窗不会保存；保存后下次启动生效；「立即预览」使用当前修改（不写盘）。
         {dirty ? <span className="__ss_dirty"> ● 未保存</span> : null}
-        {notice ? <span className="__ss_ok">{notice}</span> : null}
-        {error ? <span className="__ss_err">{error}</span> : null}
+        {notice ? (
+          <span className="__ss_ok" role="status">
+            {notice}
+          </span>
+        ) : null}
+        {error ? (
+          <span className="__ss_err" role="alert">
+            {error}
+          </span>
+        ) : null}
       </div>
     </div>
   )

@@ -15,7 +15,9 @@ export function Range({ value, min, max, step, display, onChange }) {
         style={{ flex: '1 1 200px', '--ss-fill': pct + '%' }}
         onChange={(e) => onChange(Number(e.target.value))}
       />
-      <span className="__ss_status">{display}</span>
+      <span className="__ss_status" aria-hidden="true">
+        {display}
+      </span>
     </div>
   )
 }

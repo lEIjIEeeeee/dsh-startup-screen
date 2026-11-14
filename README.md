@@ -143,7 +143,7 @@ dsh plugin --profile web remove dsh-startup-screen
 - `src/host/inject.js`：`index.html` 首屏注入
 - `src/shared/`：三个运行时共用的默认值、校验规则、路由常量
 - `src/splash/`：启动动画与样式
-- `src/client/`：设置面板（`index.jsx` 入口 / `panel.jsx` 面板 / `api.js` 接口 / `voice.js` 音色 / `components/` 控件 / `styles.js` 样式）
+- `src/client/`：设置面板（`index.jsx` 入口 / `panel.jsx` 面板 / `api.js` 接口 / `voice.js` 音色 / `components/` 自研控件 / `ui/` 宿主 primitives 包装 / `styles.js` 样式）
 - `src/assets/`：音频素材
 
 改完源码运行 `npm run build` 重新生成 `lib/`；提交前运行 `npm run verify`（lint + 类型检查 + 四套冒烟测试）。CI 会检查 `lib/` 是否与源码同步。

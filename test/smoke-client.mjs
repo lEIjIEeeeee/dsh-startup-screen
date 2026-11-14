@@ -116,15 +116,39 @@ check('提供了 factory', loaded && typeof loaded.factory === 'function')
 console.log('\n[2] factory 导出形状')
 const jsxStub = (type, props, key) =>
   ({ type, props: Object.assign({}, props || {}, key == null ? {} : { key }) })
+/* 宿主的 primitives 由模块加载器注入；这里给同形状的极小实现，
+   让冒烟测试走的是和真机一样的 Button/Input 包装层。 */
+const primitivesStub = {
+  Button({ children, ...rest }) {
+    return React.createElement('button', Object.assign({ type: 'button' }, rest), children)
+  },
+  Input({ _icon, className, ...rest }) {
+    return React.createElement('span', { className }, React.createElement('input', rest))
+  },
+}
 const requireStub = (name) => {
   if (name === 'react') return React
   if (name === 'react/jsx-runtime') return { jsx: jsxStub, jsxs: jsxStub, Fragment: 'Fragment' }
+  if (name === '@deepseek-ai/dsh-client-ui-primitives') return primitivesStub
   throw new Error('unexpected require: ' + name)
 }
 const mod = loaded.factory(requireStub)
 check('exports.inject = ["slots"]', Array.isArray(mod.inject) && mod.inject.length === 1 && mod.inject[0] === 'slots', JSON.stringify(mod.inject))
 check('exports.apply 是函数', typeof mod.apply === 'function')
 check('注入了插件样式 <style data-plugin-css>', styleTags.length === 1 && styleTags[0].dataset.pluginCss === 'dsh-startup-screen/main.css', styleTags.length + ' 个')
+
+console.log('\n[2b] 宿主 primitives 接入与可访问性')
+check('Button / Input 走宿主 ui-primitives', /from '@deepseek-ai\/dsh-client-ui-primitives'/.test(SOURCE))
+check('primitives 导出缺失时有兜底 + 告警',
+  /typeof primitives\.Button === 'function'/.test(SOURCE) &&
+  /typeof primitives\.Input === 'function'/.test(SOURCE) &&
+  /console\.warn/.test(SOURCE))
+check('字段标题用 <label> 包住控件（点标题可聚焦）',
+  /<label className="__ss_label">[\s\S]{0,120}\{children\}/.test(SOURCE))
+check('导航用 aria-current 标记当前页', /aria-current=/.test(SOURCE))
+check('页面区用 role="region" + aria-labelledby', /role="region"/.test(SOURCE) && /aria-labelledby=/.test(SOURCE))
+check('按钮 / 滑条 / 色块都有 focus-visible 焦点环',
+  /__ss_btn:focus-visible/.test(SOURCE) && /__ss_range:focus-visible/.test(SOURCE) && /__ss_swatch:focus-visible/.test(SOURCE))
 
 console.log('\n[3] ctx.slots 注册 settings.section')
 let registration = null
@@ -148,7 +172,7 @@ function walk(node, out = []) {
   if (typeof node !== 'object') return out          /* 文本节点本身不收集 */
   if (Array.isArray(node)) { node.forEach((n) => walk(n, out)); return out }
   if (node.type) {
-    /* 函数组件要展开（Field / Check / TextInput… 都不用 hooks，直接调用即可） */
+    /* 函数组件要展开（Field / Check / Input… 都不用 hooks，直接调用即可） */
     if (typeof node.type === 'function') return walk(node.type(node.props || {}), out)
     out.push(node)
     walk(node.props && node.props.children, out)
@@ -200,6 +224,7 @@ const idInput2 = find(tree, (n) => n.type === 'input' && n.props.type === 'text'
 check('改名后输入框值为「琉璃」', idInput2.props.value === '琉璃', idInput2.props.value)
 const saveBtn = find(tree, (n) => n.type === 'button' && n.props.children === '保存')
 check('找到保存按钮', !!saveBtn)
+check('保存按钮由 primitives 渲染成原生 button，且 type=button', saveBtn && saveBtn.props.type === 'button', saveBtn && String(saveBtn.props.type))
 saveBtn.props.onClick()
 await flush(); await flush(); await flush()
 const post = requests.filter((r) => r.init && r.init.method === 'POST').pop()

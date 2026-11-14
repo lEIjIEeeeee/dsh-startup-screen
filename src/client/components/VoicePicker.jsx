@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { readVoices, voiceMark } from '../voice.js'
+import { Button } from '../ui/Button.jsx'
+import { Field } from './Field.jsx'
 import { Select } from './Select.jsx'
 
 export function VoicePicker({ value, onChange, onPreview }) {
@@ -34,17 +36,16 @@ export function VoicePicker({ value, onChange, onPreview }) {
   )
 
   return (
-    <div className="__ss_field">
-      <label className="__ss_label">音色</label>
+    <Field
+      label="音色"
+      hint={list.length ? '★ 推荐 · ♀ 女声 · 共 ' + list.length + ' 个' : '暂时读不到系统音色。'}
+    >
       <div className="__ss_row">
         <Select value={value || ''} options={opts} onChange={onChange} />
-        <button className="__ss_btn" type="button" onClick={onPreview}>
+        <Button className="__ss_btn" onClick={onPreview}>
           试听
-        </button>
+        </Button>
       </div>
-      <div className="__ss_hint">
-        {list.length ? '★ 推荐 · ♀ 女声 · 共 ' + list.length + ' 个' : '暂时读不到系统音色。'}
-      </div>
-    </div>
+    </Field>
   )
 }
