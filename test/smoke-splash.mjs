@@ -760,7 +760,7 @@ console.log('\n[20] 电影细节 / 准星 / 金属鲸鱼 / facts')
   check('facts 异步刷新', /function refreshFacts\(/.test(src) && /ROUTES\.facts/.test(src))
   check('facts 未就绪会重试', /setTimeout\(tick, 400\)/.test(src) && /setTimeout\(tick, 600\)/.test(src))
   check('facts 就绪后仍继续轮询', /即使已经 ready 也继续轮询/.test(src))
-  check('会话变化不重排光场', /f\.hash !== prevHash/.test(src))
+  check('会话变化不重排光场', /hash !== prevHash/.test(src))
 
   run(true)
   const plainMeta = lookup('.dsu-meta-1')
