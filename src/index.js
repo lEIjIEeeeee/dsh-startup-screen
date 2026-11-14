@@ -48,10 +48,13 @@ function resolveWebServer(ctx) {
 
 /**
  * @param {any} server
- * @returns {boolean}
+ * @returns {{ canRegister: boolean, canTap: boolean }}
  */
-function hasRoutes(server) {
-  return !!server && typeof server.register === 'function' && typeof server.tapIndex === 'function'
+function routeAbilities(server) {
+  return {
+    canRegister: !!server && typeof server.register === 'function',
+    canTap: !!server && typeof server.tapIndex === 'function',
+  }
 }
 
 /** @param {HostContext} ctx */
@@ -62,20 +65,21 @@ function apply(ctx) {
   /** @type {Array<() => void>} */
   const disposers = []
   const webServer = resolveWebServer(ctx)
+  const { canRegister, canTap } = routeAbilities(webServer)
 
   /** 没有可注册路由的 HTTP 服务：什么都不注册，插件本身仍然正常加载，
       页面由浏览器侧自己启动动画。 */
-  if (!hasRoutes(webServer)) {
+  if (!canRegister) {
     try {
       ctx.logger?.warn?.(
-        '[' + NS + '] 当前环境没有可用的 webServer（桌面端可能直接下发页面）；' +
+        '[' + NS + '] 当前环境没有可注册路由的 webServer（桌面端可能直接下发页面）；' +
         '宿主侧跳过路由与首屏注入，改由浏览器侧自己启动动画。'
       )
     } catch (err) { /* 日志失败不影响加载 */ }
     return
   }
 
-  const config = createConfig(CONFIG_FILE)
+  const config = createConfig(CONFIG_FILE, ctx.logger)
   const host = {
     ctx,
     webServer,
@@ -90,7 +94,8 @@ function apply(ctx) {
   /* 装配中途失败时把已注册的路由和 effect 一起摘掉，避免宿主里留下半套插件。 */
   try {
     disposers.push(...registerRoutes(host))
-    disposers.push(injectIndex(host))
+    /* 首屏注入要靠路由提供样式和脚本；宿主只给了 register 时让浏览器侧自举。 */
+    if (canTap) disposers.push(injectIndex(host))
     ctx.effect(() => () => {
       for (const dispose of disposers) {
         try { dispose() } catch (err) { /* noop */ }

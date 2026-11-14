@@ -10,7 +10,8 @@ import { factsSnapshot } from './facts.js'
 export function safeJson(value) {
   return JSON.stringify(value)
     .replace(/</g, '\\u003c')
-    .replace(/\u2028|\u2029/g, '')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029')
 }
 
 /** 首屏兜底样式：在应用挂载前先盖住窗口，避免闪出界面本体。 */
@@ -68,11 +69,20 @@ export function injectIndex(host) {
       '"></script>'
 
     let out = html
-    if (out.includes('</head>')) out = out.replace('</head>', head + '</head>')
-    else out = head + out
-    if (out.includes('<body>')) out = out.replace('<body>', '<body>' + body)
-    else if (out.includes('</body>')) out = out.replace('</body>', body + '</body>')
-    else out = out + body
+    if (out.includes('</head>')) {
+      const at = out.lastIndexOf('</head>')
+      out = out.slice(0, at) + head + out.slice(at)
+    } else {
+      out = head + out
+    }
+    if (out.includes('<body>')) {
+      out = out.replace('<body>', '<body>' + body)
+    } else if (out.includes('</body>')) {
+      const at = out.lastIndexOf('</body>')
+      out = out.slice(0, at) + body + out.slice(at)
+    } else {
+      out = out + body
+    }
     return out
   })
 }

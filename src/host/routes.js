@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { DEFAULTS } from '../shared/defaults.js'
-import { ROUTES } from '../shared/routes.js'
+import { NS, ROUTES } from '../shared/routes.js'
 import { factsSnapshot, refreshSessions } from './facts.js'
 
 /** @typedef {import('node:http').IncomingMessage} IncomingMessage */
@@ -42,6 +42,7 @@ function sendJson(res, code, payload, done) {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
     'Content-Length': String(body.length),
+    'X-Content-Type-Options': 'nosniff',
   })
   res.end(body, done)
 }
@@ -105,15 +106,22 @@ function readBody(req, limit = 64 * 1024, timeoutMs = 15000) {
  * @param {ServerResponse} res
  * @param {string} type
  * @param {string} text
+ * @param {boolean} [headOnly] HEAD 请求只发头，不发正文
  */
-function sendText(res, type, text) {
+function sendText(res, type, text, headOnly) {
   const body = Buffer.from(text, 'utf8')
   res.writeHead(200, {
     'Content-Type': type,
     'Cache-Control': 'no-store',
     'Content-Length': String(body.length),
+    'X-Content-Type-Options': 'nosniff',
   })
-  res.end(body)
+  res.end(headOnly ? undefined : body)
+}
+
+/** @param {IncomingMessage} req */
+function methodOf(req) {
+  return (req.method || 'GET').toUpperCase()
 }
 
 /**
@@ -121,12 +129,12 @@ function sendText(res, type, text) {
  * @param {ServerResponse} res
  */
 function sendUnavailable(res) {
-  res.writeHead(503)
+  res.writeHead(503, { 'X-Content-Type-Options': 'nosniff' })
   res.end()
 }
 
 /**
- * 注册 5 条 HTTP 路由，返回对应的 disposer 列表。
+ * 注册 HTTP 路由，返回对应的 disposer 列表。
  * @param {HostEnv} host
  * @returns {Array<() => void>}
  */
@@ -138,6 +146,16 @@ export function registerRoutes(host) {
   const assetsDir = path.join(packageRoot, 'lib', 'assets')
   /** @type {Array<() => void>} */
   const disposers = []
+
+  /** @param {string} message @param {any} [err] */
+  function warn(message, err) {
+    try {
+      const detail = err && err.message ? err.message : err
+      ctx.logger?.warn?.('[' + NS + '] ' + message + (detail ? '：' + detail : ''))
+    } catch (e) {
+      /* 日志失败不影响请求 */
+    }
+  }
 
   /**
    * 来源校验：自定义路由必须过这一关，否则任意网页都能读写配置。
@@ -155,7 +173,15 @@ export function registerRoutes(host) {
       res.end()
       return true
     } catch (err) {
-      return false
+      /* 校验服务存在但自己出错：宁可拒绝，也不能当成“没有服务”放行 */
+      warn('来源校验失败，已拒绝请求', err)
+      try {
+        res.statusCode = 403
+        res.end()
+      } catch (e) {
+        /* 连接已断开 */
+      }
+      return true
     }
   }
 
@@ -176,15 +202,20 @@ export function registerRoutes(host) {
         try {
           await inner(req, res)
         } catch (err) {
+          warn('路由处理失败', err)
           try {
             if (!res.headersSent) {
-              res.statusCode = 500
-              res.end()
+              sendJson(res, 500, { ok: false, error: 'internal error' })
             } else if (typeof res.destroy === 'function') {
               res.destroy()
             }
           } catch (e) {
-            /* noop */
+            try {
+              res.statusCode = 500
+              res.end()
+            } catch (e2) {
+              /* 连接已断开 */
+            }
           }
         }
       },
@@ -197,9 +228,14 @@ export function registerRoutes(host) {
       kind: 'exact',
       path: ROUTES.css,
       handler: (req, res) => {
+        const method = methodOf(req)
+        if (method !== 'GET' && method !== 'HEAD') {
+          sendJson(res, 405, { ok: false, error: 'method not allowed' })
+          return
+        }
         const text = readSplashCss()
         if (text === null) return sendUnavailable(res)
-        sendText(res, 'text/css; charset=utf-8', text)
+        sendText(res, 'text/css; charset=utf-8', text, method === 'HEAD')
       },
     }),
   )
@@ -209,9 +245,14 @@ export function registerRoutes(host) {
       kind: 'exact',
       path: ROUTES.splash,
       handler: (req, res) => {
+        const method = methodOf(req)
+        if (method !== 'GET' && method !== 'HEAD') {
+          sendJson(res, 405, { ok: false, error: 'method not allowed' })
+          return
+        }
         const text = readSplashJs()
         if (text === null) return sendUnavailable(res)
-        sendText(res, 'application/javascript; charset=utf-8', text)
+        sendText(res, 'application/javascript; charset=utf-8', text, method === 'HEAD')
       },
     }),
   )
@@ -223,6 +264,11 @@ export function registerRoutes(host) {
       kind: 'prefix',
       path: ROUTES.asset,
       handler: (req, res) => {
+        const method = methodOf(req)
+        if (method !== 'GET' && method !== 'HEAD') {
+          sendJson(res, 405, { ok: false, error: 'method not allowed' })
+          return
+        }
         let pathname
         try {
           pathname = decodeURIComponent((req.url || '').split('?')[0])
@@ -250,8 +296,9 @@ export function registerRoutes(host) {
           'Content-Type': 'audio/mpeg',
           'Cache-Control': 'public, max-age=86400',
           'Content-Length': String(bytes.length),
+          'X-Content-Type-Options': 'nosniff',
         })
-        res.end(bytes)
+        res.end(method === 'HEAD' ? undefined : bytes)
       },
     }),
   )
@@ -261,7 +308,7 @@ export function registerRoutes(host) {
       kind: 'exact',
       path: ROUTES.config,
       handler: async (req, res) => {
-        const method = (req.method || 'GET').toUpperCase()
+        const method = methodOf(req)
         if (method === 'GET') {
           sendJson(res, 200, {
             ok: true,
@@ -311,10 +358,9 @@ export function registerRoutes(host) {
           const cfgNow = writeConfig({ ...current, ...patch })
           sendJson(res, 200, { ok: true, version, config: cfgNow, defaults: DEFAULTS })
         } catch (err) {
-          sendJson(res, 500, {
-            ok: false,
-            error: err instanceof Error ? err.message : String(err),
-          })
+          /* 细节只进日志，响应里不吐路径等内部信息 */
+          warn('保存配置失败', err)
+          sendJson(res, 500, { ok: false, error: 'internal error' })
         }
       },
     }),
@@ -324,15 +370,15 @@ export function registerRoutes(host) {
     registerRoute({
       kind: 'exact',
       path: ROUTES.facts,
-      handler: (req, res) => {
-        if ((req.method || 'GET').toUpperCase() !== 'GET') {
+      handler: async (req, res) => {
+        if (methodOf(req) !== 'GET') {
           sendJson(res, 405, { ok: false, error: 'method not allowed' })
           return
         }
         try {
-          refreshSessions(ctx, factsCache)
+          await refreshSessions(ctx, factsCache)
         } catch (err) {
-          /* noop */
+          warn('刷新会话数失败', err)
         }
         sendJson(res, 200, { ok: true, facts: factsSnapshot(factsCache) })
       },

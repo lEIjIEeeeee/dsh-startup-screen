@@ -66,8 +66,10 @@ process.env.DSH_HOME = SMOKE_HOME
 
 const ROUTES = new Map()
 const TAPS = []
+const logs = []
 let effects = 0
 let rejectNext = undefined
+let rejectThrows = false
 
 const workspaceRegistry = {
   list: () => [{ sessionIds: ['s1', 's2'] }],
@@ -91,9 +93,13 @@ const ctx = {
     if (name !== 'connection') return undefined
     return {
       // 与宿主同款校验：返回 undefined 表示放行
-      requestRejection() { return rejectNext },
+      requestRejection() {
+        if (rejectThrows) throw new Error('connection service boom')
+        return rejectNext
+      },
     }
   },
+  logger: { warn: (msg) => logs.push(String(msg)) },
   effect(fn) { effects++; const d = fn(); return () => { if (typeof d === 'function') d() } },
 }
 
@@ -159,6 +165,14 @@ check('splash.css 非空', r.body.length > 10000, r.body.length + ' bytes')
 r = await call('exact /dsh-startup/splash.js')
 check('splash.js 200 + 正确 MIME', r.statusCode === 200 && /javascript/.test(r.headers['Content-Type']), r.headers['Content-Type'])
 check('splash.js 非空', r.body.length > 20000, r.body.length + ' bytes')
+check('静态响应带 nosniff', r.headers['X-Content-Type-Options'] === 'nosniff', r.headers['X-Content-Type-Options'])
+r = await call('exact /dsh-startup/splash.css', 'HEAD')
+check('HEAD 只发头不发正文', r.statusCode === 200 && r.body === '' && Number(r.headers['Content-Length']) > 10000,
+  r.statusCode + ' body=' + r.body.length)
+r = await call('exact /dsh-startup/splash.js', 'POST')
+check('静态路由拒绝 POST -> 405', r.statusCode === 405, String(r.statusCode))
+r = await call('prefix /dsh-startup/asset', 'POST', undefined, '/dsh-startup/asset/sfx-tick.mp3')
+check('素材路由拒绝 POST -> 405', r.statusCode === 405, String(r.statusCode))
 
 console.log('\n[3b] 音频素材路由')
 r = await call('prefix /dsh-startup/asset')
@@ -205,6 +219,8 @@ cfg = JSON.parse(r.body)
 check('speed 低于下限被夹到 0.35', cfg.config.speed === 0.35, String(cfg.config.speed))
 check('非法 theme 回落到 light', cfg.config.theme === 'light', cfg.config.theme)
 check('非法颜色回落到默认橙', cfg.config.accent === '#ff7500', cfg.config.accent)
+r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { accent: '#ff750' } }))
+check('5 位十六进制颜色不被接受', JSON.parse(r.body).config.accent === '#ff7500', JSON.parse(r.body).config.accent)
 
 r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ action: 'reset' }))
 check('reset 恢复默认', JSON.parse(r.body).config.identity === 'JOYCE MOORE')
@@ -275,11 +291,30 @@ check('请求体中断不写盘', JSON.parse(r.body).config.identity === 'JOYCE 
 r = await call('exact /dsh-startup/config', 'DELETE')
 check('不支持的方法返回 405', r.statusCode === 405, String(r.statusCode))
 
+console.log('\n[4b] 配置损坏：备份原文件，不静默覆盖')
+{
+  const cfgPath = path.join(SMOKE_HOME, 'dsh-startup.json')
+  fs.writeFileSync(cfgPath, '{ broken', 'utf8')
+  const before = logs.length
+  r = await call('exact /dsh-startup/config')
+  check('配置损坏时回默认值', JSON.parse(r.body).config.identity === 'JOYCE MOORE', JSON.parse(r.body).config.identity)
+  const backups = fs.readdirSync(SMOKE_HOME).filter((f) => f.startsWith('dsh-startup.json.corrupt-'))
+  check('损坏的配置被备份而不是直接覆盖', backups.length === 1, backups.join(','))
+  check('备份里保留原内容', backups.length === 1 && fs.readFileSync(path.join(SMOKE_HOME, backups[0]), 'utf8') === '{ broken')
+  check('配置损坏会写警告日志', logs.slice(before).some((m) => m.includes('无法解析')), logs.slice(before).join(' | '))
+}
+
 console.log('\n[5] 信任栅栏（DNS 重绑定 / 未认证请求）')
 rejectNext = 403
 r = await call('exact /dsh-startup/config')
 check('connection 拒绝时返回 403 且不吐配置', r.statusCode === 403 && r.body === '', r.statusCode + ' body=' + JSON.stringify(r.body.slice(0, 40)))
 rejectNext = undefined
+rejectThrows = true
+const fenceLogs = logs.length
+r = await call('exact /dsh-startup/config')
+check('校验服务抛错时按拒绝处理（不 fail-open）', r.statusCode === 403 && r.body === '', r.statusCode + ' body=' + JSON.stringify(r.body.slice(0, 40)))
+check('校验异常写警告日志', logs.slice(fenceLogs).some((m) => m.includes('来源校验失败')), logs.slice(fenceLogs).join(' | '))
+rejectThrows = false
 
 /** 从注入结果里精确抠出内联 JSON 载荷（window.__DSH_STARTUP__= ... ;BOOTSTRAP） */
 function inlinePayload(html) {
@@ -306,6 +341,14 @@ check('挂载点紧跟 <body>', /<body>\s*<div id="dsh-startup-root"/.test(after
 check('幂等：二次调用不重复注入', TAPS[0](after) === after)
 check('原 <div id="root"></div> 仍在（应用照常挂载）', after.includes('<div id="root"></div>'))
 check('内联载荷里没有裸的 < （防 </script> 提前闭合）', !inlinePayload(after).includes('<'))
+{
+  const weird = '<html><head><!-- 旧构建里出现过 </head> --></head><body></body></html>'
+  const out = TAPS[0](weird)
+  const commentEnd = out.indexOf('-->')
+  check('注入位置取最后一个 </head>（注释里的不算）',
+    commentEnd !== -1 && out.indexOf('dsh-startup-critical') > commentEnd,
+    'commentEnd=' + commentEnd + ' head=' + out.indexOf('dsh-startup-critical'))
+}
 
 console.log('\n[6b] 内联启动脚本：存储被禁用时仍要挂 9 秒兜底')
 {
@@ -341,6 +384,28 @@ check('载荷里没有 </script>', !payload.includes('</script>'))
 check('转义后仍是合法 JSON 且值可还原', (() => {
   try { return JSON.parse(payload).identity === '</script><img src=x onerror=alert(1)>' } catch { return false }
 })())
+await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { identity: 'A B C' } }))
+const payloadLine = inlinePayload(TAPS[0](before))
+check('U+2028 / U+2029 被转义而不是删除',
+  payloadLine.includes('\\u2028') && payloadLine.includes('\\u2029') && JSON.parse(payloadLine).identity === 'A B C',
+  payloadLine.slice(0, 120))
+
+console.log('\n[7b] 写盘失败：回通用文案，清理临时文件')
+{
+  const cfgPath = path.join(SMOKE_HOME, 'dsh-startup.json')
+  fs.rmSync(cfgPath, { force: true })
+  fs.mkdirSync(cfgPath)
+  const before = logs.length
+  r = await call('exact /dsh-startup/config', 'POST', JSON.stringify({ patch: { identity: 'X' } }))
+  check('写盘失败返回 500', r.statusCode === 500, String(r.statusCode))
+  let body = null
+  try { body = JSON.parse(r.body) } catch { /* 留空 */ }
+  check('500 只回通用文案，不吐内部路径', !!body && body.ok === false && body.error === 'internal error', r.body.slice(0, 120))
+  check('写盘失败会记日志', logs.slice(before).some((m) => m.includes('保存配置失败')), logs.slice(before).join(' | '))
+  const tmps = fs.readdirSync(SMOKE_HOME).filter((f) => f.endsWith('.tmp'))
+  check('写盘失败会清理临时文件', tmps.length === 0, tmps.join(','))
+  fs.rmSync(cfgPath, { recursive: true, force: true })
+}
 
 console.log('\n[8] 单一事实来源')
 {

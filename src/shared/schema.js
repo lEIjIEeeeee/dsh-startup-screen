@@ -89,13 +89,13 @@ export function normalize(input) {
       out[key] = value === true || value === 'true' || value === 1 || value === '1'
     } else if (ENUMS[key]) {
       out[key] = ENUMS[key].includes(value) ? value : DEFAULTS[key]
-    } else if (key === 'speed' || RANGES[key]) {
-      const [lo, hi] = RANGES[key] || RANGES.speed
+    } else if (RANGES[key]) {
+      const [lo, hi] = RANGES[key]
       const n = Number(value)
       out[key] = Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : DEFAULTS[key]
     } else if (COLOR_KEYS.includes(key)) {
       const s = String(value).trim()
-      out[key] = /^#[0-9a-fA-F]{3,8}$/.test(s) ? s : DEFAULTS[key]
+      out[key] = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(s) ? s : DEFAULTS[key]
     } else if (TEXT_KEYS.includes(key)) {
       out[key] = String(value).slice(0, key === 'identity' ? IDENTITY_MAX : TEXT_MAX)
     } else {
