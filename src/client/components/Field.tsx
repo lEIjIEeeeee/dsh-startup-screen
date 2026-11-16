@@ -1,4 +1,11 @@
+import type { ReactNode } from 'react'
 import { FieldContext, useFieldId } from '../a11y.js'
+
+export interface FieldProps {
+  label: string
+  hint?: string
+  children: ReactNode
+}
 
 /**
  * 一行设置项：标题在上，控件在下，提示在最后。
@@ -8,7 +15,7 @@ import { FieldContext, useFieldId } from '../a11y.js'
  * 这里把标题和提示的 id 交给控件，由控件用 aria-labelledby /
  * aria-describedby 指回来，读屏能念出正确的名字和说明。
  */
-export function Field({ label, hint, children }) {
+export function Field({ label, hint, children }: FieldProps) {
   const base = useFieldId()
   const labelId = base + '-label'
   const hintId = hint ? base + '-hint' : undefined

@@ -1,6 +1,15 @@
+import type { InputHTMLAttributes } from 'react'
 import { useFieldA11y } from '../a11y.js'
 
-export function ColorInput({ value, onChange, ...rest }) {
+export interface ColorInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange' | 'type'
+> {
+  value: string
+  onChange: (value: string) => void
+}
+
+export function ColorInput({ value, onChange, ...rest }: ColorInputProps) {
   const a11y = useFieldA11y()
   return (
     <input

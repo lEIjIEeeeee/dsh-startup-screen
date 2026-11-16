@@ -1,13 +1,14 @@
 import { num } from '../format.js'
-import { ColorInput } from './ColorInput.jsx'
-import { Field } from './Field.jsx'
-import { PanelPage } from './PanelPage.jsx'
-import { Range } from './Range.jsx'
-import { Select } from './Select.jsx'
-import { Switch } from './Switch.jsx'
+import { ColorInput } from './ColorInput.js'
+import { Field } from './Field.js'
+import { PanelPage } from './PanelPage.js'
+import { Range } from './Range.js'
+import { Select } from './Select.js'
+import { Switch } from './Switch.js'
+import type { SectionProps } from './types.js'
 
 /** 外观页：主题、环境光、液态玻璃参数、颜色与故障色。 */
-export function AppearanceSection({ active, draft, onChange }) {
+export function AppearanceSection({ active, draft, onChange }: SectionProps) {
   return (
     <PanelPage name="appearance" active={active}>
       <div className="__ss_group" id="__ss_group_visual">

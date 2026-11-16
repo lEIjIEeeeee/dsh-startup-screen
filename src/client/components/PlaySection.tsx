@@ -1,17 +1,18 @@
-import { Field } from './Field.jsx'
-import { PanelPage } from './PanelPage.jsx'
-import { Range } from './Range.jsx'
-import { Select } from './Select.jsx'
-import { Switch } from './Switch.jsx'
+import { Field } from './Field.js'
+import { PanelPage } from './PanelPage.js'
+import { Range } from './Range.js'
+import { Select } from './Select.js'
+import { Switch } from './Switch.js'
+import type { SectionProps } from './types.js'
 
 const MODE_OPTIONS = [
   ['session', '每个浏览器会话一次'],
   ['daily', '每天一次'],
   ['always', '每次打开都播放'],
-]
+] as const
 
 /** 播放页：启用开关、播放时机、速度，以及交互相关的两个开关。 */
-export function PlaySection({ active, draft, onChange }) {
+export function PlaySection({ active, draft, onChange }: SectionProps) {
   return (
     <PanelPage name="play" active={active}>
       <div className="__ss_group" id="__ss_group_play">

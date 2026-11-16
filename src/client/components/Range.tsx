@@ -1,6 +1,19 @@
+import type { CSSProperties, InputHTMLAttributes } from 'react'
 import { useFieldA11y } from '../a11y.js'
 
-export function Range({ value, min, max, step, display, onChange, ...rest }) {
+export interface RangeProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'min' | 'max' | 'step' | 'onChange' | 'type'
+> {
+  value: number
+  min: number
+  max: number
+  step?: number
+  display: string
+  onChange: (value: number) => void
+}
+
+export function Range({ value, min, max, step, display, onChange, ...rest }: RangeProps) {
   const a11y = useFieldA11y()
   const lo = Number(min)
   const hi = Number(max)
@@ -15,7 +28,7 @@ export function Range({ value, min, max, step, display, onChange, ...rest }) {
         max={max}
         step={step || 0.05}
         value={value}
-        style={{ flex: '1 1 200px', '--ss-fill': pct + '%' }}
+        style={{ flex: '1 1 200px', '--ss-fill': pct + '%' } as CSSProperties}
         aria-labelledby={a11y.labelId}
         aria-describedby={a11y.hintId}
         onChange={(e) => onChange(Number(e.target.value))}

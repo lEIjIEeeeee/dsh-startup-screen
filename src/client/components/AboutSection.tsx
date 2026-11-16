@@ -1,8 +1,15 @@
-import { PanelPage } from './PanelPage.jsx'
-import { VersionLine } from './VersionLine.jsx'
+import { PanelPage } from './PanelPage.js'
+import { VersionLine } from './VersionLine.js'
+
+export interface AboutSectionProps {
+  active: boolean
+  version: string
+  buildVersion: string
+  file: string
+}
 
 /** 关于页：版本、配置文件位置与来源说明。 */
-export function AboutSection({ active, version, buildVersion, file }) {
+export function AboutSection({ active, version, buildVersion, file }: AboutSectionProps) {
   return (
     <PanelPage name="about" active={active}>
       <div className="__ss_group">

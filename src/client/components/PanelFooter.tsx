@@ -1,7 +1,25 @@
-import { Button } from '../ui/Button.jsx'
+import { Button } from '../ui/Button.js'
+
+export interface PanelFooterProps {
+  busy: boolean
+  dirty: boolean
+  notice: string | null
+  error: string | null
+  onSave: () => void
+  onPreview: () => void
+  onReset: () => void
+}
 
 /** 底部固定操作栏：保存 / 立即预览 / 恢复默认，外加状态提示。 */
-export function PanelFooter({ busy, dirty, notice, error, onSave, onPreview, onReset }) {
+export function PanelFooter({
+  busy,
+  dirty,
+  notice,
+  error,
+  onSave,
+  onPreview,
+  onReset,
+}: PanelFooterProps) {
   return (
     <div className="__ss_footer">
       <div className="__ss_actions">

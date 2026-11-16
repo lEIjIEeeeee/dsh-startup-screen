@@ -7,15 +7,17 @@
  * 宿主版本可能没有导出这个控件，缺了就退回原生按钮并告警一次：
  * 设置面板不能因为一个装饰性依赖整个挂掉。
  */
+import type { ButtonHTMLAttributes, ComponentType } from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 
-const PrimitiveButton = typeof primitives.Button === 'function' ? primitives.Button : null
+const PrimitiveButton: ComponentType<ButtonHTMLAttributes<HTMLButtonElement>> | null =
+  typeof primitives.Button === 'function' ? primitives.Button : null
 
 if (!PrimitiveButton && typeof console !== 'undefined' && console.warn) {
   console.warn('[dsh-startup-screen] 宿主未导出 ui-primitives.Button，已退回原生按钮')
 }
 
-function FallbackButton({ children, ...rest }) {
+function FallbackButton({ children, ...rest }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button type="button" {...rest}>
       {children}
@@ -23,7 +25,7 @@ function FallbackButton({ children, ...rest }) {
   )
 }
 
-export function Button(props) {
+export function Button(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   const Impl = PrimitiveButton || FallbackButton
   return <Impl {...props} />
 }

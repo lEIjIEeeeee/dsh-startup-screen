@@ -1,14 +1,20 @@
+import type { ReactNode } from 'react'
 import { VOICE_LEAD_MAX } from '../../shared/schema.js'
+import type { StartupConfig } from '../../shared/types.js'
 import { num } from '../format.js'
-import { Button } from '../ui/Button.jsx'
-import { Field } from './Field.jsx'
-import { Range } from './Range.jsx'
-import { Select } from './Select.jsx'
-import { Switch } from './Switch.jsx'
-import { VoicePicker } from './VoicePicker.jsx'
+import { Button } from '../ui/Button.js'
+import { Field } from './Field.js'
+import { Range } from './Range.js'
+import { Select } from './Select.js'
+import { Switch } from './Switch.js'
+import { VoicePicker } from './VoicePicker.js'
+import type { SectionProps } from './types.js'
 
 /* 「电影旁白」档：压低语速与音调，自动挑神经网络女声，保留提示音和开口留白。 */
-const MOVIE_PRESET = {
+const MOVIE_PRESET: Pick<
+  StartupConfig,
+  'voiceRate' | 'voicePitch' | 'voiceName' | 'voiceCue' | 'voiceLead'
+> = {
   voiceRate: 0.88,
   voicePitch: 0.85,
   voiceName: '',
@@ -16,8 +22,13 @@ const MOVIE_PRESET = {
   voiceLead: 240,
 }
 
+export interface VoiceGroupProps extends Pick<SectionProps, 'draft' | 'onChange'> {
+  onPreview: () => void
+  children?: ReactNode
+}
+
 /** 语音播报分组：开关、来源、语言、音色与语速/音调；界面音效作为子节点接在后面。 */
-export function VoiceGroup({ draft, onChange, onPreview, children }) {
+export function VoiceGroup({ draft, onChange, onPreview, children }: VoiceGroupProps) {
   return (
     <div className="__ss_group" id="__ss_group_voice">
       <div className="__ss_groupTitle">声音</div>
@@ -61,7 +72,9 @@ export function VoiceGroup({ draft, onChange, onPreview, children }) {
           <Button
             className="__ss_btn"
             onClick={() => {
-              for (const key of Object.keys(MOVIE_PRESET)) onChange(key, MOVIE_PRESET[key])
+              for (const key of Object.keys(MOVIE_PRESET) as Array<keyof typeof MOVIE_PRESET>) {
+                onChange(key, MOVIE_PRESET[key])
+              }
             }}
           >
             ↺ 套用「电影旁白」档

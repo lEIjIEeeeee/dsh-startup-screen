@@ -106,7 +106,7 @@ async function main() {
 
     /* 加载器把 require 作为参数交给 factory，所以注册壳必须包在打包结果外面 */
     await build({
-      entryPoints: [path.join(SRC, 'client', 'index.jsx')],
+      entryPoints: [path.join(SRC, 'client', 'index.tsx')],
       outfile: path.join(OUT, 'client.js'),
       bundle: true,
       format: 'cjs',

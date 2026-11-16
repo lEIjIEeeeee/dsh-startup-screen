@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react'
-import { AboutSection } from './components/AboutSection.jsx'
-import { AppearanceSection } from './components/AppearanceSection.jsx'
-import { ContentSection } from './components/ContentSection.jsx'
-import { PanelFooter } from './components/PanelFooter.jsx'
-import { PanelNav } from './components/PanelNav.jsx'
-import { PanelSkeleton } from './components/PanelSkeleton.jsx'
-import { PlaySection } from './components/PlaySection.jsx'
-import { SoundSection } from './components/SoundSection.jsx'
+import { AboutSection } from './components/AboutSection.js'
+import { AppearanceSection } from './components/AppearanceSection.js'
+import { ContentSection } from './components/ContentSection.js'
+import { PanelFooter } from './components/PanelFooter.js'
+import { PanelNav } from './components/PanelNav.js'
+import { PanelSkeleton } from './components/PanelSkeleton.js'
+import { PlaySection } from './components/PlaySection.js'
+import { SoundSection } from './components/SoundSection.js'
+import type { PanelTab } from './components/types.js'
 import { useFitHeight } from './use-fit-height.js'
 import { usePanelConfig } from './use-panel-config.js'
 import { speakSample } from './voice.js'
@@ -18,14 +19,14 @@ const BUILD_VERSION = __PLUGIN_VERSION__
 export function Panel() {
   const { draft, file, version, error, notice, busy, dirty, set, save, reset, preview, reload } =
     usePanelConfig()
-  const [tab, setTab] = useState('play')
-  const contentRef = useRef(null)
-  const shellRef = useRef(null)
+  const [tab, setTab] = useState<PanelTab>('play')
+  const contentRef = useRef<HTMLDivElement>(null)
+  const shellRef = useRef<HTMLDivElement>(null)
 
   /* 配置到位后重新量一次高度（draft 从 null 变成对象） */
   useFitHeight(shellRef, draft ? 1 : 0)
 
-  function switchTab(key) {
+  function switchTab(key: PanelTab) {
     setTab(key)
     const c = contentRef.current
     if (c) {

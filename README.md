@@ -145,7 +145,7 @@ dsh plugin --profile web remove dsh-startup-screen
 - `src/host/inject.ts`：`index.html` 首屏注入
 - `src/shared/`：三个运行时共用的默认值、校验规则、路由常量、音色打分与日期工具
 - `src/splash/`：启动动画与样式
-- `src/client/`：设置面板（`index.jsx` 入口 / `panel.jsx` 面板 / `api.js` 接口 / `voice.js` 音色 / `components/` 自研控件 / `ui/` 宿主 primitives 包装 / `styles.js` 样式）
+- `src/client/`：设置面板（`index.tsx` 入口 / `panel.tsx` 面板 / `api.ts` 接口 / `voice.ts` 音色 / `components/` 自研控件 / `ui/` 宿主 primitives 包装 / `styles.ts` 样式）
 - `src/assets/`：音频素材
 - `scripts/`：构建、体积预算与发布前检查
 - `test/`：单元测试与四套冒烟测试

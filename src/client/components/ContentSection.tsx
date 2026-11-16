@@ -1,11 +1,12 @@
 import { DEFAULTS } from '../../shared/defaults.js'
 import { BRAND2_MAX, IDENTITY_ID_MAX, IDENTITY_MAX, TEXT_MAX } from '../../shared/schema.js'
-import { Field } from './Field.jsx'
-import { PanelPage } from './PanelPage.jsx'
-import { Input } from '../ui/Input.jsx'
+import { Field } from './Field.js'
+import { PanelPage } from './PanelPage.js'
+import { Input } from '../ui/Input.js'
+import type { SectionProps } from './types.js'
 
 /** 内容页：身份资料与品牌文案。 */
-export function ContentSection({ active, draft, onChange }) {
+export function ContentSection({ active, draft, onChange }: SectionProps) {
   return (
     <PanelPage name="content" active={active}>
       <div className="__ss_group" id="__ss_group_identity">

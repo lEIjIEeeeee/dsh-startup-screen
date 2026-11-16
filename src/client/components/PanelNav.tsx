@@ -1,5 +1,7 @@
+import type { PanelTab } from './types.js'
+
 /* 左侧导航：五个页面，点击切页；右侧内容独立滚动，底部操作栏固定。 */
-const PAGES = [
+const PAGES: ReadonlyArray<readonly [PanelTab, string]> = [
   ['play', '播放'],
   ['appearance', '外观'],
   ['sound', '声音'],
@@ -7,11 +9,18 @@ const PAGES = [
   ['about', '关于'],
 ]
 
+export interface PanelNavProps {
+  tab: PanelTab
+  version: string
+  buildVersion: string
+  switchTab: (tab: PanelTab) => void
+}
+
 /**
  * 导航项保持原生 button：它们的版式完全由 __ss_navItem 控制，
  * 套宿主的 Button 会带进胶囊高度/居中排版，反而要写一堆重置。
  */
-export function PanelNav({ tab, version, buildVersion, switchTab }) {
+export function PanelNav({ tab, version, buildVersion, switchTab }: PanelNavProps) {
   return (
     <nav className="__ss_nav" aria-label="启动动画设置">
       <div className="__ss_navTitle">启动动画</div>

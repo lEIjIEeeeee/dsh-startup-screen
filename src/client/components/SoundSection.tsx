@@ -1,13 +1,18 @@
 import { num } from '../format.js'
-import { Field } from './Field.jsx'
-import { PanelPage } from './PanelPage.jsx'
-import { Range } from './Range.jsx'
-import { Select } from './Select.jsx'
-import { Switch } from './Switch.jsx'
-import { VoiceGroup } from './VoiceGroup.jsx'
+import { Field } from './Field.js'
+import { PanelPage } from './PanelPage.js'
+import { Range } from './Range.js'
+import { Select } from './Select.js'
+import { Switch } from './Switch.js'
+import { VoiceGroup } from './VoiceGroup.js'
+import type { SectionProps } from './types.js'
+
+export interface SoundSectionProps extends SectionProps {
+  onPreview: () => void
+}
 
 /** 声音页：语音播报与界面音效（同一个设置分组）。 */
-export function SoundSection({ active, draft, onChange, onPreview }) {
+export function SoundSection({ active, draft, onChange, onPreview }: SoundSectionProps) {
   return (
     <PanelPage name="sound" active={active}>
       <VoiceGroup draft={draft} onChange={onChange} onPreview={onPreview}>

@@ -75,7 +75,7 @@ export const CSS = [
 const TAG_ID = 'dsh-startup-screen/main.css'
 
 /** 挂一次样式；已挂过就跳过（设置页可能被反复打开）。 */
-export function injectStyles() {
+export function injectStyles(): void {
   if (typeof document === 'undefined') return
   if (document.querySelector('style[data-plugin-css="' + TAG_ID + '"]') !== null) return
   const tag = document.createElement('style')

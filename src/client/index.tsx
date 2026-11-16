@@ -8,11 +8,33 @@
  * 这样宿主升级设置模块时不会把面板带崩。
  * 注册 id 必须和插件名一致，否则加载器会报错；注册壳由构建时套上。
  */
+import type { ReactNode } from 'react'
 import { localDayKey } from '../shared/day.js'
 import { ROUTES } from '../shared/routes.js'
+import type { Facts, RuntimeConfig, StartupConfig } from '../shared/types.js'
 import { API } from './api.js'
-import { Panel } from './panel.jsx'
+import { Panel } from './panel.js'
 import { injectStyles } from './styles.js'
+
+interface BootConfig extends Partial<StartupConfig> {
+  facts?: Facts
+}
+
+interface BootPayload {
+  ok: boolean
+  config?: StartupConfig
+  facts?: Facts
+}
+
+interface ClientContext {
+  slots: {
+    inject: (name: string, fn: () => unknown) => void
+    register: (
+      options: { name: string; id: string; order: number; label: string },
+      render: () => ReactNode,
+    ) => unknown
+  }
+}
 
 injectStyles()
 
@@ -25,7 +47,7 @@ injectStyles()
      __DSH_STARTUP_SKIP__  已经判定这次不播
      __DSH_STARTUP__       配置已经就位 */
 
-function readFlag(store, key) {
+function readFlag(store: 'sessionStorage' | 'localStorage', key: string): string | null {
   try {
     const s = window[store]
     return s ? s.getItem(key) : null
@@ -43,7 +65,7 @@ function markBooted() {
 }
 
 /** 挂一个 <script src>；失败时调 fail(err)。 */
-function loadScript(src, fail) {
+function loadScript(src: string, fail?: ((err: Error | null) => void) | null) {
   const s = document.createElement('script')
   s.src = src
   s.async = false
@@ -55,7 +77,7 @@ function loadScript(src, fail) {
 }
 
 /** 挂一份 <link rel=stylesheet>；失败时调 fail(err)。 */
-function loadCss(href, fail) {
+function loadCss(href: string, fail?: ((err: Error | null) => void) | null) {
   const link = document.createElement('link')
   link.rel = 'stylesheet'
   link.href = href
@@ -67,7 +89,7 @@ function loadCss(href, fail) {
 }
 
 /** 移除根节点、解开滚动锁定 —— 启动过程中任何一步失败都要把页面还回去。 */
-function release(ok) {
+function release(ok: boolean) {
   if (ok) return
   try {
     const r = document.getElementById('dsh-startup-root')
@@ -80,7 +102,7 @@ function release(ok) {
   }
 }
 
-function injectRoot(cfg) {
+function injectRoot(cfg: BootConfig) {
   let root = document.getElementById('dsh-startup-root')
   if (!root) {
     root = document.createElement('div')
@@ -96,7 +118,7 @@ function injectRoot(cfg) {
   let cssReady = false
   let scriptReady = false
   let readyCalled = false
-  function guard(err) {
+  function guard(err: Error | null) {
     if (err) {
       if (!failed && typeof console !== 'undefined' && console.warn) {
         console.warn('[dsh-startup-screen] 启动界面自举失败，已放开页面：', err.message)
@@ -121,7 +143,7 @@ function injectRoot(cfg) {
   })
 
   /* 配置先落 window：splash.js 载入时直接读它 */
-  window.__DSH_STARTUP__ = cfg || {}
+  window.__DSH_STARTUP__ = cfg as RuntimeConfig
   try {
     delete window.__DSH_STARTUP_LOADED__
   } catch (e) {
@@ -149,8 +171,8 @@ function injectRoot(cfg) {
 
 /* 这次不播，但先把运行时挂上：设置页的「立即预览」要靠运行时暴露的接口。
    运行时看到跳过标记只暴露接口，不建界面、不锁滚动。 */
-function loadSkippedRuntime(cfg) {
-  window.__DSH_STARTUP__ = cfg || {}
+function loadSkippedRuntime(cfg: BootConfig) {
+  window.__DSH_STARTUP__ = cfg as RuntimeConfig
   window.__DSH_STARTUP_SKIP__ = true
   try {
     delete window.__DSH_STARTUP_LOADED__
@@ -173,31 +195,31 @@ function selfBoot() {
     if (window.__DSH_STARTUP_FAILED__ === true) return
     markBooted()
     fetch(API, { headers: { Accept: 'application/json' } })
-      .then((r) => r.json())
+      .then((r) => r.json() as Promise<BootPayload>)
       .then((j) => {
         if (!j || j.ok !== true) return null
-        const cfg = j.config || null
+        const cfg: BootConfig | null = j.config || null
         if (cfg && j.facts) cfg.facts = j.facts
         return cfg
       })
       .catch(() => null)
       .then((cfg) => {
-        cfg = cfg || { enabled: true, mode: 'session', speed: 1 }
-        if (cfg.enabled === false) {
-          loadSkippedRuntime(cfg)
+        const next: BootConfig = cfg || { enabled: true, mode: 'session', speed: 1 }
+        if (next.enabled === false) {
+          loadSkippedRuntime(next)
           return
         }
         const today = localDayKey()
         const shownThisSession =
-          cfg.mode === 'session' && readFlag('sessionStorage', 'dsh-startup-screen:shown') === '1'
+          next.mode === 'session' && readFlag('sessionStorage', 'dsh-startup-screen:shown') === '1'
         const playedToday =
-          cfg.mode === 'daily' && readFlag('localStorage', 'dsh-startup-screen:day') === today
+          next.mode === 'daily' && readFlag('localStorage', 'dsh-startup-screen:day') === today
         if (shownThisSession || playedToday) {
-          loadSkippedRuntime(cfg)
+          loadSkippedRuntime(next)
           return
         }
         /* 已播标记由运行时在播完或跳过时写：脚本加载成功不等于真的播过。 */
-        injectRoot(cfg)
+        injectRoot(next)
       })
       .catch(() => {
         /* 自举失败就算了，页面本来就是好的 */
@@ -210,7 +232,7 @@ function selfBoot() {
 /* ── 插件入口 ────────────────────────────────────────────────────────────── */
 const inject = ['slots']
 
-function apply(ctx) {
+function apply(ctx: ClientContext) {
   /* 桌面端兜底：宿主没有注入启动界面时，由这里自己启动。
      网页版这两个标记已经就位，本函数会直接返回。 */
   selfBoot()

@@ -1,4 +1,11 @@
-export function Switch({ label, hint, checked, onChange }) {
+export interface SwitchProps {
+  label: string
+  hint?: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}
+
+export function Switch({ label, hint, checked, onChange }: SwitchProps) {
   return (
     <label className="__ss_check">
       <input

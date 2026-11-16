@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react'
 import { readVoices, voiceMark } from '../voice.js'
-import { Button } from '../ui/Button.jsx'
-import { Field } from './Field.jsx'
-import { Select } from './Select.jsx'
+import { Button } from '../ui/Button.js'
+import { Field } from './Field.js'
+import { Select } from './Select.js'
 
-export function VoicePicker({ value, onChange, onPreview }) {
-  const [list, setList] = useState(readVoices)
+export interface VoicePickerProps {
+  value: string
+  onChange: (value: string) => void
+  onPreview: () => void
+}
+
+export function VoicePicker({ value, onChange, onPreview }: VoicePickerProps) {
+  const [list, setList] = useState<SpeechSynthesisVoice[]>(readVoices)
 
   useEffect(() => {
     const s = window.speechSynthesis
@@ -28,12 +34,13 @@ export function VoicePicker({ value, onChange, onPreview }) {
   }, [])
 
   const auto = window.__DSH_STARTUP_API__ && window.__DSH_STARTUP_API__.voice
-  const opts = [['', '自动（优先神经网络女声）' + (auto ? ' → ' + auto : '')]].concat(
-    list.map((v) => {
-      const name = String(v.name || '').toLowerCase()
-      return [v.name, voiceMark(name) + v.name + ' · ' + (v.lang || '')]
-    }),
-  )
+  const opts: Array<[string, string]> = [
+    ['', '自动（优先神经网络女声）' + (auto ? ' → ' + auto : '')],
+  ]
+  for (const v of list) {
+    const name = String(v.name || '').toLowerCase()
+    opts.push([v.name, voiceMark(name) + v.name + ' · ' + (v.lang || '')])
+  }
 
   return (
     <Field
