@@ -20,8 +20,7 @@ import { createConfig } from './host/config.js'
 import { collectFacts, createFactsCache } from './host/facts.js'
 import { registerRoutes } from './host/routes.js'
 import { injectIndex } from './host/inject.js'
-
-/** @typedef {import('./host/types.js').HostContext} HostContext */
+import type { HostContext, HostEnv, WebServer } from './host/types.js'
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const DSH_HOME = process.env.DSH_HOME || path.join(os.homedir(), '.dsh')
@@ -36,11 +35,11 @@ const inject = ['webServer', 'connection']
 /**
  * 取 HTTP 服务。网页版和桌面版通常都会提供；桌面版也可能改用 file:// 加进程通信
  * 直接下发页面，这时没有 HTTP 服务，插件不能因此报错，改由浏览器侧自己启动动画。
- * @param {HostContext} ctx
  */
-function resolveWebServer(ctx) {
+function resolveWebServer(ctx: HostContext): WebServer | undefined {
   try {
-    const viaGet = typeof ctx.get === 'function' ? ctx.get('webServer') : undefined
+    const viaGet =
+      typeof ctx.get === 'function' ? (ctx.get('webServer') as WebServer | undefined) : undefined
     if (viaGet) return viaGet
   } catch (err) {
     /* 取不到就当没有 */
@@ -48,19 +47,17 @@ function resolveWebServer(ctx) {
   return ctx.webServer
 }
 
-/**
- * @param {any} server
- * @returns {{ canRegister: boolean, canTap: boolean }}
- */
-function routeAbilities(server) {
+function routeAbilities(server: WebServer | undefined): {
+  canRegister: boolean
+  canTap: boolean
+} {
   return {
     canRegister: !!server && typeof server.register === 'function',
     canTap: !!server && typeof server.tapIndex === 'function',
   }
 }
 
-/** @param {HostContext} ctx */
-function apply(ctx) {
+function apply(ctx: HostContext): void {
   /* 每次 apply 一份新缓存：宿主热重载时不会沿用旧 ctx 采到的快照。 */
   const factsCache = createFactsCache()
   try {
@@ -68,14 +65,13 @@ function apply(ctx) {
   } catch (err) {
     /* 采事实失败绝不影响插件 */
   }
-  /** @type {Array<() => void>} */
-  const disposers = []
+  const disposers: Array<() => void> = []
   const webServer = resolveWebServer(ctx)
   const { canRegister, canTap } = routeAbilities(webServer)
 
   /** 没有可注册路由的 HTTP 服务：什么都不注册，插件本身仍然正常加载，
       页面由浏览器侧自己启动动画。 */
-  if (!canRegister) {
+  if (!webServer || !canRegister) {
     try {
       ctx.logger?.warn?.(
         '[' +
@@ -90,7 +86,7 @@ function apply(ctx) {
   }
 
   const config = createConfig(CONFIG_FILE, ctx.logger)
-  const host = {
+  const host: HostEnv = {
     ctx,
     webServer,
     packageRoot: PACKAGE_ROOT,

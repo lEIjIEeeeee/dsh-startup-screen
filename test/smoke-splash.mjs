@@ -1130,7 +1130,7 @@ console.log('\n[15] 背景模糊：独立图层，不与任何素材绑定')
 console.log('\n[16b] 启动期不得露出 DSH 白底（0.2.1 起 body 被强制 #fff）')
 {
   const hostSrc = fs.readFileSync(
-    fileURLToPath(new URL('../src/host/inject.js', import.meta.url)),
+    fileURLToPath(new URL('../src/host/inject.ts', import.meta.url)),
     'utf8',
   )
   check(
@@ -1415,7 +1415,7 @@ console.log('\n[21] 数据面板 / 首帧实心 / 细环 / 双语解码')
   const css = CSS_TEXT
   const src = SOURCE_TEXT
   const host = fs.readFileSync(
-    fileURLToPath(new URL('../src/host/facts.js', import.meta.url)),
+    fileURLToPath(new URL('../src/host/facts.ts', import.meta.url)),
     'utf8',
   )
   const defaults = fs.readFileSync(DEFAULTS_SOURCE, 'utf8')
@@ -1428,7 +1428,7 @@ console.log('\n[21] 数据面板 / 首帧实心 / 细环 / 双语解码')
   check(
     'facts 采集 sessions',
     /\['SESSIONS', facts\.sessions\]/.test(src) &&
-      /service\(ctx, 'sessions'\)/.test(host) &&
+      /service(?:<[^>]+>)?\(ctx, 'sessions'\)/.test(host) &&
       /facts\.sessions/.test(host),
   )
   check('玻璃默认关闭', /glass: false/.test(defaults))

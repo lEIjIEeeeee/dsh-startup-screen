@@ -1,22 +1,16 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { DEFAULTS } from '../shared/defaults.js'
 import { NS, ROUTES } from '../shared/routes.js'
 import { factsSnapshot, refreshSessions } from './facts.js'
-
-/** @typedef {import('node:http').IncomingMessage} IncomingMessage */
-/** @typedef {import('node:http').ServerResponse} ServerResponse */
-/** @typedef {import('./types.js').HostEnv} HostEnv */
-/** @typedef {import('./types.js').Route} Route */
+import type { ConnectionGuard, HostEnv, Route } from './types.js'
 
 /**
  * 静态文件按修改时间缓存：改完插件刷新页面就生效。文件缺失返回 null，由调用方回 503。
- * @param {string} file
- * @returns {() => string | null}
  */
-function makeReader(file) {
-  /** @type {{ mtimeMs: number, text: string } | null} */
-  let cache = null
+function makeReader(file: string): () => string | null {
+  let cache: { mtimeMs: number; text: string } | null = null
   return function read() {
     try {
       const st = fs.statSync(file)
@@ -30,13 +24,7 @@ function makeReader(file) {
   }
 }
 
-/**
- * @param {ServerResponse} res
- * @param {number} code
- * @param {any} payload
- * @param {(() => void)} [done]
- */
-function sendJson(res, code, payload, done) {
+function sendJson(res: ServerResponse, code: number, payload: unknown, done?: () => void) {
   const body = Buffer.from(JSON.stringify(payload), 'utf8')
   res.writeHead(code, {
     'Content-Type': 'application/json; charset=utf-8',
@@ -47,27 +35,24 @@ function sendJson(res, code, payload, done) {
   res.end(body, done)
 }
 
+interface ReadBodyResult {
+  tooLarge: boolean
+  text: string
+  error?: boolean
+}
+
 /**
  * 读请求体。三种结果：
  *   `{ tooLarge: true }` 超限，调用方回 413；
  *   `{ error: true }`    连接中断或超时，调用方回 400，绝不能当成空 patch 写盘；
  *   其余                 正常读到文本。
- *
- * @param {IncomingMessage} req
- * @param {number} [limit]
- * @param {number} [timeoutMs]
- * @returns {Promise<{ tooLarge: boolean, text: string, error?: boolean }>}
  */
-function readBody(req, limit = 64 * 1024, timeoutMs = 15000) {
-  return new Promise((resolve) => {
+function readBody(req: IncomingMessage, limit = 64 * 1024, timeoutMs = 15000) {
+  return new Promise<ReadBodyResult>((resolve) => {
     let size = 0
     let settled = false
-    /** @type {Buffer[]} */
-    const chunks = []
-    /**
-     * @param {{ tooLarge: boolean, text: string, error?: boolean }} result
-     */
-    const finish = (result) => {
+    const chunks: Buffer[] = []
+    function finish(result: ReadBodyResult) {
       if (settled) return
       settled = true
       clearTimeout(timer)
@@ -81,7 +66,7 @@ function readBody(req, limit = 64 * 1024, timeoutMs = 15000) {
       }
       finish({ tooLarge: false, text: '', error: true })
     }, timeoutMs)
-    req.on('data', (c) => {
+    req.on('data', (c: Buffer) => {
       if (settled) return
       size += c.length
       if (size > limit) {
@@ -102,13 +87,7 @@ function readBody(req, limit = 64 * 1024, timeoutMs = 15000) {
   })
 }
 
-/**
- * @param {ServerResponse} res
- * @param {string} type
- * @param {string} text
- * @param {boolean} [headOnly] HEAD 请求只发头，不发正文
- */
-function sendText(res, type, text, headOnly) {
+function sendText(res: ServerResponse, type: string, text: string, headOnly?: boolean) {
   const body = Buffer.from(text, 'utf8')
   res.writeHead(200, {
     'Content-Type': type,
@@ -119,33 +98,31 @@ function sendText(res, type, text, headOnly) {
   res.end(headOnly ? undefined : body)
 }
 
-/** @param {IncomingMessage} req */
-function methodOf(req) {
+function methodOf(req: IncomingMessage): string {
   return (req.method || 'GET').toUpperCase()
 }
 
 /**
  * 构建产物缺失：路由在、文件不在，属于服务端配置问题，回 503 让浏览器侧直接走兜底。
- * @param {ServerResponse} res
  */
-function sendUnavailable(res) {
+function sendUnavailable(res: ServerResponse) {
   res.writeHead(503, { 'X-Content-Type-Options': 'nosniff' })
   res.end()
 }
 
-/** @param {ServerResponse} res */
-function methodNotAllowed(res) {
+function methodNotAllowed(res: ServerResponse) {
   sendJson(res, 405, { ok: false, error: 'method not allowed' })
 }
 
 /**
  * 静态产物（CSS / JS）：只允许 GET / HEAD，文件缺失回 503。
- * @param {IncomingMessage} req
- * @param {ServerResponse} res
- * @param {() => string | null} read
- * @param {string} type
  */
-function serveStatic(req, res, read, type) {
+function serveStatic(
+  req: IncomingMessage,
+  res: ServerResponse,
+  read: () => string | null,
+  type: string,
+) {
   const method = methodOf(req)
   if (method !== 'GET' && method !== 'HEAD') return methodNotAllowed(res)
   const text = read()
@@ -155,15 +132,10 @@ function serveStatic(req, res, read, type) {
 
 /* 音频素材：只读、白名单、不含子路径，杜绝目录穿越。
    素材缺失时浏览器会自动改用合成音。 */
-/**
- * @param {string} assetsDir
- * @param {IncomingMessage} req
- * @param {ServerResponse} res
- */
-function serveAsset(assetsDir, req, res) {
+function serveAsset(assetsDir: string, req: IncomingMessage, res: ServerResponse) {
   const method = methodOf(req)
   if (method !== 'GET' && method !== 'HEAD') return methodNotAllowed(res)
-  let pathname
+  let pathname: string
   try {
     pathname = decodeURIComponent((req.url || '').split('?')[0])
   } catch (err) {
@@ -178,7 +150,7 @@ function serveAsset(assetsDir, req, res) {
     res.end()
     return
   }
-  let bytes
+  let bytes: Buffer
   try {
     bytes = fs.readFileSync(path.join(assetsDir, name))
   } catch (err) {
@@ -198,13 +170,13 @@ function serveAsset(assetsDir, req, res) {
 /**
  * 配置读写：GET 返回当前配置、默认值、文件位置与启动信息快照；
  * POST 接受整份配置或 { patch }，action=reset 时写回默认值。
- *
- * @param {HostEnv} host
- * @param {(message: string, err?: any) => void} warn
- * @param {IncomingMessage} req
- * @param {ServerResponse} res
  */
-async function serveConfig(host, warn, req, res) {
+async function serveConfig(
+  host: HostEnv,
+  warn: (message: string, err?: unknown) => void,
+  req: IncomingMessage,
+  res: ServerResponse,
+) {
   const { version, factsCache, readConfig, writeConfig, configFile } = host
   const method = methodOf(req)
   if (method === 'GET') {
@@ -234,7 +206,7 @@ async function serveConfig(host, warn, req, res) {
     })
     return
   }
-  let payload
+  let payload: unknown
   try {
     payload = body.text ? JSON.parse(body.text) : {}
   } catch (err) {
@@ -242,14 +214,14 @@ async function serveConfig(host, warn, req, res) {
     return
   }
   try {
-    if (payload && payload.action === 'reset') {
+    const data = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {}
+    if (data.action === 'reset') {
       const cfgNow = writeConfig(DEFAULTS)
       sendJson(res, 200, { ok: true, version, config: cfgNow, defaults: DEFAULTS })
       return
     }
     const current = readConfig()
-    const patch =
-      payload && typeof payload.patch === 'object' && payload.patch ? payload.patch : payload
+    const patch = data.patch && typeof data.patch === 'object' ? data.patch : data
     const cfgNow = writeConfig({ ...current, ...patch })
     sendJson(res, 200, { ok: true, version, config: cfgNow, defaults: DEFAULTS })
   } catch (err) {
@@ -261,13 +233,13 @@ async function serveConfig(host, warn, req, res) {
 
 /**
  * 启动信息快照：读之前顺手刷新一次会话数。
- *
- * @param {HostEnv} host
- * @param {(message: string, err?: any) => void} warn
- * @param {IncomingMessage} req
- * @param {ServerResponse} res
  */
-async function serveFacts(host, warn, req, res) {
+async function serveFacts(
+  host: HostEnv,
+  warn: (message: string, err?: unknown) => void,
+  req: IncomingMessage,
+  res: ServerResponse,
+) {
   if (methodOf(req) !== 'GET') return methodNotAllowed(res)
   try {
     await refreshSessions(host.ctx, host.factsCache)
@@ -279,21 +251,17 @@ async function serveFacts(host, warn, req, res) {
 
 /**
  * 注册 HTTP 路由，返回对应的 disposer 列表。
- * @param {HostEnv} host
- * @returns {Array<() => void>}
  */
-export function registerRoutes(host) {
+export function registerRoutes(host: HostEnv): Array<() => void> {
   const { ctx, webServer, packageRoot } = host
   const readSplashCss = makeReader(path.join(packageRoot, 'lib', 'splash.css'))
   const readSplashJs = makeReader(path.join(packageRoot, 'lib', 'splash.js'))
   const assetsDir = path.join(packageRoot, 'lib', 'assets')
-  /** @type {Array<() => void>} */
-  const disposers = []
+  const disposers: Array<() => void> = []
 
-  /** @param {string} message @param {any} [err] */
-  function warn(message, err) {
+  function warn(message: string, err?: unknown) {
     try {
-      const detail = err && err.message ? err.message : err
+      const detail = err && (err as { message?: unknown }).message ? (err as Error).message : err
       ctx.logger?.warn?.('[' + NS + '] ' + message + (detail ? '：' + detail : ''))
     } catch (e) {
       /* 日志失败不影响请求 */
@@ -302,13 +270,11 @@ export function registerRoutes(host) {
 
   /**
    * 来源校验：自定义路由必须过这一关，否则任意网页都能读写配置。
-   * @param {IncomingMessage} req
-   * @param {ServerResponse} res
    */
-  function rejected(req, res) {
+  function rejected(req: IncomingMessage, res: ServerResponse): boolean {
     try {
-      const conn =
-        (typeof ctx.get === 'function' ? ctx.get('connection') : undefined) || ctx.connection
+      const conn = ((typeof ctx.get === 'function' ? ctx.get('connection') : undefined) ||
+        ctx.connection) as ConnectionGuard | undefined
       if (!conn || typeof conn.requestRejection !== 'function') return false
       const code = conn.requestRejection(req)
       if (code === undefined || code === null || code === false) return false
@@ -330,13 +296,10 @@ export function registerRoutes(host) {
 
   /**
    * 统一包一层：来源校验 + 异常兜底。handler 的 req/res 类型由 Route 给出。
-   * @param {Route} route
-   * @returns {() => void}
    */
-  function registerRoute(route) {
+  function registerRoute(route: Route): () => void {
     const inner = route.handler
-    /** @type {Route} */
-    const wrapped = {
+    const wrapped: Route = {
       kind: route.kind,
       path: route.path,
       handler: async (req, res) => {

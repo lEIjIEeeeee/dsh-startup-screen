@@ -82,7 +82,7 @@ async function main() {
 
     /* 宿主和共享模块一起打包；import.meta.url 在 lib/index.js 里仍指向 lib/ */
     await build({
-      entryPoints: [path.join(SRC, 'index.js')],
+      entryPoints: [path.join(SRC, 'index.ts')],
       outfile: path.join(OUT, 'index.js'),
       bundle: true,
       format: 'esm',

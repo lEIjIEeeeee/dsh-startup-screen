@@ -13,11 +13,11 @@ import { warnIfStale } from './_fresh.mjs'
 import { createChecker } from './helpers/check.mjs'
 
 const PLUGIN_ROOT = fileURLToPath(new URL('..', import.meta.url))
-const HOST_SOURCE = path.join(PLUGIN_ROOT, 'src', 'index.js')
+const HOST_SOURCE = path.join(PLUGIN_ROOT, 'src', 'index.ts')
 const HOST_DIR = path.join(PLUGIN_ROOT, 'src', 'host')
 const HOST_MODULES = fs
   .readdirSync(HOST_DIR)
-  .filter((f) => f.endsWith('.js'))
+  .filter((f) => f.endsWith('.ts'))
   .sort()
   .map((f) => path.join(HOST_DIR, f))
 const HOST_SOURCES = [HOST_SOURCE, ...HOST_MODULES]
@@ -411,12 +411,12 @@ check(
   String(factsBody.facts.sessionsArchived),
 )
 check('/facts 记录未归档会话数', factsBody.facts.sessions === 1, String(factsBody.facts.sessions))
-const hostSrcForFacts = fs.readFileSync(path.join(PLUGIN_ROOT, 'src', 'host', 'routes.js'), 'utf8')
+const hostSrcForFacts = fs.readFileSync(path.join(PLUGIN_ROOT, 'src', 'host', 'routes.ts'), 'utf8')
 check(
   '/facts 会重采 sessions',
   /refreshSessions\(host\.ctx, host\.factsCache\)/.test(hostSrcForFacts),
 )
-const hostFactsSrc = fs.readFileSync(path.join(PLUGIN_ROOT, 'src', 'host', 'facts.js'), 'utf8')
+const hostFactsSrc = fs.readFileSync(path.join(PLUGIN_ROOT, 'src', 'host', 'facts.ts'), 'utf8')
 check(
   'facts 并行读取且单个服务有超时',
   /READ_TIMEOUT_MS/.test(hostFactsSrc) &&
@@ -692,7 +692,7 @@ console.log('\n[7b] 写盘失败：回通用文案，清理临时文件')
 console.log('\n[8] 单一事实来源')
 {
   const read = (rel) => fs.readFileSync(path.join(PLUGIN_ROOT, rel), 'utf8')
-  const host = read('src/index.js')
+  const host = read('src/index.ts')
   const hostModules = HOST_MODULES.map((f) => fs.readFileSync(f, 'utf8'))
   const splash = read('src/splash/index.js')
   const clientDir = path.join(PLUGIN_ROOT, 'src', 'client')

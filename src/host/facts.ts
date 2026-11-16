@@ -4,18 +4,41 @@
  * 取不到的字段留空，页面显示 "—"，绝不把异常抛给宿主。
  * ========================================================================== */
 
-/** @typedef {import('./types.js').Facts} Facts */
-/** @typedef {import('./types.js').FactsCache} FactsCache */
-/** @typedef {import('./types.js').HostContext} HostContext */
+import type { Facts, FactsCache, HostContext } from './types.js'
+
+interface ProfileContext {
+  name?: string
+  startedBundles?: unknown[]
+}
+
+interface SandboxPolicy {
+  defaultMode?: string
+  resolve?: () => { mode?: string } | null | undefined
+}
+
+interface AgentDefaultModel {
+  currentSelection?: () => Promise<{ model?: string } | null | undefined>
+}
+
+interface PluginManager {
+  listBundles?: () => Promise<Array<{ name?: string; version?: string }>>
+}
+
+interface SessionsService {
+  list?: () => Promise<unknown>
+}
+
+interface WorkspaceRegistry {
+  list?: () => Array<{ sessionIds?: unknown[] }>
+  archivedSessionIds?: unknown[]
+}
 
 /**
  * 从宿主取服务；宿主没有或取失败都当没有。
- * @param {HostContext} ctx
- * @param {string} name
  */
-function service(ctx, name) {
+function service<T>(ctx: HostContext, name: string): T | undefined {
   try {
-    return typeof ctx.get === 'function' ? ctx.get(name) : undefined
+    return typeof ctx.get === 'function' ? (ctx.get(name) as T | undefined) : undefined
   } catch (err) {
     return undefined
   }
@@ -23,9 +46,8 @@ function service(ctx, name) {
 
 /**
  * 生成 8 位十六进制短指纹，只用来保证同一台机器的光场构图一致，不用于安全用途。
- * @param {string} text
  */
-function shortHash(text) {
+function shortHash(text: string): string {
   let h = 0x811c9dc5
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i)
@@ -37,15 +59,13 @@ function shortHash(text) {
 /**
  * 工作区注册表知道所有工作区里的会话 + 归档会话；
  * sessions.list() 默认不含归档，所以 SESSIONS 优先用这里的总数。
- * @param {HostContext} ctx
  */
-function readRegistryCounts(ctx) {
-  /** @type {Record<string, number>} */
-  const out = {}
+function readRegistryCounts(ctx: HostContext): Partial<Facts> {
+  const out: Partial<Facts> = {}
   try {
-    const wr = service(ctx, 'workspaceRegistry')
+    const wr = service<WorkspaceRegistry>(ctx, 'workspaceRegistry')
     if (!wr || typeof wr.list !== 'function') return out
-    const ids = new Set()
+    const ids = new Set<string>()
     const list = wr.list()
     if (Array.isArray(list)) {
       for (const w of list) {
@@ -65,17 +85,12 @@ function readRegistryCounts(ctx) {
   return out
 }
 
-/** @returns {FactsCache} */
-export function createFactsCache() {
+export function createFactsCache(): FactsCache {
   return { value: null, started: false }
 }
 
-/**
- * @param {FactsCache} cache
- * @returns {Facts}
- */
-export function factsSnapshot(cache) {
-  const facts = cache.value || { ready: false }
+export function factsSnapshot(cache: FactsCache): Facts {
+  const facts: Facts = cache.value || { ready: false }
   /* 超时之后晚到的 model / bundles 仍会补进 facts；每次出快照重算指纹，
      避免 hash 与随行的字段对不上。会话数不参与指纹。 */
   if (facts.ready) facts.hash = factsHash(facts)
@@ -84,12 +99,10 @@ export function factsSnapshot(cache) {
 
 /**
  * 用户资料与已加载插件数。
- * @param {HostContext} ctx
- * @param {Facts} facts
  */
-function readProfile(ctx, facts) {
+function readProfile(ctx: HostContext, facts: Facts) {
   try {
-    const pc = service(ctx, 'profileContext') || {}
+    const pc = service<ProfileContext>(ctx, 'profileContext') || {}
     facts.profile = pc.name ? String(pc.name).toUpperCase() : null
     facts.bundleCount = Array.isArray(pc.startedBundles) ? pc.startedBundles.length : null
   } catch (err) {
@@ -99,13 +112,11 @@ function readProfile(ctx, facts) {
 
 /**
  * 沙箱默认模式；没有默认值时向策略要一次解析结果。
- * @param {HostContext} ctx
- * @param {Facts} facts
  */
-function readSandbox(ctx, facts) {
+function readSandbox(ctx: HostContext, facts: Facts) {
   try {
-    const sp = service(ctx, 'sandboxPolicy')
-    let mode = sp && sp.defaultMode
+    const sp = service<SandboxPolicy>(ctx, 'sandboxPolicy')
+    let mode: string | null | undefined = sp && sp.defaultMode
     if (!mode && sp && typeof sp.resolve === 'function') {
       const r = sp.resolve()
       mode = r && r.mode
@@ -118,12 +129,10 @@ function readSandbox(ctx, facts) {
 
 /**
  * 当前会话选用的模型。
- * @param {HostContext} ctx
- * @param {Facts} facts
  */
-async function readModel(ctx, facts) {
+async function readModel(ctx: HostContext, facts: Facts) {
   try {
-    const md = service(ctx, 'agentDefaultModel')
+    const md = service<AgentDefaultModel>(ctx, 'agentDefaultModel')
     if (md && typeof md.currentSelection === 'function') {
       const sel = await md.currentSelection()
       facts.model = sel && sel.model ? String(sel.model) : null
@@ -135,12 +144,10 @@ async function readModel(ctx, facts) {
 
 /**
  * 插件清单：总数，以及 dsh-base（或第一个插件）的版本。
- * @param {HostContext} ctx
- * @param {Facts} facts
  */
-async function readBundles(ctx, facts) {
+async function readBundles(ctx: HostContext, facts: Facts) {
   try {
-    const pm = service(ctx, 'pluginManager')
+    const pm = service<PluginManager>(ctx, 'pluginManager')
     if (pm && typeof pm.listBundles === 'function') {
       const list = await pm.listBundles()
       if (Array.isArray(list) && list.length) {
@@ -157,17 +164,18 @@ async function readBundles(ctx, facts) {
 
 /**
  * 会话数；不同版本的 sessions.list 返回形状不同。
- * @param {HostContext} ctx
- * @param {Facts} facts
  */
-async function readSessions(ctx, facts) {
+async function readSessions(ctx: HostContext, facts: Facts) {
   try {
-    const s = service(ctx, 'sessions')
+    const s = service<SessionsService>(ctx, 'sessions')
     if (s && typeof s.list === 'function') {
       const r = await s.list()
       if (Array.isArray(r)) facts.sessions = r.length
-      else if (r && Array.isArray(r.items)) facts.sessions = r.items.length
-      else if (r && Array.isArray(r.sessions)) facts.sessions = r.sessions.length
+      else if (r && typeof r === 'object') {
+        const box = r as { items?: unknown; sessions?: unknown }
+        if (Array.isArray(box.items)) facts.sessions = box.items.length
+        else if (Array.isArray(box.sessions)) facts.sessions = box.sessions.length
+      }
     }
   } catch (err) {
     /* noop */
@@ -176,9 +184,8 @@ async function readSessions(ctx, facts) {
 
 /**
  * 只取"这台机器上稳定"的项；会话数会变，不参与指纹。
- * @param {Facts} facts
  */
-function factsHash(facts) {
+function factsHash(facts: Facts): string {
   return shortHash(
     [facts.profile, facts.version, facts.model, facts.sandbox, facts.bundleCount]
       .map((x) => (x === null || x === undefined ? '-' : String(x)))
@@ -191,11 +198,8 @@ const READ_TIMEOUT_MS = 1500
 
 /**
  * 给一次服务读取加超时：到点就当作没读到，晚到的结果仍然会补进 facts。
- *
- * @param {Promise<any>} promise
- * @returns {Promise<void>}
  */
-function withTimeout(promise) {
+function withTimeout(promise: Promise<unknown>): Promise<void> {
   return new Promise(function (resolve) {
     const timer = setTimeout(resolve, READ_TIMEOUT_MS)
     Promise.resolve(promise).then(
@@ -211,16 +215,10 @@ function withTimeout(promise) {
   })
 }
 
-/**
- * @param {HostContext} ctx
- * @param {FactsCache} cache
- * @returns {Facts}
- */
-export function collectFacts(ctx, cache) {
+export function collectFacts(ctx: HostContext, cache: FactsCache): Facts {
   if (cache.started) return cache.value || { ready: false }
   cache.started = true
-  /** @type {Facts} */
-  const facts = { ready: false }
+  const facts: Facts = { ready: false }
   cache.value = facts
 
   ;(async () => {
@@ -244,11 +242,7 @@ export function collectFacts(ctx, cache) {
 
 /* 会话可能比插件启动得晚：每次读取真实信息时顺手重采一次，
    动画播放期间浏览器会轮询几次，晚到的会话数也能补上。 */
-/**
- * @param {HostContext} ctx
- * @param {FactsCache} cache
- */
-export async function refreshSessions(ctx, cache) {
+export async function refreshSessions(ctx: HostContext, cache: FactsCache): Promise<void> {
   const facts = cache.value
   if (!facts) return
   /* 轮询路径同样要有上限：sessions 服务卡住时不能把 /facts 一起拖死。 */

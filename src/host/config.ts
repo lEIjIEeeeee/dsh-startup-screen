@@ -3,20 +3,19 @@ import path from 'node:path'
 import { DEFAULTS } from '../shared/defaults.js'
 import { NS } from '../shared/routes.js'
 import { normalize } from '../shared/schema.js'
+import type { Logger, StartupConfig } from './types.js'
 
 /**
  * 配置读写。路径由调用方给，模块自己不推算。
- *
- * @param {string} configFile
- * @param {{ warn?: (msg: string) => void }} [logger]
- * @returns {{ read: () => import('./types.js').Config, write: (next: any) => import('./types.js').Config }}
  */
-export function createConfig(configFile, logger) {
+export function createConfig(
+  configFile: string,
+  logger?: Logger,
+): { read: () => StartupConfig; write: (next: unknown) => StartupConfig } {
   let seq = 0
   let readWarned = false
 
-  /** @param {string} message */
-  function warn(message) {
+  function warn(message: string) {
     try {
       if (logger && typeof logger.warn === 'function') logger.warn('[' + NS + '] ' + message)
     } catch (err) {
@@ -36,13 +35,13 @@ export function createConfig(configFile, logger) {
     }
   }
 
-  function read() {
-    let text
+  function read(): StartupConfig {
+    let text: string
     try {
       text = fs.readFileSync(configFile, 'utf8')
     } catch (err) {
       /* 首次运行没有文件是正常的，不用提示 */
-      const code = /** @type {any} */ (err || {}).code
+      const code = (err as { code?: string } | undefined)?.code
       if (code !== 'ENOENT' && !readWarned) {
         readWarned = true
         warn('读取配置失败，本次使用默认配置：' + messageOf(err))
@@ -57,11 +56,7 @@ export function createConfig(configFile, logger) {
     }
   }
 
-  /**
-   * @param {any} next
-   * @returns {import('./types.js').Config}
-   */
-  function write(next) {
+  function write(next: unknown): StartupConfig {
     const cfg = normalize(next)
     fs.mkdirSync(path.dirname(configFile), { recursive: true })
     /* 临时文件名带 pid + 序号：并发保存时不会互相踩掉对方的 rename。 */
@@ -83,7 +78,6 @@ export function createConfig(configFile, logger) {
   return { read, write }
 }
 
-/** @param {any} err */
-function messageOf(err) {
-  return String(err && err.message ? err.message : err)
+function messageOf(err: unknown): string {
+  return String(err && (err as { message?: unknown }).message ? (err as Error).message : err)
 }

@@ -1,14 +1,14 @@
 import { ROUTES } from '../shared/routes.js'
+import type { RuntimeConfig } from '../shared/types.js'
 import { factsSnapshot } from './facts.js'
-
-/** @typedef {import('./types.js').HostEnv} HostEnv */
+import type { HostEnv } from './types.js'
 
 /**
  * 内联到页面里的 JSON 不能出现 `</script>`。
- * @param {any} value
  */
-export function safeJson(value) {
-  return JSON.stringify(value)
+export function safeJson(value: unknown): string {
+  const text = JSON.stringify(value)
+  return (text === undefined ? 'null' : text)
     .replace(/</g, '\\u003c')
     .replace(/\u2028/g, '\\u2028')
     .replace(/\u2029/g, '\\u2029')
@@ -39,15 +39,14 @@ else{document.documentElement.classList.add('dsu-lock');setTimeout(function(){tr
 
 /**
  * 把首屏覆盖层注入宿主下发的 index.html。
- * @param {HostEnv} host
- * @returns {() => void} disposer
  */
-export function injectIndex(host) {
+export function injectIndex(host: HostEnv): () => void {
   const { webServer, version, factsCache, readConfig } = host
-  return webServer.tapIndex((html) => {
+  const tap = webServer.tapIndex
+  if (typeof tap !== 'function') return () => {}
+  return tap((html) => {
     if (!html || html.includes(ROUTES.splash)) return html
-    const cfg = readConfig()
-    cfg.facts = factsSnapshot(factsCache)
+    const cfg: RuntimeConfig = { ...readConfig(), facts: factsSnapshot(factsCache) }
     const head =
       '<link rel="stylesheet" href="' +
       ROUTES.css +

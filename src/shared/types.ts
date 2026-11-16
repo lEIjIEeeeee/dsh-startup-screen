@@ -63,6 +63,11 @@ export interface Facts {
   hash?: string
 }
 
+/** 注入到页面里的配置：用户配置 + 一份启动信息快照。 */
+export interface RuntimeConfig extends StartupConfig {
+  facts?: Facts
+}
+
 /** 宿主侧的 facts 缓存；宿主只创建一次，浏览器轮询读取。 */
 export interface FactsCache {
   value: Facts | null
