@@ -1,8 +1,13 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  BOOL_KEYS,
   BRAND2_MAX,
+  COLOR_KEYS,
+  ENUMS,
   IDENTITY_MAX,
+  RANGES,
+  TEXT_KEYS,
   TEXT_MAX,
   VOICE_NAME_MAX,
   normalize,
@@ -57,6 +62,19 @@ test('文案按各自上限截断', () => {
 
 test('空白身份名回落到默认身份', () => {
   assert.equal(normalize({ identity: '   ' }).identity, DEFAULTS.identity)
+})
+
+test('每个默认字段都归入且只归入一个校验分组', () => {
+  const groups = [
+    ...BOOL_KEYS,
+    ...Object.keys(ENUMS),
+    ...Object.keys(RANGES),
+    ...COLOR_KEYS,
+    ...TEXT_KEYS,
+  ]
+  const missing = Object.keys(DEFAULTS).filter((key) => !groups.includes(key))
+  assert.deepEqual(missing, [], '缺少分组的字段：' + missing.join(', '))
+  assert.equal(new Set(groups).size, groups.length, '字段不能同时归入多个分组')
 })
 
 test('身份编号只保留字母数字并大写', () => {

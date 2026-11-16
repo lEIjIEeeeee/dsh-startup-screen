@@ -102,6 +102,8 @@ export function normalize(input: unknown): StartupConfig {
   const set = <K extends keyof StartupConfig>(key: K, value: StartupConfig[K]) => {
     out[key] = value
   }
+  /* 新增字段必须归入 BOOL / ENUM / RANGE / COLOR / TEXT 之一；
+     test/unit/schema.test.mjs 会检查覆盖和互斥。 */
   for (const key of Object.keys(DEFAULTS) as Array<keyof StartupConfig>) {
     if (!(key in src) || src[key] === undefined || src[key] === null) continue
     const value = src[key]
