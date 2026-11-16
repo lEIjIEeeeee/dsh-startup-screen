@@ -7,6 +7,43 @@ import { createStall } from './stall.js'
 import { createTermination } from './termination.js'
 
 /**
+ * 三幕共享的时间线上下文。
+ *
+ * 由 timeline.js 用 `Object.assign(rt, helpers, …)` 组装；三幕只读不改。
+ * 新增字段时同时更新这里和用到它的 play* 文件，避免靠猜字段名。
+ *
+ * @typedef {Object} TimelineContext
+ * @property {Record<string, any>} C 规范化后的配置
+ * @property {Record<string, any>} ui 舞台节点引用
+ * @property {any} root 启动界面根节点
+ * @property {any} audio 界面音效
+ * @property {any} voice 语音播报
+ * @property {any} chromeSync 桌面端标题栏同步
+ * @property {(base: number) => number} ms 按播放速度换算时长
+ * @property {(base: number) => Promise<any>} wait 普通等待
+ * @property {() => Promise<any>} waitAction 等待用户操作
+ * @property {() => void} armStall 给停滞看门狗上弦
+ * @property {() => boolean} isFinished 是否已经揭幕
+ * @property {() => boolean} stale 当前代际是否已失效
+ * @property {() => boolean} ambientOn 环境光效是否开启
+ * @property {() => any} finish 揭幕
+ * @property {(n: number) => void} setProgress 底部进度
+ * @property {(n: number) => void} setSlats 阶段柱
+ * @property {(n: number, code?: string) => void} setStepCount 步骤编号
+ * @property {(zh: string, en: string) => void} setSubtitle 底部双语日志
+ * @property {(n: number) => void} setChecks 右侧自检点亮
+ * @property {(host: any, text: string, stagger: number, mode?: string) => any[]} typeIn 逐字写入
+ * @property {(slots: any[]) => void} startDecode 启动解码动画
+ * @property {() => void} stopDecode 立即定格真字
+ * @property {() => void} startHex 十六进制读数
+ * @property {() => void} stopHex 停止十六进制读数
+ * @property {() => void} sweep 扫描线
+ * @property {() => void} assembleLogo 鲸鱼落墨
+ * @property {(step: any) => void} showAction 显示操作卡
+ * @property {() => void} hideAction 收起操作卡
+ */
+
+/**
  * 启动动画时间线：开场、逐幕推进、终幕、揭幕与跳过。
  *
  * 共享状态（计时器、等待者、finished / skipped）都收在这里；

@@ -3,7 +3,7 @@ import { STEPS } from '../data/steps.js'
 /**
  * 六个阶段：编号、阶段柱、自检、字幕、语音与等待。
  *
- * @param {Record<string, any>} ctx
+ * @param {import('./timeline.js').TimelineContext} ctx
  * @returns {Promise<any>}
  */
 export function playSteps(ctx) {

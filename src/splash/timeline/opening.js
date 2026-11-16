@@ -1,7 +1,7 @@
 /**
  * 开场：黑幕 → 鲸鱼标识 → 过曝洗白 → 暖白底板 → 品牌与读数进场。
  *
- * @param {Record<string, any>} ctx
+ * @param {import('./timeline.js').TimelineContext} ctx
  * @returns {Promise<any>}
  */
 export function playOpening(ctx) {

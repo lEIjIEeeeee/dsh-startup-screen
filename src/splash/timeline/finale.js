@@ -1,7 +1,7 @@
 /**
  * 终幕：欢迎语、色散故障、光晕峰值与揭幕。
  *
- * @param {Record<string, any>} ctx
+ * @param {import('./timeline.js').TimelineContext} ctx
  * @returns {Promise<any>}
  */
 export function playFinale(ctx) {
