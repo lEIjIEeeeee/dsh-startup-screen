@@ -76,6 +76,24 @@
 
   /* ── 设置面板模拟（DSH 设置页里的那一节）──────────────────────────── */
   #settingsMock {
+    /* 预览环境没有宿主的 --dsw-* token，这里在弹窗作用域里补一份浅色值 */
+    --dsw-alias-label-primary: #23242a;
+    --dsw-alias-label-secondary: #55565e;
+    --dsw-alias-label-tertiary: #8a8b93;
+    --dsw-alias-label-primary-foreground: #fff;
+    --dsw-alias-border-l2: #e6e6ea;
+    --dsw-alias-border-l3: #dcdce2;
+    --dsw-alias-border-l4: #d4d4da;
+    --dsw-alias-bg-layer-1: #fff;
+    --dsw-alias-bg-layer-3: #f2f2f4;
+    --dsw-alias-interactive-bg-hover: #ececef;
+    --dsw-alias-state-business-primary: #4176e6;
+    --dsw-alias-state-error-primary: #f85149;
+    --dsw-alias-switch-thumb: #fff;
+    --dsw-alias-brand-primary-new-colorprimary-new-color: #4176e6;
+    --dsw-radius-md: 12px;
+    --dsh-hairline-width: .5px;
+    --dsh-button-outline-color: #d4d4da;
     position: fixed; inset: 0; z-index: 2147483700; display: none;
     background: rgba(10, 11, 16, .55); backdrop-filter: blur(3px);
     align-items: center; justify-content: center;
@@ -93,29 +111,66 @@
   #settingsMock .dlgHead { padding: 18px 24px 12px; border-bottom: 1px solid #ededf0; display: flex; align-items: center; justify-content: space-between; }
   #settingsMock .dlgHead h3 { margin: 0; font-size: 16px; }
   #settingsMock .dlgHead .x { cursor: pointer; color: #8a8b93; font-size: 18px; line-height: 1; }
-  #settingsMock .dlgContent { flex: 1; overflow: auto; padding: 18px 24px 26px; }
-
-  /* 设置节样式（对应 lib/client.js 里注入的那套 __ss_* 样式）*/
-  .__ss_root { max-width: 620px; display: flex; flex-direction: column; gap: 14px; font-size: 13px; color: #23242a; }
-  .__ss_lead { font-size: 12px; line-height: 1.65; color: #8a8b93; }
-  .__ss_group { border: 1px solid #e6e6ea; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 11px; }
-  .__ss_groupTitle { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #8a8b93; }
-  .__ss_field { display: flex; flex-direction: column; gap: 5px; }
-  .__ss_label { font-size: 12px; font-weight: 600; }
-  .__ss_hint { font-size: 11px; line-height: 1.55; color: #8a8b93; }
+  /* 设置面板模拟：布局与 lib/client.js 注入的 __ss_* 样式一致。 */
+  #settingsMock .dlgContent { flex: 1; min-height: 0; padding: 0; display: flex; }
+  .__ss_root { max-width: 620px; display: flex; flex-direction: column; gap: 14px; font-size: 13.5px; line-height: 1.5; color: var(--dsw-alias-label-primary); }
+  .__ss_version { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; letter-spacing: .04em; color: var(--dsw-alias-label-tertiary); }
+  .__ss_group { border: 1px solid var(--dsw-alias-border-l2); border-radius: var(--dsw-radius-md); padding: 12px 14px; display: flex; flex-direction: column; gap: 11px; }
+  .__ss_groupTitle { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dsw-alias-label-tertiary); }
+  .__ss_groupTitle::after { content: ""; flex: 1; height: 1px; background: var(--dsw-alias-border-l2); }
+  .__ss_subTitle { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; color: var(--dsw-alias-label-tertiary); margin-top: 2px; }
+  .__ss_shell { flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 420px; padding: 16px 20px 14px; box-sizing: border-box; }
+  .__ss_layout { display: flex; flex: 1; min-height: 0; gap: 16px; }
+  .__ss_nav { width: 124px; flex: none; display: flex; flex-direction: column; gap: 4px; border-right: 1px solid var(--dsw-alias-border-l2); padding-right: 12px; }
+  .__ss_navTitle { font-size: 12px; font-weight: 600; letter-spacing: .08em; color: var(--dsw-alias-label-tertiary); padding: 2px 8px 6px; }
+  .__ss_navItem { position: relative; text-align: left; border: 0; background: transparent; color: var(--dsw-alias-label-secondary); border-radius: var(--dsw-radius-md); padding: 8px 12px; font: inherit; font-size: 13.5px; cursor: pointer; }
+  .__ss_navItem:hover { color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-layer-3); }
+  .__ss_navItemActive { color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-layer-3); font-weight: 600; }
+  .__ss_navItem:focus-visible { outline: 2px solid var(--dsw-alias-state-business-primary); outline-offset: -2px; }
+  .__ss_navVersion { margin-top: auto; padding: 10px 8px 0; font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; color: var(--dsw-alias-label-tertiary); }
+  .__ss_main { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+  .__ss_content { flex: 1; min-height: 0; overflow-y: auto; padding-right: 6px; display: flex; flex-direction: column; gap: 14px; }
+  .__ss_page { display: flex; flex-direction: column; gap: 14px; }
+  .__ss_page[hidden] { display: none; }
+  .__ss_details { border-top: 1px dashed var(--dsw-alias-border-l2); padding-top: 8px; display: flex; flex-direction: column; gap: 10px; }
+  .__ss_details summary { cursor: pointer; font-size: 12px; color: var(--dsw-alias-label-secondary); }
+  .__ss_field { display: flex; flex-direction: column; gap: 6px; }
+  .__ss_label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--dsw-alias-label-primary); }
+  .__ss_labelText { display: block; }
+  .__ss_hint { font-size: 11.5px; line-height: 1.5; color: var(--dsw-alias-label-tertiary); }
   .__ss_row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .__ss_input { display: block; box-sizing: border-box; width: 100%; min-width: 0; }
+  .__ss_input input { box-sizing: border-box; width: 100%; height: 34px; padding: 0 12px; border: .5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-3); font: inherit; font-size: 13px; line-height: 1.5; color: var(--dsw-alias-label-primary); outline: none; }
+  .__ss_input input:focus { border-color: var(--dsw-alias-state-business-primary); }
+  .__ss_inputMono input { font-family: ui-monospace, Consolas, monospace; font-size: 12px; letter-spacing: .06em; }
+  .__ss_select { box-sizing: border-box; height: 34px; padding: 0 10px; border: .5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-3); color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px; min-width: 180px; }
+  .__ss_select:focus { border-color: var(--dsw-alias-state-business-primary); outline: none; }
+  .__ss_check { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 16px; cursor: pointer; padding: 2px 0; }
+  .__ss_check input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .__ss_switch { order: 2; position: relative; flex: none; box-sizing: border-box; width: 36px; height: 20px; padding: 2px; border: 0; border-radius: 999px; background: var(--dsw-alias-border-l3); transition: background 180ms ease; }
+  .__ss_switch i { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--dsw-alias-switch-thumb); transition: transform 180ms cubic-bezier(.2,.8,.2,1); }
+  .__ss_check input:checked + .__ss_switch { background: var(--dsw-alias-state-business-primary); }
+  .__ss_check input:checked + .__ss_switch i { transform: translateX(16px); }
+  .__ss_check input:focus-visible + .__ss_switch { outline: 2px solid var(--dsw-alias-state-business-primary); outline-offset: 2px; }
+  .__ss_checkText { order: 1; flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .__ss_range { flex: 1 1 200px; -webkit-appearance: none; appearance: none; height: 18px; background: transparent; cursor: pointer; }
+  .__ss_range::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--dsw-alias-state-business-primary) 0 var(--ss-fill, 50%), var(--dsw-alias-border-l2) var(--ss-fill, 50%)); }
+  .__ss_range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5.5px; border-radius: 50%; background: #fff; border: 2px solid var(--dsw-alias-state-business-primary); box-shadow: 0 1px 3px rgba(0,0,0,.22); }
   .__ss_two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .__ss_check { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
-  .__ss_checkText { display: flex; flex-direction: column; gap: 2px; }
-  .__ss_input, .__ss_select { border: 1px solid #dcdce2; background: #fff; color: #23242a; border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 13px; box-sizing: border-box; width: 100%; outline: none; }
-  .__ss_inputMono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; letter-spacing: .06em; }
   .__ss_actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .__ss_btn { border: 1px solid #dcdce2; background: #fff; color: #23242a; border-radius: 8px; padding: 6px 14px; font: inherit; font-size: 13px; cursor: pointer; }
-  .__ss_btnPrimary { background: #3964fe; border-color: #3964fe; color: #fff; }
-  .__ss_status { font-size: 12px; color: #8a8b93; }
-  .__ss_preview { border: 1px dashed #dcdce2; border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .__ss_previewText { font-size: 12px; color: #8a8b93; line-height: 1.5; }
-  .__ss_swatch { width: 38px; height: 26px; padding: 0; border: 1px solid #dcdce2; border-radius: 6px; background: transparent; cursor: pointer; }
+  .__ss_footer { flex: none; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-1); display: flex; flex-direction: column; gap: 6px; }
+  .__ss_barHint { font-size: 11.5px; line-height: 1.5; color: var(--dsw-alias-label-tertiary); word-break: break-all; }
+  .__ss_barFile { display: block; opacity: .85; font-family: ui-monospace, Consolas, monospace; font-size: 11px; }
+  .__ss_dirty { font-size: 12px; color: var(--dsw-alias-state-business-primary); font-weight: 600; }
+  .__ss_btn { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 14px; border: 0; border-radius: var(--dsw-radius-md); background: transparent; box-shadow: inset 0 0 0 var(--dsh-hairline-width) var(--dsh-button-outline-color); color: var(--dsw-alias-label-primary); font: inherit; font-size: 14px; cursor: pointer; }
+  .__ss_btn:hover { background: var(--dsw-alias-interactive-bg-hover); }
+  .__ss_btnPrimary { background: var(--dsw-alias-state-business-primary); color: #fff; box-shadow: none; }
+  .__ss_btnPrimary:hover { background: var(--dsw-alias-state-business-primary); filter: brightness(1.06); }
+  .__ss_btn:focus-visible, .__ss_select:focus-visible, .__ss_range:focus-visible, .__ss_swatch:focus-visible { outline: 2px solid var(--dsw-alias-state-business-primary); outline-offset: 2px; }
+  .__ss_status { font-size: 12.5px; color: var(--dsw-alias-label-tertiary); }
+  .__ss_ok { font-size: 12.5px; color: var(--dsw-alias-state-business-primary); }
+  .__ss_err { font-size: 12.5px; color: var(--dsw-alias-state-error-primary); }
+  .__ss_swatch { width: 38px; height: 26px; padding: 0; border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; background: transparent; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -253,7 +308,7 @@
       </div>
       <div class="row">
         <label>开口前留白 <span id="fVLeadVal">240 ms</span></label>
-        <input type="range" id="fVLead" min="0" max="800" step="20" value="240">
+        <input type="range" id="fVLead" min="0" max="1200" step="20" value="240">
       </div>
       <div class="chk"><input type="checkbox" id="fVoiceCue" checked><label for="fVoiceCue">播报前提示音（两声轻提示，AI 感的关键）</label></div>
       <div class="chk"><input type="checkbox" id="fSound" checked><label for="fSound">界面音效（咔哒 / 确认音 / 扫频 / 和声钟）</label></div>
@@ -295,86 +350,168 @@
         <span class="x" id="btnCloseSettings">✕</span>
       </div>
       <div class="dlgContent">
-        <div class="__ss_root">
-          <div class="__ss_lead">启动界面：黑幕 DeepSeek 标识 → 过曝洗白 → 技术档案底板 → 交互式访问授权序列（需要访问许可 / 身份资料确认 / 接收访问需求 / 读取完毕 / 验证通过 / 欢迎 xxx 访问）。中文主字 + 英文等宽字幕，风格取自参考片。</div>
+        <div class="__ss_shell">
+          <div class="__ss_layout">
+            <nav class="__ss_nav" aria-label="启动动画设置">
+              <div class="__ss_navTitle">启动动画</div>
+              <button class="__ss_navItem __ss_navItemActive" type="button" id="__ss_tab_play" data-page="play" aria-current="page">播放</button>
+              <button class="__ss_navItem" type="button" id="__ss_tab_appearance" data-page="appearance">外观</button>
+              <button class="__ss_navItem" type="button" id="__ss_tab_sound" data-page="sound">声音</button>
+              <button class="__ss_navItem" type="button" id="__ss_tab_content" data-page="content">内容</button>
+              <button class="__ss_navItem" type="button" id="__ss_tab_about" data-page="about">关于</button>
+              <div class="__ss_navVersion" id="sNavVersion">v1.4.0</div>
+            </nav>
+            <div class="__ss_main">
+              <div class="__ss_content">
 
-          <div class="__ss_group">
-            <div class="__ss_groupTitle">播放</div>
-            <label class="__ss_check"><input type="checkbox" checked id="sEnabled"><span class="__ss_checkText"><span>启用启动动画</span><span class="__ss_hint">关闭后直接进主界面，不再显示启动界面。</span></span></label>
-            <div class="__ss_field"><label class="__ss_label">播放时机</label>
-              <select class="__ss_select" id="sMode">
-                <option value="session" selected>每个浏览器会话一次</option>
-                <option value="daily">每天一次</option>
-                <option value="always">每次打开都播放</option>
-              </select>
-            </div>
-            <div class="__ss_field"><label class="__ss_label">速度倍率</label>
-              <div class="__ss_row"><input type="range" min="0.35" max="3" step="0.05" value="1" style="flex:1 1 240px" id="sSpeed"><span class="__ss_status" id="sSpeedVal">1.00×</span></div>
-              <div class="__ss_hint">0.35 慢放 · 1 原速 · 3 快放；参考片时长约 27 秒，默认整套约 16 秒。</div>
-            </div>
-          </div>
+                <section class="__ss_page" id="__ss_page_play" role="region" aria-labelledby="__ss_tab_play">
+                  <div class="__ss_group">
+                    <div class="__ss_groupTitle">播放</div>
+                    <label class="__ss_check"><input type="checkbox" role="switch" aria-checked="true" checked id="sEnabled"><span class="__ss_switch" aria-hidden="true"><i></i></span><span class="__ss_checkText"><span>启用启动动画</span><span class="__ss_hint">关闭后直接进入主界面。</span></span></label>
+                    <div class="__ss_field"><span class="__ss_label">播放时机</span>
+                      <select class="__ss_select" id="sMode">
+                        <option value="session" selected>每个浏览器会话一次</option>
+                        <option value="daily">每天一次</option>
+                        <option value="always">每次打开都播放</option>
+                      </select>
+                    </div>
+                    <div class="__ss_field"><span class="__ss_label">速度倍率</span>
+                      <div class="__ss_row"><input class="__ss_range" type="range" min="0.35" max="3" step="0.05" value="1" id="sSpeed"><span class="__ss_status" id="sSpeedVal">1.00×</span></div>
+                      <div class="__ss_hint">0.35 慢放 · 1 原速 · 3 快放；默认约 16 秒。</div>
+                    </div>
+                  </div>
+                  <div class="__ss_group">
+                    <div class="__ss_groupTitle">交互</div>
+                    <label class="__ss_check"><input type="checkbox" role="switch" aria-checked="true" checked id="sInteract"><span class="__ss_switch" aria-hidden="true"><i></i></span><span class="__ss_checkText"><span>需要人工确认</span><span class="__ss_hint">第 1、2 步停下来等按钮或 Enter。</span></span></label>
+                    <label class="__ss_check"><input type="checkbox" role="switch" aria-checked="true" checked id="sSkip"><span class="__ss_switch" aria-hidden="true"><i></i></span><span class="__ss_checkText"><span>允许跳过</span><span class="__ss_hint">右上角显示 SKIP，Esc 也能跳过。</span></span></label>
+                  </div>
+                </section>
 
-          <div class="__ss_group">
-            <div class="__ss_groupTitle">身份资料</div>
-            <div class="__ss_field"><label class="__ss_label">身份名称</label>
-              <input class="__ss_input" type="text" id="sIdentity" value="JOYCE MOORE" maxlength="64">
-              <div class="__ss_hint">终幕「欢迎 xxx 访问 / WELCOME, XXX」里的 xxx，也出现在第二步的身份卡上。</div>
-            </div>
-            <div class="__ss_two">
-              <div class="__ss_field"><label class="__ss_label">身份编号</label><input class="__ss_input __ss_inputMono" type="text" id="sId" value="0087"><div class="__ss_hint">显示在身份卡上，建议用数字编号（如 0087）。</div></div>
-              <div class="__ss_field"><label class="__ss_label">权限等级</label><input class="__ss_input __ss_inputMono" type="text" id="sLevel" value="3"></div>
-            </div>
-          </div>
+                <section class="__ss_page" id="__ss_page_appearance" role="region" aria-labelledby="__ss_tab_appearance" hidden>
+                  <div class="__ss_group">
+                    <div class="__ss_groupTitle">外观</div>
+                    <div class="__ss_subTitle">主题与背景</div>
+                    <div class="__ss_field"><span class="__ss_label">主题</span>
+                      <select class="__ss_select" id="sTheme">
+                        <option value="light" selected>浅色 · 暖白档案底板（参考片原色）</option>
+                        <option value="dark">深色 · 暗底板</option>
+                      </select>
+                    </div>
+                    <label class="__ss_check"><input type="checkbox" role="switch" aria-checked="true" checked id="sAmbient"><span class="__ss_switch" aria-hidden="true"><i></i></span><span class="__ss_checkText"><span>环境光效（Canvas 光场 / 氛围层）</span><span class="__ss_hint">背景的星尘、流光和光斑；低端机可关闭。</span></span></label>
+                    <div class="__ss_subTitle">液态玻璃</div>
+                    <label class="__ss_check"><input type="checkbox" role="switch" aria-checked="false" id="sGlass"><span class="__ss_switch" aria-hidden="true"><i></i></span><span class="__ss_checkText"><span>液态玻璃（透出桌面 / 背后窗口）</span><span class="__ss_hint">底板变成磨砂玻璃，能透出后面的窗口。</span></span></label>
+                    <details class="__ss_details" id="sGlassDetails" hidden>
+                      <summary>高级玻璃参数</summary>
+                      <div class="__ss_field"><span class="__ss_label">玻璃不透明度</span><div class="__ss_row"><input class="__ss_range" type="range" min="0.15" max="0.95" step="0.01" value="0.75" id="sGlassOpacity"><span class="__ss_status" id="sGlassOpacityVal">75%</span></div><div class="__ss_hint">越低越透。</div></div>
+                      <div class="__ss_field"><span class="__ss_label">磨砂模糊</span><div class="__ss_row"><input class="__ss_range" type="range" min="0" max="60" step="1" value="22" id="sGlassBlur"><span class="__ss_status" id="sGlassBlurVal">22 px</span></div></div>
+                      <div class="__ss_field"><span class="__ss_label">玻璃饱和度</span><div class="__ss_row"><input class="__ss_range" type="range" min="100" max="200" step="5" value="160" id="sGlassSat"><span class="__ss_status" id="sGlassSatVal">160%</span></div></div>
+                      <div class="__ss_field"><span class="__ss_label">背景模糊</span><div class="__ss_row"><input class="__ss_range" type="range" min="0" max="80" step="1" value="28" id="sGlassBackdrop"><span class="__ss_status" id="sGlassBackdropVal">28 px</span></div></div>
+                    </details>
+                    <div class="__ss_subTitle">颜色与特效</div>
+                    <div class="__ss_two">
+                      <div class="__ss_field"><span class="__ss_label">强调色 · 橙</span><div class="__ss_row"><input class="__ss_swatch" type="color" value="#ff7500" id="sAccent"><span class="__ss_status">#ff7500</span></div></div>
+                      <div class="__ss_field"><span class="__ss_label">故障色 · 蓝</span><div class="__ss_row"><input class="__ss_swatch" type="color" value="#2971b8" id="sGlitchB"><span class="__ss_status">#2971b8</span></div></div>
+                    </div>
+                    <div class="__ss_field"><span class="__ss_label">故障色 · 红</span><div class="__ss_row"><input class="__ss_swatch" type="color" value="#ff3b30" id="sGlitchA"><span class="__ss_status">#ff3b30</span></div></div>
+                  </div>
+                </section>
 
-          <div class="__ss_group">
-            <div class="__ss_groupTitle">交互</div>
-            <label class="__ss_check"><input type="checkbox" checked id="sInteract"><span class="__ss_checkText"><span>需要人工确认</span><span class="__ss_hint">第 1、2 步停下来等按钮 / Enter / 空格；关闭则整段自动播放。</span></span></label>
-            <label class="__ss_check"><input type="checkbox" checked id="sSkip"><span class="__ss_checkText"><span>允许跳过</span><span class="__ss_hint">右上角显示 SKIP，按 Esc 也能直接进主界面。</span></span></label>
-            <label class="__ss_check"><input type="checkbox" id="sSound"><span class="__ss_checkText"><span>音效</span><span class="__ss_hint">默认关闭；开启后交互确认时有轻微电子音。</span></span></label>
-          </div>
+                <section class="__ss_page" id="__ss_page_sound" role="region" aria-labelledby="__ss_tab_sound" hidden>
+                  <div class="__ss_group">
+                    <div class="__ss_groupTitle">语音播报</div>
+                    <label class="__ss_check"><input type="checkbox" role="switch" aria-checked="true" checked id="sVoice"><span class="__ss_switch" aria-hidden="true"><i></i></span><span class="__ss_checkText"><span>语音播报</span><span class="__ss_hint">用系统语音念每一步的台词。</span></span></label>
+                    <div class="__ss_two">
+                      <div class="__ss_field"><span class="__ss_label">语音来源</span>
+                        <select class="__ss_select" id="sVoiceSource">
+                          <option value="asset" selected>内置真声（缺失自动回落）</option>
+                          <option value="tts">系统语音</option>
+                        </select>
+                      </div>
+                      <div class="__ss_field"><span class="__ss_label">语言</span>
+                        <select class="__ss_select" id="sVoiceLang">
+                          <option value="en" selected>英文</option>
+                          <option value="zh">中文</option>
+                          <option value="both">中英双语</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="__ss_field"><span class="__ss_label">音色</span>
+                      <div class="__ss_row"><select class="__ss_select" id="sVoiceName" style="flex:1"><option value="">自动（优先神经网络女声）</option></select><button class="__ss_btn" id="sSample" type="button">试听</button><button class="__ss_btn" id="sPreset" type="button">电影旁白</button></div>
+                      <div class="__ss_hint" id="sVoiceNote">读取本机音色…</div>
+                    </div>
+                    <div class="__ss_two">
+                      <div class="__ss_field"><span class="__ss_label">语速</span><div class="__ss_row"><input class="__ss_range" type="range" min="0.5" max="2" step="0.01" value="0.88" id="sVoiceRate"><span class="__ss_status" id="sVoiceRateVal">0.88×</span></div></div>
+                      <div class="__ss_field"><span class="__ss_label">音调</span><div class="__ss_row"><input class="__ss_range" type="range" min="0" max="2" step="0.01" value="0.85" id="sVoicePitch"><span class="__ss_status" id="sVoicePitchVal">0.85</span></div></div>
+                    </div>
+                    <div class="__ss_two">
+                      <div class="__ss_field"><span class="__ss_label">音量</span><div class="__ss_row"><input class="__ss_range" type="range" min="0" max="1" step="0.01" value="0.9" id="sVoiceVol"><span class="__ss_status" id="sVoiceVolVal">90%</span></div></div>
+                      <div class="__ss_field"><span class="__ss_label">开口前留白</span><div class="__ss_row"><input class="__ss_range" type="range" min="0" max="1200" step="20" value="240" id="sVLead"><span class="__ss_status" id="sVLeadVal">240 ms</span></div></div>
+                    </div>
+                    <label class="__ss_check"><input type="checkbox" role="switch" aria-checked="true" checked id="sVoiceCue"><span class="__ss_switch" aria-hidden="true"><i></i></span><span class="__ss_checkText"><span>念台词前轻提示</span><span class="__ss_hint">提示音之后留一小段空白再开口。</span></span></label>
+                    <div class="__ss_subTitle">界面音效</div>
+                    <label class="__ss_check"><input type="checkbox" role="switch" aria-checked="true" checked id="sSound"><span class="__ss_switch" aria-hidden="true"><i></i></span><span class="__ss_checkText"><span>界面音效</span><span class="__ss_hint">按钮、过场和结尾的提示音。</span></span></label>
+                    <div class="__ss_two">
+                      <div class="__ss_field"><span class="__ss_label">音效来源</span>
+                        <select class="__ss_select" id="sSfx">
+                          <option value="audio" selected>内置素材（推荐）</option>
+                          <option value="synth">现场合成</option>
+                        </select>
+                      </div>
+                      <div class="__ss_field"><span class="__ss_label">音效音量</span><div class="__ss_row"><input class="__ss_range" type="range" min="0" max="1" step="0.01" value="0.5" id="sSoundVol"><span class="__ss_status" id="sSoundVolVal">50%</span></div></div>
+                    </div>
+                  </div>
+                </section>
 
-          <div class="__ss_group">
-            <div class="__ss_groupTitle">视觉</div>
-            <div class="__ss_field"><label class="__ss_label">主题</label>
-              <select class="__ss_select" id="sTheme">
-                <option value="light" selected>浅色 · 暖白档案底板（参考片原色）</option>
-                <option value="dark">深色 · 暗底板</option>
-              </select>
-            </div>
-            <div class="__ss_two">
-              <div class="__ss_field"><label class="__ss_label">强调色 · 橙</label><div class="__ss_row"><input class="__ss_swatch" type="color" value="#ff7500" id="sAccent"><span class="__ss_status">#ff7500</span></div></div>
-              <div class="__ss_field"><label class="__ss_label">故障色 · 蓝</label><div class="__ss_row"><input class="__ss_swatch" type="color" value="#2971b8" id="sGlitch"><span class="__ss_status">#2971b8</span></div></div>
-            </div>
-          </div>
+                <section class="__ss_page" id="__ss_page_content" role="region" aria-labelledby="__ss_tab_content" hidden>
+                  <div class="__ss_group">
+                    <div class="__ss_groupTitle">身份资料</div>
+                    <div class="__ss_field"><span class="__ss_label">身份名称</span><span class="__ss_input"><input type="text" id="sIdentity" value="JOYCE MOORE" maxlength="48" placeholder="例如：JOYCE MOORE"></span><div class="__ss_hint">终幕欢迎语和第二步身份卡上的名字。</div></div>
+                    <div class="__ss_two">
+                      <div class="__ss_field"><span class="__ss_label">身份编号</span><span class="__ss_input __ss_inputMono"><input type="text" id="sId" value="0087" maxlength="12"></span><div class="__ss_hint">第二步身份卡上的编号，建议用数字。</div></div>
+                      <div class="__ss_field"><span class="__ss_label">权限等级</span><span class="__ss_input __ss_inputMono"><input type="text" id="sLevel" value="3"></span></div>
+                    </div>
+                  </div>
+                  <div class="__ss_group">
+                    <div class="__ss_groupTitle">品牌文案</div>
+                    <div class="__ss_two">
+                      <div class="__ss_field"><span class="__ss_label">左上 · 主标题</span><span class="__ss_input"><input type="text" id="sBrand1" value="DEEPSEEK"></span></div>
+                      <div class="__ss_field"><span class="__ss_label">左上 · 产品行</span><div class="__ss_row"><span class="__ss_input" style="flex:1"><input type="text" id="sBrand3a" value="HARNESS"></span><span class="__ss_status">+</span><span class="__ss_input" style="flex:0 0 60px"><input type="text" id="sBrand3b" value="OS"></span></div></div>
+                    </div>
+                    <div class="__ss_field"><span class="__ss_label">左上 · 副标题</span><span class="__ss_input"><input type="text" id="sBrand2" value="SYNTHESIZE INTELLIGENCE" maxlength="40"></span></div>
+                    <div class="__ss_two">
+                      <div class="__ss_field"><span class="__ss_label">黑幕 · 中文</span><span class="__ss_input"><input type="text" id="sOrgZh" value="深度求索"></span></div>
+                      <div class="__ss_field"><span class="__ss_label">黑幕 · 英文</span><span class="__ss_input __ss_inputMono"><input type="text" id="sOrgEn" value="DEEPSEEK"></span></div>
+                    </div>
+                    <div class="__ss_two">
+                      <div class="__ss_field"><span class="__ss_label">黑幕 · 小字</span><span class="__ss_input __ss_inputMono"><input type="text" id="sOrgSub" value="DEEPSEEK HARNESS"></span></div>
+                      <div class="__ss_field"><span class="__ss_label">终幕 · 黑框</span><span class="__ss_input"><input type="text" id="sWelcomeBox" value="DEEPSEEK HARNESS"></span></div>
+                    </div>
+                    <div class="__ss_field"><span class="__ss_label">右下 · 页脚</span><span class="__ss_input __ss_inputMono"><input type="text" id="sFooter" value="POWERED BY DEEPSEEK"></span></div>
+                  </div>
+                </section>
 
-          <div class="__ss_group">
-            <div class="__ss_groupTitle">文案</div>
-            <div class="__ss_two">
-              <div class="__ss_field"><label class="__ss_label">左上 · 主标题</label><input class="__ss_input" type="text" value="DEEPSEEK" id="sBrand1"></div>
-              <div class="__ss_field"><label class="__ss_label">左上 · 产品行</label><div class="__ss_row"><input class="__ss_input" type="text" value="HARNESS" id="sBrand3a" style="flex:1"><span class="__ss_status">+</span><input class="__ss_input" type="text" value="OS" id="sBrand3b" style="flex:0 0 60px"></div></div>
-            </div>
-            <div class="__ss_field"><label class="__ss_label">左上 · 副标题</label><input class="__ss_input" type="text" value="SYNTHESIZE INTELLIGENCE" maxlength="40" id="sBrand2"></div>
-            <div class="__ss_two">
-              <div class="__ss_field"><label class="__ss_label">黑幕 · 中文</label><input class="__ss_input" type="text" value="深度求索" id="sOrgZh"></div>
-              <div class="__ss_field"><label class="__ss_label">黑幕 · 英文</label><input class="__ss_input __ss_inputMono" type="text" value="DEEPSEEK" id="sOrgEn"></div>
-            </div>
-            <div class="__ss_two">
-              <div class="__ss_field"><label class="__ss_label">黑幕 · 小字</label><input class="__ss_input __ss_inputMono" type="text" value="DEEPSEEK HARNESS" id="sOrgSub"></div>
-              <div class="__ss_field"><label class="__ss_label">终幕 · 黑框</label><input class="__ss_input" type="text" value="DEEPSEEK HARNESS" id="sWelcomeBox"></div>
-            </div>
-            <div class="__ss_field"><label class="__ss_label">右下 · 页脚</label><input class="__ss_input __ss_inputMono" type="text" value="POWERED BY DEEPSEEK" id="sFooter"></div>
-          </div>
+                <section class="__ss_page" id="__ss_page_about" role="region" aria-labelledby="__ss_tab_about" hidden>
+                  <div class="__ss_group">
+                    <div class="__ss_groupTitle">关于</div>
+                    <div class="__ss_version">版本 v1.4.0</div>
+                    <div class="__ss_barFile">配置文件：C:\Users\&lt;you&gt;\.dsh\dsh-startup.json</div>
+                    <div class="__ss_hint">本仓库是 6shenhonghong9/dsh-startup-screen 的 fork；Canvas 光场等视觉方案参考 QIFANAI/dsh-startup-screen 1.6.0（MIT）。</div>
+                    <div class="__ss_hint">「恢复默认」会覆盖当前所有设置；「立即预览」使用当前修改但不写盘。</div>
+                  </div>
+                </section>
 
-          <div class="__ss_preview">
-            <div class="__ss_previewText">预览会按当前「已保存」的配置重播一次。<br><span style="opacity:.75">配置文件：C:\Users\&lt;you&gt;\.dsh\dsh-startup.json</span></div>
-            <button class="__ss_btn" id="sPreview" type="button">立即预览</button>
-          </div>
-
-          <div class="__ss_actions">
-            <button class="__ss_btn __ss_btnPrimary" id="sSave" type="button">保存</button>
-            <button class="__ss_btn" id="sReset" type="button">恢复默认</button>
-            <button class="__ss_btn" id="sReload" type="button">放弃修改</button>
-            <span class="__ss_status" id="sNotice"></span>
+              </div>
+              <div class="__ss_footer">
+                <div class="__ss_actions">
+                  <button class="__ss_btn __ss_btnPrimary" id="sSave" type="button">保存</button>
+                  <button class="__ss_btn" id="sPreview" type="button">立即预览</button>
+                  <button class="__ss_btn" id="sReset" type="button">恢复默认</button>
+                  <button class="__ss_btn" id="sReload" type="button">放弃修改</button>
+                  <span class="__ss_status" id="sNotice"></span>
+                </div>
+                <div class="__ss_barHint">离线预览不落盘；正式插件里保存到 <span class="__ss_barFile">~/.dsh/dsh-startup.json</span></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -450,19 +587,24 @@
     } catch (e) { return []; }
   }
   function fillVoices() {
-    var sel = document.getElementById('fVoiceName'), cur = sel.value;
     var list = readVoices();
-    sel.innerHTML = '<option value="">自动（优先女声）</option>';
-    list.forEach(function (v) {
-      var o = document.createElement('option');
-      o.value = v.name;
-      var ln = String(v.name || '').toLowerCase();
-      o.textContent = (hits(ln, NATURAL_HINTS) ? '★ ' : (hits(ln, FEMALE_HINTS) ? '♀ ' : '')) + v.name + ' · ' + (v.lang || '');
-      sel.appendChild(o);
+    ['fVoiceName', 'sVoiceName'].forEach(function (id) {
+      var sel = document.getElementById(id);
+      if (!sel) return;
+      var cur = sel.value;
+      sel.innerHTML = '<option value="">自动（优先神经网络女声）</option>';
+      list.forEach(function (v) {
+        var o = document.createElement('option');
+        o.value = v.name;
+        var ln = String(v.name || '').toLowerCase();
+        o.textContent = (hits(ln, NATURAL_HINTS) ? '★ ' : (hits(ln, FEMALE_HINTS) ? '♀ ' : '')) + v.name + ' · ' + (v.lang || '');
+        sel.appendChild(o);
+      });
+      if (cur) sel.value = cur;
     });
-    if (cur) sel.value = cur;
-    document.getElementById('voiceNote').textContent =
-      list.length ? ('本机 ' + list.length + ' 个音色') : '读不到音色';
+    var note = list.length ? ('本机 ' + list.length + ' 个音色') : '读不到音色';
+    $('voiceNote').textContent = note;
+    $('sVoiceNote').textContent = note;
   }
   fillVoices();
   try {
@@ -472,37 +614,49 @@
   } catch (e) {}
   setTimeout(fillVoices, 600);
 
-  function speakSample() {
+  function speakSample(lang, name, rate, pitch) {
     try {
       var ss = window.speechSynthesis;
       if (!ss) return;
       ss.cancel();
-      var lang = document.getElementById('fVoiceLang').value;
       var u = new SpeechSynthesisUtterance(lang === 'zh' ? '需要访问许可，验证通过。' : 'Access permission required.');
-      var name = document.getElementById('fVoiceName').value;
       var list = readVoices();
       for (var i = 0; i < list.length; i++) { if (list[i].name === name) { u.voice = list[i]; u.lang = list[i].lang; } }
       if (lang === 'zh' && !name) u.lang = 'zh-CN';
-      u.rate = Number(document.getElementById('fVRate').value);
-      u.pitch = Number(document.getElementById('fVPitch').value);
+      u.rate = rate;
+      u.pitch = pitch;
       ss.speak(u);
     } catch (e) {}
   }
-  document.getElementById('btnSample').addEventListener('click', function (e) {
+  function speakFromConsole() {
+    speakSample($('fVoiceLang').value, $('fVoiceName').value, Number($('fVRate').value), Number($('fVPitch').value));
+  }
+  function speakFromMock() {
+    speakSample($('sVoiceLang').value, $('sVoiceName').value, Number($('sVoiceRate').value), Number($('sVoicePitch').value));
+  }
+  $('btnSample').addEventListener('click', function (e) { e.stopPropagation(); speakFromConsole(); });
+  $('sSample').addEventListener('click', function (e) { e.stopPropagation(); speakFromMock(); });
+  $('btnAiPreset').addEventListener('click', function (e) {
     e.stopPropagation();
-    speakSample();
+    $('fVRate').value = 0.88;
+    $('fVPitch').value = 0.85;
+    $('fVoiceName').value = '';
+    $('fVoiceCue').checked = true;
+    $('fVLead').value = 240;
+    $('fVRateVal').textContent = '0.88×';
+    $('fVPitchVal').textContent = '0.85';
+    $('fVLeadVal').textContent = '240 ms';
+    speakFromConsole();
   });
-  document.getElementById('btnAiPreset').addEventListener('click', function (e) {
+  $('sPreset').addEventListener('click', function (e) {
     e.stopPropagation();
-    document.getElementById('fVRate').value = 0.88;
-    document.getElementById('fVPitch').value = 0.85;
-    document.getElementById('fVoiceName').value = '';
-    document.getElementById('fVoiceCue').checked = true;
-    document.getElementById('fVLead').value = 240;
-    document.getElementById('fVRateVal').textContent = '0.88×';
-    document.getElementById('fVPitchVal').textContent = '0.85';
-    document.getElementById('fVLeadVal').textContent = '240 ms';
-    speakSample();
+    $('sVoiceRate').value = 0.88;
+    $('sVoicePitch').value = 0.85;
+    $('sVoiceName').value = '';
+    $('sVoiceCue').checked = true;
+    $('sVLead').value = 240;
+    syncMockRanges();
+    speakFromMock();
   });
 
   $('btnReplay').addEventListener('click', replay);
@@ -528,41 +682,173 @@
   });
   $('settingsMock').addEventListener('keydown', function (e) { e.stopPropagation(); });
 
-  /* 设置面板里的"立即预览"：关掉弹窗 + 按面板里的值重播 */
-  function pullFromSettings() {
-    $('fIdentity').value = $('sIdentity').value;
-    $('fId').value = $('sId').value;
-    $('fLevel').value = $('sLevel').value;
-    $('fTheme').value = $('sTheme').value;
-    $('fSpeed').value = $('sSpeed').value;
-    $('fInteract').checked = $('sInteract').checked;
-    $('fSkip').checked = $('sSkip').checked;
-    applyConfig();
+  /* 五个页签：只切显示，不销毁控件 */
+  var PAGES = ['play', 'appearance', 'sound', 'content', 'about'];
+  function showPage(name) {
+    PAGES.forEach(function (p) {
+      var on = p === name;
+      var page = $('__ss_page_' + p);
+      var tab = $('__ss_tab_' + p);
+      if (page) page.hidden = !on;
+      if (tab) {
+        tab.classList.toggle('__ss_navItemActive', on);
+        if (on) tab.setAttribute('aria-current', 'page');
+        else tab.removeAttribute('aria-current');
+      }
+    });
   }
-  $('sIdentity').addEventListener('input', function () { $('fIdentity').value = this.value; });
-  $('sSpeed').addEventListener('input', function () {
-    $('sSpeedVal').textContent = Number(this.value).toFixed(2) + '×';
-    $('fSpeed').value = this.value;
-    $('fSpeedVal').textContent = Number(this.value).toFixed(2) + '×';
+  document.querySelectorAll('[data-page]').forEach(function (btn) {
+    btn.addEventListener('click', function () { showPage(this.dataset.page); });
   });
-  $('sPreview').addEventListener('click', function () { pullFromSettings(); closeSettings(); replay(); });
+
+  /* 面板控件 → 配置字段 */
+  var MOCK_FIELDS = {
+    sEnabled: ['enabled', 'checked'], sMode: ['mode', 'value'], sSpeed: ['speed', 'number'],
+    sInteract: ['requireInteraction', 'checked'], sSkip: ['allowSkip', 'checked'],
+    sTheme: ['theme', 'value'], sAmbient: ['ambient', 'checked'], sGlass: ['glass', 'checked'],
+    sGlassOpacity: ['glassOpacity', 'number'], sGlassBlur: ['glassBlur', 'number'],
+    sGlassSat: ['glassSaturate', 'number'], sGlassBackdrop: ['glassBackdropBlur', 'number'],
+    sAccent: ['accent', 'value'], sGlitchA: ['glitchA', 'value'], sGlitchB: ['glitchB', 'value'],
+    sVoice: ['voice', 'checked'], sVoiceSource: ['voiceSource', 'value'], sVoiceLang: ['voiceLang', 'value'],
+    sVoiceName: ['voiceName', 'value'], sVoiceRate: ['voiceRate', 'number'], sVoicePitch: ['voicePitch', 'number'],
+    sVoiceVol: ['voiceVolume', 'number'], sVLead: ['voiceLead', 'number'], sVoiceCue: ['voiceCue', 'checked'],
+    sSound: ['sound', 'checked'], sSfx: ['sfx', 'value'], sSoundVol: ['soundVolume', 'number'],
+    sIdentity: ['identity', 'value'], sId: ['identityId', 'value'], sLevel: ['accessLevel', 'value'],
+    sBrand1: ['brand1', 'value'], sBrand2: ['brand2', 'value'], sBrand3a: ['brand3a', 'value'], sBrand3b: ['brand3b', 'value'],
+    sOrgZh: ['orgZh', 'value'], sOrgEn: ['orgEn', 'value'], sOrgSub: ['orgSub', 'value'],
+    sWelcomeBox: ['welcomeBox', 'value'], sFooter: ['footer', 'value']
+  };
+
+  var RANGE_DISPLAY = {
+    sSpeed: ['sSpeedVal', function (v) { return Number(v).toFixed(2) + '×'; }],
+    sGlassOpacity: ['sGlassOpacityVal', function (v) { return Math.round(v * 100) + '%'; }],
+    sGlassBlur: ['sGlassBlurVal', function (v) { return Math.round(v) + ' px'; }],
+    sGlassSat: ['sGlassSatVal', function (v) { return Math.round(v) + '%'; }],
+    sGlassBackdrop: ['sGlassBackdropVal', function (v) { return Math.round(v) + ' px'; }],
+    sVoiceRate: ['sVoiceRateVal', function (v) { return Number(v).toFixed(2) + '×'; }],
+    sVoicePitch: ['sVoicePitchVal', function (v) { return Number(v).toFixed(2); }],
+    sVoiceVol: ['sVoiceVolVal', function (v) { return Math.round(v * 100) + '%'; }],
+    sVLead: ['sVLeadVal', function (v) { return Math.round(v) + ' ms'; }],
+    sSoundVol: ['sSoundVolVal', function (v) { return Math.round(v * 100) + '%'; }]
+  };
+
+  function paintRange(el) {
+    var lo = Number(el.min), hi = Number(el.max);
+    var pct = hi > lo ? ((Number(el.value) - lo) / (hi - lo)) * 100 : 0;
+    el.style.setProperty('--ss-fill', Math.max(0, Math.min(100, pct)) + '%');
+  }
+  function syncMockRanges() {
+    Object.keys(RANGE_DISPLAY).forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      paintRange(el);
+      $(RANGE_DISPLAY[id][0]).textContent = RANGE_DISPLAY[id][1](Number(el.value));
+    });
+  }
+  function syncGlass() {
+    var on = $('sGlass').checked;
+    $('sGlassDetails').hidden = !on;
+    $('sGlass').setAttribute('aria-checked', String(on));
+  }
+  function syncSwitches() {
+    document.querySelectorAll('.__ss_check input[role="switch"]').forEach(function (input) {
+      input.setAttribute('aria-checked', String(input.checked));
+    });
+  }
+  document.querySelectorAll('.__ss_check input[role="switch"]').forEach(function (input) {
+    input.addEventListener('change', function () {
+      this.setAttribute('aria-checked', String(this.checked));
+      if (this.id === 'sGlass') syncGlass();
+    });
+  });
+  Object.keys(RANGE_DISPLAY).forEach(function (id) {
+    var el = $(id);
+    if (el) el.addEventListener('input', syncMockRanges);
+  });
+
+  /* 把面板值写进运行时配置；控制台里同名字段也同步，避免两边打架 */
+  function readMock() {
+    var c = window.__DSH_STARTUP__;
+    Object.keys(MOCK_FIELDS).forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      var spec = MOCK_FIELDS[id];
+      c[spec[0]] = spec[1] === 'checked' ? el.checked : (spec[1] === 'number' ? Number(el.value) : el.value);
+    });
+    $('fIdentity').value = c.identity;
+    $('fId').value = c.identityId;
+    $('fLevel').value = c.accessLevel;
+    $('fTheme').value = c.theme;
+    $('fSpeed').value = c.speed;
+    $('fAmbient').checked = c.ambient !== false;
+    $('fGlass').checked = !!c.glass;
+    $('fInteract').checked = !!c.requireInteraction;
+    $('fSkip').checked = !!c.allowSkip;
+    $('fVoice').checked = c.voice !== false;
+    $('fVoiceLang').value = c.voiceLang || 'en';
+    $('fVoiceName').value = c.voiceName || '';
+    $('fVoiceCue').checked = c.voiceCue !== false;
+    $('fVLead').value = c.voiceLead == null ? 240 : c.voiceLead;
+    $('fVRate').value = c.voiceRate == null ? 0.88 : c.voiceRate;
+    $('fVPitch').value = c.voicePitch == null ? 0.85 : c.voicePitch;
+    $('fSound').checked = !!c.sound;
+    $('fSpeedVal').textContent = Number(c.speed).toFixed(2) + '×';
+    $('fVRateVal').textContent = Number(c.voiceRate).toFixed(2) + '×';
+    $('fVPitchVal').textContent = Number(c.voicePitch).toFixed(2);
+    $('fVLeadVal').textContent = c.voiceLead + ' ms';
+  }
+
+  /* 配置 → 面板控件（首次打开、放弃修改、恢复默认都走这里） */
+  function fillMockFromConfig() {
+    var c = window.__DSH_STARTUP__;
+    Object.keys(MOCK_FIELDS).forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      var spec = MOCK_FIELDS[id];
+      var v = c[spec[0]];
+      if (spec[1] === 'checked') el.checked = !!v;
+      else el.value = v == null ? '' : v;
+    });
+    syncSwitches();
+    syncGlass();
+    syncMockRanges();
+  }
+
+  function replayFromMock() {
+    readMock();
+    if (window.__DSH_STARTUP_API__ && window.__DSH_STARTUP_API__.replay) {
+      window.__DSH_STARTUP_API__.replay();
+    }
+  }
+
+  $('sPreview').addEventListener('click', function () { replayFromMock(); closeSettings(); });
   $('sSave').addEventListener('click', function () {
-    pullFromSettings();
+    readMock();
     $('sNotice').textContent = '已保存（离线预览不落盘）。正式插件里写 ~/.dsh/dsh-startup.json。';
   });
-  $('sReload').addEventListener('click', function () { $('sNotice').textContent = '已放弃修改。'; });
+  $('sReload').addEventListener('click', function () {
+    fillMockFromConfig();
+    $('sNotice').textContent = '已放弃修改。';
+  });
   $('sReset').addEventListener('click', function () {
-    $('sIdentity').value = 'JOYCE MOORE'; $('sId').value = '0087';
-    $('sLevel').value = '3'; $('sTheme').value = 'light';
-    $('sSpeed').value = 1; $('sSpeedVal').textContent = '1.00×';
-    $('sInteract').checked = true; $('sSkip').checked = true; $('sSound').checked = false;
-    $('sBrand1').value = 'DEEPSEEK'; $('sBrand2').value = 'SYNTHESIZE INTELLIGENCE';
-    $('sBrand3a').value = 'HARNESS'; $('sBrand3b').value = 'OS';
-    $('sOrgZh').value = '深度求索'; $('sOrgEn').value = 'DEEPSEEK';
-    $('sOrgSub').value = 'DEEPSEEK HARNESS'; $('sWelcomeBox').value = 'DEEPSEEK HARNESS';
-    $('sFooter').value = 'POWERED BY DEEPSEEK';
+    var c = window.__DSH_STARTUP__;
+    c.enabled = true; c.mode = 'session'; c.speed = 1;
+    c.requireInteraction = true; c.allowSkip = true;
+    c.theme = 'light'; c.ambient = true; c.glass = false;
+    c.glassOpacity = 0.75; c.glassBlur = 22; c.glassSaturate = 160; c.glassBackdropBlur = 28;
+    c.accent = '#ff7500'; c.glitchA = '#ff3b30'; c.glitchB = '#2971b8';
+    c.voice = true; c.voiceSource = 'asset'; c.voiceLang = 'en'; c.voiceName = '';
+    c.voiceRate = 0.88; c.voicePitch = 0.85; c.voiceVolume = 0.9; c.voiceLead = 240; c.voiceCue = true;
+    c.sound = true; c.sfx = 'audio'; c.soundVolume = 0.5;
+    c.identity = 'JOYCE MOORE'; c.identityId = '0087'; c.accessLevel = '3';
+    c.brand1 = 'DEEPSEEK'; c.brand2 = 'SYNTHESIZE INTELLIGENCE'; c.brand3a = 'HARNESS'; c.brand3b = 'OS';
+    c.orgZh = '深度求索'; c.orgEn = 'DEEPSEEK'; c.orgSub = 'DEEPSEEK HARNESS';
+    c.welcomeBox = 'DEEPSEEK HARNESS'; c.footer = 'POWERED BY DEEPSEEK';
+    fillMockFromConfig();
     $('sNotice').textContent = '已恢复默认。';
   });
+
+  fillMockFromConfig();
 
   /* 动画播完后控制台不遮住画面：挪到右下 */
   window.addEventListener('dsh-startup:done', function () {
