@@ -42,9 +42,8 @@ else{document.documentElement.classList.add('dsu-lock');setTimeout(function(){tr
  */
 export function injectIndex(host: HostEnv): () => void {
   const { webServer, version, factsCache, readConfig } = host
-  const tap = webServer.tapIndex
-  if (typeof tap !== 'function') return () => {}
-  return tap((html) => {
+  if (typeof webServer.tapIndex !== 'function') return () => {}
+  return webServer.tapIndex((html) => {
     if (!html || html.includes(ROUTES.splash)) return html
     const cfg: RuntimeConfig = { ...readConfig(), facts: factsSnapshot(factsCache) }
     const head =

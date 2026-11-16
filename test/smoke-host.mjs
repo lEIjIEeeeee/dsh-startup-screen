@@ -97,6 +97,7 @@ const sessionsService = {
 }
 const ctx = {
   webServer: {
+    taps: TAPS,
     register(route) {
       if (ROUTES.has(route.kind + ' ' + route.path))
         throw new Error('duplicate route ' + route.path)
@@ -104,8 +105,9 @@ const ctx = {
       return () => ROUTES.delete(route.kind + ' ' + route.path)
     },
     tapIndex(fn) {
-      TAPS.push(fn)
-      return () => TAPS.splice(TAPS.indexOf(fn), 1)
+      /* 真实宿主可能是类方法，故意依赖 this，防止调用时把 this 弄丢。 */
+      this.taps.push(fn)
+      return () => this.taps.splice(this.taps.indexOf(fn), 1)
     },
   },
   get(name) {

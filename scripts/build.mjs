@@ -12,7 +12,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { build } from 'esbuild'
-import { NS } from '../src/shared/routes.js'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = path.join(ROOT, 'src')
@@ -20,11 +19,12 @@ const LIB = path.join(ROOT, 'lib')
 const OUT = path.join(ROOT, 'lib.tmp')
 const BACKUP = path.join(ROOT, 'lib.bak')
 
-/* 版本号唯一来源是 package.json；构建时写进宿主和设置面板。 */
-const PLUGIN_VERSION = (() => {
-  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
-  return String(pkg.version || '0.0.0')
-})()
+/* 版本号和插件 id 的唯一来源都是 package.json。
+   id 与包名一致，直接取，避免构建脚本为了一个常量去 import TS 源码。 */
+const PKG = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
+const PLUGIN_VERSION = String(PKG.version || '0.0.0')
+const NS = String(PKG.name || '')
+if (!NS) fail('package.json 缺少 name')
 const DEFINE = { __PLUGIN_VERSION__: JSON.stringify(PLUGIN_VERSION) }
 
 /* 加载器在 factory 里注入这些模块。不标成 external 就会被重复打包，

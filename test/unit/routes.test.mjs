@@ -1,12 +1,19 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
 import { NS, ROUTE_BASE, ROUTES } from '../../src/shared/routes.js'
 import { localDayKey } from '../../src/shared/day.js'
+
+const PKG = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8'))
 
 test('所有路由都以统一前缀开头', () => {
   for (const [name, path] of Object.entries(ROUTES)) {
     assert.ok(path.startsWith(ROUTE_BASE + '/'), name + ' → ' + path)
   }
+})
+
+test('命名空间与包名一致', () => {
+  assert.equal(NS, PKG.name)
 })
 
 test('路由互不重复', () => {
