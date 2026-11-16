@@ -92,14 +92,14 @@ export default [
       // 默认解析器不认 .jsx / .ts，显式补上，否则 no-cycle 对 JSX / TS 模块完全失效。
       'import-x/extensions': ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx'],
       'import-x/resolver-next': [
-        createNodeResolver({
-          extensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'],
-        }),
-        // TS 文件里的 ./foo.js 要映射到 foo.ts；只靠 node resolver 会静默跳过循环检查。
+        // TS 文件里的 ./foo.js 要映射到 foo.ts；放在前面，避免同目录双份文件时命中旧的 .js。
         createTypeScriptImportResolver({
           project: ['./tsconfig.json', './tsconfig.client.json'],
           // 两个项目是有意的：Node 侧与浏览器侧 lib 不同，不合并成一个配置。
           noWarnOnMultipleProjects: true,
+        }),
+        createNodeResolver({
+          extensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'],
         }),
       ],
     },

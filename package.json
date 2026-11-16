@@ -36,15 +36,15 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "node --import tsx scripts/build.mjs",
+    "build": "tsx scripts/build.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "size": "node scripts/check-size.mjs",
     "pretest": "npm run build",
-    "test:unit": "node --import tsx --test \"test/unit/*.test.mjs\"",
-    "test": "npm run test:unit && node --import tsx test/smoke-host.mjs && node --import tsx test/smoke-splash.mjs && node --import tsx test/smoke-client.mjs && node --import tsx test/smoke-desktop-boot.mjs",
+    "test:unit": "tsx --test \"test/unit/*.test.mjs\"",
+    "test": "npm run test:unit && tsx test/smoke-host.mjs && tsx test/smoke-splash.mjs && tsx test/smoke-client.mjs && tsx test/smoke-desktop-boot.mjs",
     "verify": "npm run lint && npm run typecheck && npm test && npm run size",
     "release:check": "node scripts/release.mjs",
     "prepublishOnly": "npm run verify"
