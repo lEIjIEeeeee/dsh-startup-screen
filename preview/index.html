@@ -133,6 +133,7 @@
   .__ss_page { display: flex; flex-direction: column; gap: 14px; }
   .__ss_page[hidden] { display: none; }
   .__ss_details { border-top: 1px dashed var(--dsw-alias-border-l2); padding-top: 8px; display: flex; flex-direction: column; gap: 10px; }
+  .__ss_details[hidden] { display: none; }
   .__ss_details summary { cursor: pointer; font-size: 12px; color: var(--dsw-alias-label-secondary); }
   .__ss_field { display: flex; flex-direction: column; gap: 6px; }
   .__ss_label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--dsw-alias-label-primary); }
@@ -218,6 +219,17 @@
     requireInteraction: true,
     allowSkip: true,
     sound: false,
+    soundVolume: 0.5,
+    voice: true,
+    voiceSource: 'asset',
+    voiceLang: 'en',
+    voiceName: '',
+    voiceRate: 0.88,
+    voicePitch: 0.85,
+    voiceVolume: 0.9,
+    voiceCue: true,
+    voiceLead: 240,
+    sfx: 'audio',
     ambient: true,
     glass: false, glassOpacity: 0.75, glassBlur: 22, glassSaturate: 160, glassBackdropBlur: 28,
     facts: { ready: true, profile: 'DESKTOP', version: '0.2.1', bundleCount: 18, model: 'deepseek-chat', sandbox: 'workspace-write', sessions: 3, sessionsArchived: 2, sessionsTotal: 5, hash: 'A1B2C3D4' },
@@ -656,6 +668,7 @@
     $('sVoiceName').value = '';
     $('sVoiceCue').checked = true;
     $('sVLead').value = 240;
+    syncSwitches();
     syncMockRanges();
     speakFromMock();
   });

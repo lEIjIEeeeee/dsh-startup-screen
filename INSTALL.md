@@ -118,7 +118,7 @@ lib/client.js         设置面板（浏览器半）
 lib/assets/           真声台词 x5 + 终幕欢迎语 + 界面音效 x2
 cordis.patch.yml      bundle 层声明
 preview/index.html    离线预览页
-test/                 单元测试 + 四套冒烟测试（529 项断言）
+test/                 单元测试 + 四套冒烟测试（529 项；运行需源码仓库的 src/ 与 scripts/）
 README.md             完整文档
 AUDIO-FIELDS.md       需要音频的字段清单
 ```

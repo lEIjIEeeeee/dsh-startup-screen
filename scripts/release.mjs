@@ -55,21 +55,24 @@ const names = new Set(files)
 console.log('[release] ' + info.filename)
 console.log('[release] ' + files.length + ' 个文件，压缩包 ' + Math.round(info.size / 1024) + ' KB')
 
-const required = [
+/* 运行时必需的文件单独点名；其余靠下面的 files 白名单逐条核对。 */
+const critical = [
   'lib/index.js',
   'lib/splash.js',
   'lib/splash.css',
   'lib/client.js',
   'cordis.patch.yml',
   'preview/index.html',
-  'README.md',
-  'INSTALL.md',
-  'DESKTOP.md',
-  'CHANGELOG.md',
-  'LICENSE',
-  '安装.cmd',
 ]
-for (const name of required) check(names.has(name), '包含 ' + name)
+for (const name of critical) check(names.has(name), '包含 ' + name)
+
+/* package.json 的 files 是发布清单的唯一来源：每条都要能在 tarball 里找到，
+   避免手工维护的 required 列表漏掉新增文件。 */
+for (const entry of Array.isArray(pkg.files) ? pkg.files : []) {
+  const prefix = entry.replace(/\/+$/, '') + '/'
+  const hit = files.some((name) => name === entry || name.startsWith(prefix))
+  check(hit, 'files 条目已打包：' + entry)
+}
 
 const audio = files.filter((name) => /^lib\/assets\/.+\.mp3$/.test(name))
 check(audio.length >= 8, '包含音频素材（实际 ' + audio.length + ' 个）')

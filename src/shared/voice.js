@@ -75,6 +75,21 @@ export function hits(name, list) {
 }
 
 /**
+ * 语种前缀是否吻合；`want` 是 'en' / 'zh' 这样的两字母前缀。
+ *
+ * @param {string|undefined} lang
+ * @param {string} want
+ * @returns {boolean}
+ */
+export function langMatches(lang, want) {
+  return (
+    String(lang || '')
+      .toLowerCase()
+      .indexOf(want) === 0
+  )
+}
+
+/**
  * 给一个音色打分；`want` 传 'en' / 'zh' 这样的两字母前缀。
  *
  * @param {{ name?: string, lang?: string, localService?: boolean, default?: boolean }} voice
@@ -83,12 +98,11 @@ export function hits(name, list) {
  */
 export function scoreVoice(voice, want) {
   const name = String(voice.name || '').toLowerCase()
-  const lang = String(voice.lang || '').toLowerCase()
   let sc = 0
   if (hits(name, NATURAL_HINTS)) sc += 60
   if (hits(name, FEMALE_HINTS)) sc += 40
   if (hits(name, MALE_HINTS)) sc -= 45
-  if (lang.indexOf(want) === 0) sc += 25
+  if (langMatches(voice.lang, want)) sc += 25
   if (voice.localService) sc += 4 /* 本地音色起播快，不会先卡半秒 */
   if (voice.default) sc += 3
   return sc
@@ -104,12 +118,7 @@ export function scoreVoice(voice, want) {
  */
 export function pickVoice(voices, want) {
   if (!voices || !voices.length) return null
-  let pool = voices.filter(
-    (v) =>
-      String(v.lang || '')
-        .toLowerCase()
-        .indexOf(want) === 0,
-  )
+  let pool = voices.filter((v) => langMatches(v.lang, want))
   if (!pool.length) pool = voices.slice()
   let best = null
   let bestScore = -1e9
@@ -135,14 +144,7 @@ export function pickVoice(voices, want) {
 export function findVoiceByName(voices, name, want) {
   if (!name || !voices || !voices.length) return null
   for (const voice of voices) {
-    if (
-      voice.name === name &&
-      String(voice.lang || '')
-        .toLowerCase()
-        .indexOf(want) === 0
-    ) {
-      return voice
-    }
+    if (voice.name === name && langMatches(voice.lang, want)) return voice
   }
   return null
 }

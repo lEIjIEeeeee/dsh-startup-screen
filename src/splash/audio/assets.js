@@ -1,5 +1,5 @@
 import { ROUTES } from '../../shared/routes.js'
-import { ASSET_TAIL_MS } from '../core/constants.js'
+import { ASSET_FETCH_MS, ASSET_TAIL_MS } from '../core/constants.js'
 import { clamp } from '../core/clamp.js'
 
 /**
@@ -13,7 +13,12 @@ import { clamp } from '../core/clamp.js'
 function fetchBuffer(engine, name, force) {
   return Promise.resolve()
     .then(function () {
-      return fetch(ROUTES.asset + '/' + name + '.mp3')
+      /* 路由不可达时 fetch 可能长时间不返回；给个上限，到点按失败回落。 */
+      const signal =
+        typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+          ? AbortSignal.timeout(ASSET_FETCH_MS)
+          : undefined
+      return fetch(ROUTES.asset + '/' + name + '.mp3', signal ? { signal } : undefined)
     })
     .then(function (r) {
       return r.ok ? r.arrayBuffer() : null

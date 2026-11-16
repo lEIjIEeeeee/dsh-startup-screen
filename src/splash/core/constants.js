@@ -17,3 +17,6 @@ export const FACTS_POLL_MS = 600
 
 /** 音频素材 onended 失联时的额外等待（毫秒）；等完按已知时长放行。 */
 export const ASSET_TAIL_MS = 1500
+
+/** 单个音频素材的拉取上限（毫秒）；路由卡住时直接回落合成音。 */
+export const ASSET_FETCH_MS = 5000

@@ -75,7 +75,11 @@ export function createFactsCache() {
  * @returns {Facts}
  */
 export function factsSnapshot(cache) {
-  return cache.value || { ready: false }
+  const facts = cache.value || { ready: false }
+  /* 超时之后晚到的 model / bundles 仍会补进 facts；每次出快照重算指纹，
+     避免 hash 与随行的字段对不上。会话数不参与指纹。 */
+  if (facts.ready) facts.hash = factsHash(facts)
+  return facts
 }
 
 /**
@@ -247,6 +251,7 @@ export function collectFacts(ctx, cache) {
 export async function refreshSessions(ctx, cache) {
   const facts = cache.value
   if (!facts) return
-  await readSessions(ctx, facts)
+  /* 轮询路径同样要有上限：sessions 服务卡住时不能把 /facts 一起拖死。 */
+  await withTimeout(readSessions(ctx, facts))
   Object.assign(facts, readRegistryCounts(ctx))
 }
