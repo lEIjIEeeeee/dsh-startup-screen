@@ -13,5 +13,7 @@ export function hexToRgba(hex, alpha) {
   }
   const n = parseInt(h, 16)
   if (!isFinite(n) || h.length !== 6) return 'rgba(255, 117, 0, ' + alpha + ')'
-  return 'rgba(' + ((n >> 16) & 255) + ', ' + ((n >> 8) & 255) + ', ' + (n & 255) + ', ' + alpha + ')'
+  return (
+    'rgba(' + ((n >> 16) & 255) + ', ' + ((n >> 8) & 255) + ', ' + (n & 255) + ', ' + alpha + ')'
+  )
 }

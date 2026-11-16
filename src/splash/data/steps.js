@@ -24,7 +24,7 @@ export const STEPS = [
     btnZh: '授予访问权限',
     btnEn: 'GRANT ACCESS',
     hold: 900,
-    progress: 0.34
+    progress: 0.34,
   },
   {
     zh: '身份资料确认',
@@ -38,7 +38,7 @@ export const STEPS = [
     btnZh: '确认身份',
     btnEn: 'CONFIRM IDENTITY',
     hold: 700,
-    progress: 0.5
+    progress: 0.5,
   },
   {
     zh: '接收访问需求',
@@ -51,7 +51,7 @@ export const STEPS = [
     action: 'auto',
     hold: 1200,
     progress: 0.66,
-    assembleLogo: true
+    assembleLogo: true,
   },
   {
     zh: '开始读取权限',
@@ -64,7 +64,7 @@ export const STEPS = [
     action: 'auto',
     hold: 1200,
     progress: 0.8,
-    hex: true
+    hex: true,
   },
   {
     zh: '读取完毕 · 核验通过',
@@ -77,6 +77,6 @@ export const STEPS = [
     action: 'auto',
     hold: 1600,
     progress: 0.93,
-    reticle: true
-  }
+    reticle: true,
+  },
 ]

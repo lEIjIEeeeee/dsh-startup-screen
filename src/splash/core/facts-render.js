@@ -10,7 +10,8 @@ export function paintMeta(ui, facts) {
     ui.meta1.textContent = 'REV 0.1.0 · WEB PROFILE'
     return
   }
-  ui.meta1.textContent = 'REV ' + factText(facts.version) + ' · ' + factText(facts.profile) + ' PROFILE'
+  ui.meta1.textContent =
+    'REV ' + factText(facts.version) + ' · ' + factText(facts.profile) + ' PROFILE'
 }
 
 /** 左侧两行读数。 */

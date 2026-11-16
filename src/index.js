@@ -42,7 +42,9 @@ function resolveWebServer(ctx) {
   try {
     const viaGet = typeof ctx.get === 'function' ? ctx.get('webServer') : undefined
     if (viaGet) return viaGet
-  } catch (err) { /* 取不到就当没有 */ }
+  } catch (err) {
+    /* 取不到就当没有 */
+  }
   return ctx.webServer
 }
 
@@ -61,7 +63,11 @@ function routeAbilities(server) {
 function apply(ctx) {
   /* 每次 apply 一份新缓存：宿主热重载时不会沿用旧 ctx 采到的快照。 */
   const factsCache = createFactsCache()
-  try { collectFacts(ctx, factsCache) } catch (err) { /* 采事实失败绝不影响插件 */ }
+  try {
+    collectFacts(ctx, factsCache)
+  } catch (err) {
+    /* 采事实失败绝不影响插件 */
+  }
   /** @type {Array<() => void>} */
   const disposers = []
   const webServer = resolveWebServer(ctx)
@@ -72,10 +78,14 @@ function apply(ctx) {
   if (!canRegister) {
     try {
       ctx.logger?.warn?.(
-        '[' + NS + '] 当前环境没有可注册路由的 webServer（桌面端可能直接下发页面）；' +
-        '宿主侧跳过路由与首屏注入，改由浏览器侧自己启动动画。'
+        '[' +
+          NS +
+          '] 当前环境没有可注册路由的 webServer（桌面端可能直接下发页面）；' +
+          '宿主侧跳过路由与首屏注入，改由浏览器侧自己启动动画。',
       )
-    } catch (err) { /* 日志失败不影响加载 */ }
+    } catch (err) {
+      /* 日志失败不影响加载 */
+    }
     return
   }
 
@@ -98,12 +108,20 @@ function apply(ctx) {
     if (canTap) disposers.push(injectIndex(host))
     ctx.effect(() => () => {
       for (const dispose of disposers) {
-        try { dispose() } catch (err) { /* noop */ }
+        try {
+          dispose()
+        } catch (err) {
+          /* noop */
+        }
       }
     })
   } catch (err) {
     for (const dispose of disposers) {
-      try { dispose() } catch (e) { /* noop */ }
+      try {
+        dispose()
+      } catch (e) {
+        /* noop */
+      }
     }
     throw err
   }

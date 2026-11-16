@@ -425,6 +425,13 @@ check(
   '/facts 会重采 sessions',
   /refreshSessions\(host\.ctx, host\.factsCache\)/.test(hostSrcForFacts),
 )
+const hostFactsSrc = fs.readFileSync(path.join(PLUGIN_ROOT, 'src', 'host', 'facts.js'), 'utf8')
+check(
+  'facts 并行读取且单个服务有超时',
+  /READ_TIMEOUT_MS/.test(hostFactsSrc) &&
+    /Promise\.all\(\[/.test(hostFactsSrc) &&
+    /withTimeout\(readModel/.test(hostFactsSrc),
+)
 r = await call('exact /dsh-startup/config')
 check('config 响应也带 facts', !!JSON.parse(r.body).facts)
 

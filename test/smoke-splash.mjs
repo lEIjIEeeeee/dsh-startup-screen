@@ -689,8 +689,10 @@ console.log('\n[9] 右下角身份读数：不压版心、窄窗口不丢、第 
     /@media \(max-width: 1400px\) and \(min-width: 1180px\)[\s\S]{0,500}\.dsu-checks\s*\{[\s\S]{0,200}right: 20px;[\s\S]{0,80}top: 50%;[\s\S]{0,160}width: 230px;/.test(
       css,
     ) &&
-      /\.dsu-hex \{ display: none; \}/.test(css) &&
-      /@media \(max-width: 1179px\) \{ \.dsu-checks \{ display: none; \} \}/.test(css),
+      /\.dsu-hex\s*\{\s*display:\s*none;?\s*\}/.test(css) &&
+      /@media \(max-width: 1179px\)\s*\{\s*\.dsu-checks\s*\{\s*display:\s*none;?\s*\}\s*\}/.test(
+        css,
+      ),
   )
   check(
     '第 3 幕起（i >= 2）就收掉身份读数',
@@ -913,6 +915,24 @@ console.log('\n[12] 卡死防线与重播隔离（外部审查发现的坑）')
     'audio.confirm 只定义一次',
     (src.match(/(?:confirm: function \(\)|confirm\(\) \{)/g) || []).length === 1,
     String((src.match(/(?:confirm: function \(\)|confirm\(\) \{)/g) || []).length),
+  )
+
+  /* ⑥ 揭幕之后链上再走到等待，也不能注册新监听或复活看门狗 */
+  check(
+    'release 后闸门永久打开',
+    /let released = false/.test(src) &&
+      /released = true/.test(src) &&
+      /if \(released \|\| isSkipped\(\)\) return resolve\(\)/.test(src),
+  )
+  check('闸门不再累积已触发的计时器', /timers\.delete\(timer\)/.test(src))
+  check(
+    '素材失败不永久缓存，后续可重试',
+    /delete pending\[name\]/.test(src) && /delete fetching\[name\]/.test(src),
+  )
+  check(
+    '运行时音色选择复用 shared 的查找与打分',
+    /findVoiceByName\(state\.voices, config\.voiceName, want\)/.test(src) &&
+      /pickVoice\(state\.voices, want\)/.test(src),
   )
 }
 
@@ -1167,9 +1187,9 @@ console.log('\n[17] P0 中文清晰度与逐字解码')
   const zhLine = (css.match(/--dsu-zh:[^;]+;/) || [''])[0]
   check(
     '中文优先 Noto Sans SC',
-    zhLine.indexOf('"Noto Sans SC"') !== -1 &&
-      (zhLine.indexOf('"Microsoft YaHei"') === -1 ||
-        zhLine.indexOf('"Noto Sans SC"') < zhLine.indexOf('"Microsoft YaHei"')),
+    /['"]Noto Sans SC['"]/.test(zhLine) &&
+      (zhLine.indexOf('Microsoft YaHei') === -1 ||
+        zhLine.indexOf('Noto Sans SC') < zhLine.indexOf('Microsoft YaHei')),
   )
   check('主字使用中文栈', /\.dsu-status\s*\{[\s\S]{0,500}font-family:\s*var\(--dsu-zh\)/.test(css))
   check('主字真实 500 字重', /\.dsu-status\s*\{[\s\S]{0,500}font-weight:\s*500/.test(css))

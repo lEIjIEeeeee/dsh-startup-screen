@@ -73,7 +73,10 @@ export function createField(options) {
     )
     const H = Math.max(
       1,
-      Number(canvas.clientHeight) || Number(root.clientHeight) || Number(window.innerHeight) || 1020,
+      Number(canvas.clientHeight) ||
+        Number(root.clientHeight) ||
+        Number(window.innerHeight) ||
+        1020,
     )
     canvas.width = Math.round(W * dpr)
     canvas.height = Math.round(H * dpr)

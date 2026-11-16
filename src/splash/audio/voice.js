@@ -12,7 +12,11 @@ import { createTts } from './tts.js'
 export function createVoice(options) {
   const config = options.config
   const sfx = options.sfx
-  const isFinished = options.isFinished || function () { return false }
+  const isFinished =
+    options.isFinished ||
+    function () {
+      return false
+    }
   const tts = createTts(options)
 
   /**

@@ -76,7 +76,8 @@ function drawRibbon(scene, r, now) {
   /* 光带上的读取头：沿同一条贝塞尔曲线移动的小光点 */
   const u = (((now * 0.000034 + r.ph / (Math.PI * 2)) % 1) + 1) % 1
   const v = 1 - u
-  const px = v * v * v * x0 + 3 * v * v * u * (W * 0.28) + 3 * v * u * u * (W * 0.7) + u * u * u * x1
+  const px =
+    v * v * v * x0 + 3 * v * v * u * (W * 0.28) + 3 * v * u * u * (W * 0.7) + u * u * u * x1
   const py = v * v * v * y0 + 3 * v * v * u * c1 + 3 * v * u * u * c2 + u * u * u * y1
   const cdx = (px / W - 0.5) * 2
   const cdy = (py / H - 0.45) * 2

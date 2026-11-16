@@ -3,6 +3,32 @@ import { ASSET_TAIL_MS } from '../core/constants.js'
 import { clamp } from '../core/clamp.js'
 
 /**
+ * 拉取并解码一段素材；任何失败都返回 null，由调用方决定降级方式。
+ *
+ * @param {ReturnType<typeof import('./engine.js').createEngine>} engine
+ * @param {string} name
+ * @param {boolean} [force] 语音素材要无视「界面音效」开关
+ * @returns {Promise<any>}
+ */
+function fetchBuffer(engine, name, force) {
+  return Promise.resolve()
+    .then(function () {
+      return fetch(ROUTES.asset + '/' + name + '.mp3')
+    })
+    .then(function (r) {
+      return r.ok ? r.arrayBuffer() : null
+    })
+    .then(function (ab) {
+      if (!ab) return null
+      const c = engine.ac(force)
+      return c ? c.decodeAudioData(ab) : null
+    })
+    .catch(function () {
+      return null
+    })
+}
+
+/**
  * 音频素材：从 /dsh-startup/asset/ 拉真素材并解码缓存；
  * 拿不到就返回失败，由调用方回落到合成音。
  *
@@ -18,23 +44,10 @@ export function createAssets(options) {
     if (config.sfx === 'synth') return
     if (buffers[name] || fetching[name]) return
     fetching[name] = true
-    try {
-      fetch(ROUTES.asset + '/' + name + '.mp3')
-        .then(function (r) {
-          return r.ok ? r.arrayBuffer() : null
-        })
-        .then(function (ab) {
-          return ab ? engine.ac().decodeAudioData(ab) : null
-        })
-        .then(function (buf) {
-          if (buf) buffers[name] = buf
-        })
-        .catch(function () {
-          /* 没素材就走合成音 */
-        })
-    } catch (e) {
-      /* fetch 不存在也一样降级 */
-    }
+    fetchBuffer(engine, name).then(function (buf) {
+      if (buf) buffers[name] = buf
+      delete fetching[name]
+    })
   }
 
   /* 素材预加载：fetch + decodeAudioData 不需要用户手势，所以加载时就拉，
@@ -44,32 +57,18 @@ export function createAssets(options) {
     if (buffers[name]) return Promise.resolve(true)
     if (pending[name]) return pending[name]
     if (config.voiceSource === 'tts') return Promise.resolve(false)
-    pending[name] = new Promise(function (resolve) {
-      try {
-        fetch(ROUTES.asset + '/' + name + '.mp3')
-          .then(function (r) {
-            return r.ok ? r.arrayBuffer() : null
-          })
-          .then(function (ab) {
-            if (!ab) return null
-            return engine.ac(true).decodeAudioData(ab)
-          })
-          .then(function (buf) {
-            if (buf) {
-              buffers[name] = buf
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          })
-          .catch(function () {
-            resolve(false)
-          })
-      } catch (e) {
-        resolve(false)
-      }
+    /* 失败不缓存：路由刚注册好或网络抖动后，下一句还能重试；
+       成功则留在 buffers 里，后续直接命中。 */
+    const p = fetchBuffer(engine, name, true).then(function (buf) {
+      if (!buf) return false
+      buffers[name] = buf
+      return true
     })
-    return pending[name]
+    pending[name] = p
+    p.then(function (ok) {
+      if (!ok) delete pending[name]
+    })
+    return p
   }
 
   /** 播素材并等它播完，resolve 实际时长(ms)。拿不到素材 resolve 0。
@@ -103,9 +102,12 @@ export function createAssets(options) {
           fin(Math.round(buf.duration * 1000))
         }
         src.start()
-        setTimeout(function () {
-          fin(Math.round(buf.duration * 1000))
-        }, buf.duration * 1000 + ASSET_TAIL_MS)
+        setTimeout(
+          function () {
+            fin(Math.round(buf.duration * 1000))
+          },
+          buf.duration * 1000 + ASSET_TAIL_MS,
+        )
       } catch (e) {
         fin(0)
       }
@@ -124,10 +126,7 @@ export function createAssets(options) {
       const src = c.createBufferSource()
       src.buffer = buf
       const g = c.createGain()
-      g.gain.value = Math.min(
-        1,
-        (gain == null ? 0.55 : gain) * clamp(config.soundVolume, 0, 1) * 2,
-      )
+      g.gain.value = Math.min(1, (gain == null ? 0.55 : gain) * clamp(config.soundVolume, 0, 1) * 2)
       src.connect(g)
       g.connect(c.destination)
       src.start()

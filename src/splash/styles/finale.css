@@ -13,7 +13,9 @@
   pointer-events: none;
   transition: opacity 420ms ease;
 }
-.dsu-welcome.dsu-in { opacity: 1; }
+.dsu-welcome.dsu-in {
+  opacity: 1;
+}
 .dsu-w1 {
   font-size: 40px;
   font-weight: 700;
@@ -38,7 +40,11 @@
   align-items: center;
   gap: 10px;
 }
-.dsu-w3 svg { width: 76px; height: 76px; color: var(--dsu-ink); }
+.dsu-w3 svg {
+  width: 76px;
+  height: 76px;
+  color: var(--dsu-ink);
+}
 .dsu-w3 span {
   font-family: var(--dsu-mono);
   font-size: 10px;
@@ -59,7 +65,9 @@
    做法：复制层带 0.5px 模糊 + 分片 clip-path 位移 + 混合模式，
    读起来像镜头色散而不是"三个字叠一起"。常态必须 opacity:0，
    否则动画跑完红蓝副本会一直压在文字上。 */
-.dsu-glitch { position: relative; }
+.dsu-glitch {
+  position: relative;
+}
 .dsu-glitch[data-text]::before,
 .dsu-glitch[data-text]::after {
   content: attr(data-text);
@@ -70,32 +78,90 @@
   opacity: 0;
   pointer-events: none;
   filter: blur(0.5px);
-  mix-blend-mode: multiply;      /* 浅底深字：做减色边缘 */
+  mix-blend-mode: multiply; /* 浅底深字：做减色边缘 */
   clip-path: inset(0 0 100% 0);
 }
-.dsu-glitch[data-text]::before { color: var(--dsu-glitch-a); }
-.dsu-glitch[data-text]::after { color: var(--dsu-glitch-b); }
+.dsu-glitch[data-text]::before {
+  color: var(--dsu-glitch-a);
+}
+.dsu-glitch[data-text]::after {
+  color: var(--dsu-glitch-b);
+}
 /* 黑底白字那块要换成加色，否则乘完是黑 */
 .dsu-glitch.dsu-glitch-box::before,
-.dsu-glitch.dsu-glitch-box::after { mix-blend-mode: screen; }
+.dsu-glitch.dsu-glitch-box::after {
+  mix-blend-mode: screen;
+}
 
-.dsu-glitch.dsu-on::before { animation: dsu-gx 430ms steps(3, end) 2 both; }
-.dsu-glitch.dsu-on::after { animation: dsu-gy 430ms steps(3, end) 2 both; }
+.dsu-glitch.dsu-on::before {
+  animation: dsu-gx 430ms steps(3, end) 2 both;
+}
+.dsu-glitch.dsu-on::after {
+  animation: dsu-gy 430ms steps(3, end) 2 both;
+}
 @keyframes dsu-gx {
-  0% { transform: translate(0, 0); opacity: 0; clip-path: inset(0 0 100% 0); }
-  14% { transform: translate(-3px, 0); opacity: 0.7; clip-path: inset(6% 0 68% 0); }
-  34% { transform: translate(2px, 0); opacity: 0.5; clip-path: inset(54% 0 28% 0); }
-  56% { transform: translate(-2px, 0); opacity: 0.6; clip-path: inset(22% 0 56% 0); }
-  80% { transform: translate(1px, 0); opacity: 0.32; clip-path: inset(72% 0 10% 0); }
-  100% { transform: none; opacity: 0; clip-path: inset(0 0 100% 0); }
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
+  14% {
+    transform: translate(-3px, 0);
+    opacity: 0.7;
+    clip-path: inset(6% 0 68% 0);
+  }
+  34% {
+    transform: translate(2px, 0);
+    opacity: 0.5;
+    clip-path: inset(54% 0 28% 0);
+  }
+  56% {
+    transform: translate(-2px, 0);
+    opacity: 0.6;
+    clip-path: inset(22% 0 56% 0);
+  }
+  80% {
+    transform: translate(1px, 0);
+    opacity: 0.32;
+    clip-path: inset(72% 0 10% 0);
+  }
+  100% {
+    transform: none;
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
 }
 @keyframes dsu-gy {
-  0% { transform: translate(0, 0); opacity: 0; clip-path: inset(0 0 100% 0); }
-  14% { transform: translate(3px, 0); opacity: 0.7; clip-path: inset(62% 0 14% 0); }
-  34% { transform: translate(-2px, 0); opacity: 0.5; clip-path: inset(10% 0 66% 0); }
-  56% { transform: translate(2px, 0); opacity: 0.6; clip-path: inset(48% 0 34% 0); }
-  80% { transform: translate(-1px, 0); opacity: 0.32; clip-path: inset(30% 0 52% 0); }
-  100% { transform: none; opacity: 0; clip-path: inset(0 0 100% 0); }
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
+  14% {
+    transform: translate(3px, 0);
+    opacity: 0.7;
+    clip-path: inset(62% 0 14% 0);
+  }
+  34% {
+    transform: translate(-2px, 0);
+    opacity: 0.5;
+    clip-path: inset(10% 0 66% 0);
+  }
+  56% {
+    transform: translate(2px, 0);
+    opacity: 0.6;
+    clip-path: inset(48% 0 34% 0);
+  }
+  80% {
+    transform: translate(-1px, 0);
+    opacity: 0.32;
+    clip-path: inset(30% 0 52% 0);
+  }
+  100% {
+    transform: none;
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
 }
 
 /* ── 收尾：径向光晕 + 变形宽银幕光条 + 暗角 + 机位后撤 ─────────────────── */
@@ -116,7 +182,9 @@
     radial-gradient(122% 104% at 50% 42%, rgba(0, 0, 0, 0) 48%, rgba(0, 0, 0, 0.42) 100%),
     radial-gradient(60% 40% at 50% 45%, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%);
 }
-.dsu-vignette.dsu-in { opacity: 1; }
+.dsu-vignette.dsu-in {
+  opacity: 1;
+}
 
 /* 径向光晕：不是整屏糊白，而是从中心炸开一朵光，边缘仍留暖色 */
 .dsu-bloom {
@@ -140,12 +208,26 @@
     rgba(255, 255, 255, 0) 78%
   );
 }
-.dsu-bloom.dsu-go { animation: dsu-bloom 1250ms cubic-bezier(0.22, 0.68, 0.2, 1) forwards; }
+.dsu-bloom.dsu-go {
+  animation: dsu-bloom 1250ms cubic-bezier(0.22, 0.68, 0.2, 1) forwards;
+}
 @keyframes dsu-bloom {
-  0% { opacity: 0; transform: scale(0.08); }
-  20% { opacity: 1; transform: scale(0.42); }
-  58% { opacity: 0.96; transform: scale(0.96); }
-  100% { opacity: 0; transform: scale(1.42); }
+  0% {
+    opacity: 0;
+    transform: scale(0.08);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(0.42);
+  }
+  58% {
+    opacity: 0.96;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.42);
+  }
 }
 
 /* 变形宽银幕光条：横着抽出来的一条细光，光晕最亮那一刻扫过 */
@@ -169,12 +251,30 @@
     rgba(255, 255, 255, 0) 100%
   );
 }
-.dsu-streak.dsu-go { animation: dsu-streak 1000ms cubic-bezier(0.2, 0.78, 0.2, 1) forwards; }
+.dsu-streak.dsu-go {
+  animation: dsu-streak 1000ms cubic-bezier(0.2, 0.78, 0.2, 1) forwards;
+}
 @keyframes dsu-streak {
-  0% { opacity: 0; width: 0; height: 1px; }
-  26% { opacity: 1; width: 62vw; height: 3px; }
-  60% { opacity: 0.6; width: 96vw; height: 2px; }
-  100% { opacity: 0; width: 132vw; height: 1px; }
+  0% {
+    opacity: 0;
+    width: 0;
+    height: 1px;
+  }
+  26% {
+    opacity: 1;
+    width: 62vw;
+    height: 3px;
+  }
+  60% {
+    opacity: 0.6;
+    width: 96vw;
+    height: 2px;
+  }
+  100% {
+    opacity: 0;
+    width: 132vw;
+    height: 1px;
+  }
 }
 
 /* 光晕最亮那一刻：文字带一点青色光晕（halation），颗粒变粗。
@@ -184,19 +284,24 @@
 #dsh-startup-root.dsu-peak .dsu-w4 {
   color: var(--dsu-glitch-b);
   text-shadow: 0 0 14px rgba(41, 113, 184, 0.55);
-  transition: color 260ms ease, text-shadow 260ms ease;
+  transition:
+    color 260ms ease,
+    text-shadow 260ms ease;
 }
 #dsh-startup-root.dsu-peak .dsu-w3 svg {
   filter: drop-shadow(0 0 10px rgba(41, 113, 184, 0.45));
 }
-#dsh-startup-root.dsu-peak .dsu-grain { opacity: 0.11; }
+#dsh-startup-root.dsu-peak .dsu-grain {
+  opacity: 0.11;
+}
 
 /* 揭幕：整个机位后撤 + 轻微失焦，比单纯淡出更有镜头感 */
 #dsh-startup-root.dsu-handoff {
   transform: scale(1.035);
   filter: blur(5px);
   opacity: 0;
-  transition: opacity 780ms cubic-bezier(0.4, 0, 0.2, 1),
-    transform 780ms cubic-bezier(0.4, 0, 0.2, 1), filter 780ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 780ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 780ms cubic-bezier(0.4, 0, 0.2, 1),
+    filter 780ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-

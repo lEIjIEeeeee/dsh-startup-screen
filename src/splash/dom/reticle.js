@@ -20,8 +20,20 @@ function arc(r, a0, a1, cls, cap) {
   const p = svgEl('path')
   p.setAttribute(
     'd',
-    'M' + x0.toFixed(2) + ' ' + y0.toFixed(2) +
-      ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2),
+    'M' +
+      x0.toFixed(2) +
+      ' ' +
+      y0.toFixed(2) +
+      ' A' +
+      r +
+      ' ' +
+      r +
+      ' 0 ' +
+      large +
+      ' 1 ' +
+      x1.toFixed(2) +
+      ' ' +
+      y1.toFixed(2),
   )
   p.setAttribute('class', cls)
   if (cap) p.setAttribute('stroke-linecap', cap)
@@ -91,7 +103,11 @@ export function createReticle(host, facts) {
   gC.appendChild(arc(62, 298, 62, 'dsu-bracket', 'round').node)
   svg.appendChild(gC)
 
-  const pts = [[152, 132], [252, 268], [278, 150]]
+  const pts = [
+    [152, 132],
+    [252, 268],
+    [278, 150],
+  ]
   for (let i = 0; i < pts.length; i++) {
     svg.appendChild(dot('dsu-dot-o', pts[i][0], pts[i][1], '2.8'))
   }

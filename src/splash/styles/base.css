@@ -42,16 +42,19 @@
        等宽：Cascadia Mono(Win) → SFMono/Consolas → DejaVu Sans Mono(Linux)
        中文：Noto Sans SC(优先) → 思源 → 雅黑(Win) → 苹方(macOS) → WQY(Linux)
      完全没有时退到通用 sans-serif —— 版式不变，只是字面观感略有差异。 */
-  --dsu-din: "Bahnschrift", "DIN Alternate", "DIN Condensed", "Archivo", "Oswald",
-    "Arial Narrow", "Liberation Sans Narrow", "Ubuntu Condensed", "Roboto Condensed",
-    "Noto Sans Display", "HarmonyOS Sans SC", "Microsoft YaHei", "PingFang SC", sans-serif;
-  --dsu-mono: "Cascadia Mono", "SFMono-Regular", "Consolas", "Menlo", "DejaVu Sans Mono",
-    "Liberation Mono", "Noto Sans Mono", ui-monospace, monospace;
+  --dsu-din:
+    'Bahnschrift', 'DIN Alternate', 'DIN Condensed', 'Archivo', 'Oswald', 'Arial Narrow',
+    'Liberation Sans Narrow', 'Ubuntu Condensed', 'Roboto Condensed', 'Noto Sans Display',
+    'HarmonyOS Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --dsu-mono:
+    'Cascadia Mono', 'SFMono-Regular', 'Consolas', 'Menlo', 'DejaVu Sans Mono', 'Liberation Mono',
+    'Noto Sans Mono', ui-monospace, monospace;
   /* 中文优先 Noto Sans SC / 思源黑体系：笔画更几何，暗底发虚比雅黑轻。
      没装才退微软雅黑，版式不变。 */
-  --dsu-zh: "Noto Sans SC", "Source Han Sans SC", "Noto Sans CJK SC", "HarmonyOS Sans SC",
-    "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB",
-    "WenQuanYi Micro Hei", sans-serif;
+  --dsu-zh:
+    'Noto Sans SC', 'Source Han Sans SC', 'Noto Sans CJK SC', 'HarmonyOS Sans SC',
+    'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB',
+    'WenQuanYi Micro Hei', sans-serif;
 
   --dsu-speed: 1;
 
@@ -79,15 +82,25 @@
   display: inline-block;
   opacity: 0;
   transform: translateY(0.16em);
-  transition: opacity 340ms ease, transform 340ms ease;
+  transition:
+    opacity 340ms ease,
+    transform 340ms ease;
 }
-.dsu-sub-en .dsu-ch { transform: translateY(0.1em); transition-duration: 300ms; }
+.dsu-sub-en .dsu-ch {
+  transform: translateY(0.1em);
+  transition-duration: 300ms;
+}
 .dsu-status.dsu-in .dsu-ch,
-.dsu-sub-en.dsu-in .dsu-ch { opacity: 1; transform: none; }
+.dsu-sub-en.dsu-in .dsu-ch {
+  opacity: 1;
+  transform: none;
+}
 
 /* 中央标识与终幕标识统一取当前文字色 */
 .dsu-logo svg,
-.dsu-w3 svg { fill: currentColor; }
+.dsu-w3 svg {
+  fill: currentColor;
+}
 
 /* 深色主题：同一套版式，换成暗底板 */
 #dsh-startup-root.dsu-dark {
@@ -107,7 +120,7 @@
 
 /* 首屏兜底：脚本还没跑起来时也要先糊住整个窗口，避免闪出应用本体 */
 #dsh-startup-root.dsu-boot::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   background: #000;
@@ -119,4 +132,3 @@
   pointer-events: none;
   transition: opacity 620ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-

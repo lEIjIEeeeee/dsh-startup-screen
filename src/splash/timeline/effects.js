@@ -64,13 +64,13 @@ export function revealLogo(ui, ms, wait) {
       path.style.strokeDasharray = len
       path.style.strokeDashoffset = len
       /* 参考片的"一笔画成"：先勾线，再落墨成面 */
-      path.animate(
-        [{ strokeDashoffset: len }, { strokeDashoffset: 0 }],
-        { duration: ms(1400), easing: 'cubic-bezier(.55,.06,.24,1)', fill: 'forwards' },
-      )
+      path.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], {
+        duration: ms(1400),
+        easing: 'cubic-bezier(.55,.06,.24,1)',
+        fill: 'forwards',
+      })
       setTimeout(function () {
-        path.style.transition =
-          'fill ' + ms(420) + 'ms ease, stroke-width ' + ms(420) + 'ms ease'
+        path.style.transition = 'fill ' + ms(420) + 'ms ease, stroke-width ' + ms(420) + 'ms ease'
         path.style.fill = ''
         path.style.strokeWidth = '0'
       }, ms(1450))

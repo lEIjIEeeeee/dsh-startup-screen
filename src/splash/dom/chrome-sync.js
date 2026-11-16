@@ -89,8 +89,7 @@ export function createChromeSync(env) {
       const probe = state.probe
       if (!probe || probe.isConnected === false) return false
       const getStyle =
-        win.getComputedStyle ||
-        (typeof getComputedStyle === 'function' ? getComputedStyle : null)
+        win.getComputedStyle || (typeof getComputedStyle === 'function' ? getComputedStyle : null)
       if (!getStyle) return false
       return getStyle(probe).backgroundColor === CLEAR
     } catch (e) {
@@ -198,8 +197,7 @@ export function createChromeSync(env) {
     observerInstalled = true
     try {
       const MO =
-        win.MutationObserver ||
-        (typeof MutationObserver !== 'undefined' ? MutationObserver : null)
+        win.MutationObserver || (typeof MutationObserver !== 'undefined' ? MutationObserver : null)
       if (!MO || !doc.body) return
       const mo = new MO(function (mutations) {
         for (const mutation of mutations) {

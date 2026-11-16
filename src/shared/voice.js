@@ -122,3 +122,27 @@ export function pickVoice(voices, want) {
   }
   return best
 }
+
+/**
+ * 按用户指定的音色名精确匹配，并限定语种前缀；没指定或没命中返回 null。
+ *
+ * @template {{ name?: string, lang?: string }} T
+ * @param {T[]} voices
+ * @param {string} name
+ * @param {string} want
+ * @returns {T|null}
+ */
+export function findVoiceByName(voices, name, want) {
+  if (!name || !voices || !voices.length) return null
+  for (const voice of voices) {
+    if (
+      voice.name === name &&
+      String(voice.lang || '')
+        .toLowerCase()
+        .indexOf(want) === 0
+    ) {
+      return voice
+    }
+  }
+  return null
+}

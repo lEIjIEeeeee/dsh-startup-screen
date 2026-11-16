@@ -47,14 +47,17 @@ export function playOpening(ctx) {
         ui.plate.style.opacity = '1'
         /* 底板铺满之后才让根节点透出去；多留 60ms，避免收尾帧仍露出 body 白底。 */
         if (C.glass) {
-          setTimeout(function () {
-            try {
-              root.classList.add('dsu-glass-live')
-              root.style.background = 'transparent'
-            } catch (e) {
-              /* noop */
-            }
-          }, ms(900) + 60)
+          setTimeout(
+            function () {
+              try {
+                root.classList.add('dsu-glass-live')
+                root.style.background = 'transparent'
+              } catch (e) {
+                /* noop */
+              }
+            },
+            ms(900) + 60,
+          )
         }
         ui.watermark.style.transition =
           'opacity ' + ms(1100) + 'ms ease, transform 4.6s cubic-bezier(0.16, 0.84, 0.24, 1)'

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { pickVoice, scoreVoice } from '../../src/shared/voice.js'
+import { findVoiceByName, pickVoice, scoreVoice } from '../../src/shared/voice.js'
 
 test('神经网络女声 + 语种吻合得分最高', () => {
   const score = scoreVoice({ name: 'Microsoft Aria Online (Natural)', lang: 'en-US' }, 'en')
@@ -30,4 +30,13 @@ test('语种都不吻合时退回全部候选', () => {
 test('空列表返回 null', () => {
   assert.equal(pickVoice([], 'en'), null)
   assert.equal(pickVoice(null, 'en'), null)
+})
+
+test('按名字精确匹配指定音色，并要求语种前缀吻合', () => {
+  const en = { name: 'Microsoft Aria', lang: 'en-US' }
+  const zh = { name: 'Microsoft Aria', lang: 'zh-CN' }
+  assert.equal(findVoiceByName([zh, en], 'Microsoft Aria', 'en'), en)
+  assert.equal(findVoiceByName([zh], 'Microsoft Aria', 'en'), null)
+  assert.equal(findVoiceByName([en], '', 'en'), null)
+  assert.equal(findVoiceByName(null, 'Microsoft Aria', 'en'), null)
 })

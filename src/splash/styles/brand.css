@@ -13,7 +13,8 @@
 .dsu-brand-3 {
   opacity: 0;
   transform: translateX(-22px);
-  transition: opacity 560ms cubic-bezier(0.16, 0.84, 0.24, 1),
+  transition:
+    opacity 560ms cubic-bezier(0.16, 0.84, 0.24, 1),
     transform 560ms cubic-bezier(0.16, 0.84, 0.24, 1);
 }
 .dsu-brand-1 {
@@ -37,10 +38,24 @@
   align-items: baseline;
   gap: 9px;
 }
-.dsu-brand-3 b { font-weight: 700; }
-.dsu-brand.dsu-in .dsu-brand-1 { opacity: 1; transform: none; transition-delay: 60ms; }
-.dsu-brand.dsu-in .dsu-brand-2 { opacity: 1; transform: none; transition-delay: 150ms; }
-.dsu-brand.dsu-in .dsu-brand-3 { opacity: 1; transform: none; transition-delay: 240ms; }
+.dsu-brand-3 b {
+  font-weight: 700;
+}
+.dsu-brand.dsu-in .dsu-brand-1 {
+  opacity: 1;
+  transform: none;
+  transition-delay: 60ms;
+}
+.dsu-brand.dsu-in .dsu-brand-2 {
+  opacity: 1;
+  transform: none;
+  transition-delay: 150ms;
+}
+.dsu-brand.dsu-in .dsu-brand-3 {
+  opacity: 1;
+  transform: none;
+  transition-delay: 240ms;
+}
 
 /* 中央状态区 */
 .dsu-center {
@@ -59,7 +74,9 @@
 }
 /* 终幕时整块中央区（状态行 / 分隔线 / 鲸鱼 / 虚线）必须整体退场，
    否则会和 WELCOME 版式叠在一起 */
-.dsu-center.dsu-off { opacity: 0; }
+.dsu-center.dsu-off {
+  opacity: 0;
+}
 
 .dsu-status {
   display: flex;
@@ -77,11 +94,17 @@
   /* 清晰度优先：只给主字打开次像素抗锯齿，不动根节点，避免小字和玻璃背景一起变样 */
   -webkit-font-smoothing: auto;
   text-rendering: auto;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.055), 0 20px 54px rgba(0, 0, 0, 0.46);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.055),
+    0 20px 54px rgba(0, 0, 0, 0.46);
 }
-.dsu-status.dsu-in { opacity: 1; }
+.dsu-status.dsu-in {
+  opacity: 1;
+}
 /* 字距补偿必须加在文字子项上：flex 容器上的 text-indent 不生效，否则整行会偏右 */
-.dsu-status-zh { text-indent: 0.135em; }
+.dsu-status-zh {
+  text-indent: 0.135em;
+}
 .dsu-status.dsu-zhline {
   font-family: var(--dsu-zh);
   font-weight: 500;
@@ -89,7 +112,9 @@
   font-size: clamp(48px, 4.7vw, 72px);
 }
 #dsh-startup-root:not(.dsu-dark) .dsu-status {
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.82), 0 13px 32px rgba(66, 54, 40, 0.16);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.82),
+    0 13px 32px rgba(66, 54, 40, 0.16);
 }
 /* 分隔圆点单独提亮：整句因此有一个视觉锚 */
 .dsu-status .dsu-sep {
@@ -99,13 +124,19 @@
 /* 护城河：只准星步骤启用，避免玻璃背景下每句字都带一圈常驻光晕 */
 #dsh-startup-root .dsu-status.dsu-shield,
 #dsh-startup-root .dsu-sub-en.dsu-shield {
-  text-shadow: 0 0 14px var(--dsu-bg-2), 0 0 5px var(--dsu-bg-2),
-    0 1px 0 rgba(255, 255, 255, 0.055), 0 20px 54px rgba(0, 0, 0, 0.46);
+  text-shadow:
+    0 0 14px var(--dsu-bg-2),
+    0 0 5px var(--dsu-bg-2),
+    0 1px 0 rgba(255, 255, 255, 0.055),
+    0 20px 54px rgba(0, 0, 0, 0.46);
 }
 #dsh-startup-root:not(.dsu-dark) .dsu-status.dsu-shield,
 #dsh-startup-root:not(.dsu-dark) .dsu-sub-en.dsu-shield {
-  text-shadow: 0 0 14px var(--dsu-bg-2), 0 0 5px var(--dsu-bg-2),
-    0 1px 0 rgba(255, 255, 255, 0.82), 0 13px 32px rgba(66, 54, 40, 0.16);
+  text-shadow:
+    0 0 14px var(--dsu-bg-2),
+    0 0 5px var(--dsu-bg-2),
+    0 1px 0 rgba(255, 255, 255, 0.82),
+    0 13px 32px rgba(66, 54, 40, 0.16);
 }
 .dsu-caret {
   display: inline-block;
@@ -115,7 +146,10 @@
   background: var(--dsu-accent);
   transform: translateY(3px);
   opacity: 0;
-  transition: width 180ms ease, margin-left 180ms ease, opacity 180ms ease;
+  transition:
+    width 180ms ease,
+    margin-left 180ms ease,
+    opacity 180ms ease;
 }
 .dsu-caret.dsu-on {
   width: 15px;
@@ -123,7 +157,11 @@
   opacity: 1;
   animation: dsu-blink 1s steps(1, end) infinite;
 }
-@keyframes dsu-blink { 50% { opacity: 0; } }
+@keyframes dsu-blink {
+  50% {
+    opacity: 0;
+  }
+}
 
 .dsu-sub-en {
   margin-top: 16px;
@@ -139,7 +177,9 @@
   text-rendering: auto;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.38);
 }
-.dsu-sub-en.dsu-in { opacity: 1; }
+.dsu-sub-en.dsu-in {
+  opacity: 1;
+}
 #dsh-startup-root:not(.dsu-dark) .dsu-sub-en {
   color: #464b4a;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
@@ -152,7 +192,9 @@
   background: var(--dsu-hair);
   transition: width 620ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
-.dsu-rule.dsu-in { width: min(560px, 42vw); }
+.dsu-rule.dsu-in {
+  width: min(560px, 42vw);
+}
 
 /* 中央标识（鲸鱼）装配区 */
 .dsu-logo {
@@ -162,7 +204,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: opacity 420ms ease, height 420ms ease, margin-top 420ms ease;
+  transition:
+    opacity 420ms ease,
+    height 420ms ease,
+    margin-top 420ms ease;
 }
 .dsu-logo.dsu-in {
   opacity: 1;
@@ -208,9 +253,13 @@
   letter-spacing: 0.2em;
   color: var(--dsu-ink-soft);
   opacity: 0;
-  transition: opacity 520ms ease, transform 520ms cubic-bezier(0.16, 0.84, 0.24, 1);
+  transition:
+    opacity 520ms ease,
+    transform 520ms cubic-bezier(0.16, 0.84, 0.24, 1);
   transition-delay: 520ms;
   white-space: nowrap;
 }
-.dsu-idline.dsu-in { opacity: 1; transform: none; }
-
+.dsu-idline.dsu-in {
+  opacity: 1;
+  transform: none;
+}

@@ -182,6 +182,31 @@ function factsHash(facts) {
   )
 }
 
+/** 单个服务读取的上限；任一服务卡住都不能把整块真实信息拖成永远未就绪。 */
+const READ_TIMEOUT_MS = 1500
+
+/**
+ * 给一次服务读取加超时：到点就当作没读到，晚到的结果仍然会补进 facts。
+ *
+ * @param {Promise<any>} promise
+ * @returns {Promise<void>}
+ */
+function withTimeout(promise) {
+  return new Promise(function (resolve) {
+    const timer = setTimeout(resolve, READ_TIMEOUT_MS)
+    Promise.resolve(promise).then(
+      function () {
+        clearTimeout(timer)
+        resolve()
+      },
+      function () {
+        clearTimeout(timer)
+        resolve()
+      },
+    )
+  })
+}
+
 /**
  * @param {HostContext} ctx
  * @param {FactsCache} cache
@@ -197,9 +222,12 @@ export function collectFacts(ctx, cache) {
   ;(async () => {
     readProfile(ctx, facts)
     readSandbox(ctx, facts)
-    await readModel(ctx, facts)
-    await readBundles(ctx, facts)
-    await readSessions(ctx, facts)
+    /* 三个服务互不依赖：并行读，各自超时，慢的那个不阻塞其它字段 */
+    await Promise.all([
+      withTimeout(readModel(ctx, facts)),
+      withTimeout(readBundles(ctx, facts)),
+      withTimeout(readSessions(ctx, facts)),
+    ])
     Object.assign(facts, readRegistryCounts(ctx))
     facts.hash = factsHash(facts)
     facts.ready = true

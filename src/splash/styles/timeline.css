@@ -31,27 +31,56 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: color 220ms ease, border-color 220ms ease;
+  transition:
+    color 220ms ease,
+    border-color 220ms ease;
 }
 .dsu-btn::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   background: var(--dsu-ink);
   transform: translateX(-101%);
   transition: transform 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
-.dsu-btn:hover::before { transform: none; }
-.dsu-btn:hover { color: var(--dsu-box-ink); }
-.dsu-btn:hover .dsu-btn-en { color: var(--dsu-box-ink); opacity: 1; }
-.dsu-btn > * { position: relative; z-index: 1; }
-.dsu-btn:active { transform: translateY(1px); }
-.dsu-btn-zh { font-family: var(--dsu-zh); font-weight: 500; }
-.dsu-btn-en { font-family: var(--dsu-mono); font-size: 11px; letter-spacing: 0.24em; opacity: 0.62; }
-.dsu-btn.dsu-pulse { animation: dsu-pulse 1.9s ease-in-out infinite; }
+.dsu-btn:hover::before {
+  transform: none;
+}
+.dsu-btn:hover {
+  color: var(--dsu-box-ink);
+}
+.dsu-btn:hover .dsu-btn-en {
+  color: var(--dsu-box-ink);
+  opacity: 1;
+}
+.dsu-btn > * {
+  position: relative;
+  z-index: 1;
+}
+.dsu-btn:active {
+  transform: translateY(1px);
+}
+.dsu-btn-zh {
+  font-family: var(--dsu-zh);
+  font-weight: 500;
+}
+.dsu-btn-en {
+  font-family: var(--dsu-mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  opacity: 0.62;
+}
+.dsu-btn.dsu-pulse {
+  animation: dsu-pulse 1.9s ease-in-out infinite;
+}
 @keyframes dsu-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 117, 0, 0); }
-  50% { box-shadow: 0 0 0 7px rgba(255, 117, 0, 0.14); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 117, 0, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(255, 117, 0, 0.14);
+  }
 }
 .dsu-hint {
   font-family: var(--dsu-zh);
@@ -80,7 +109,9 @@
 }
 /* 作者样式里的 display:flex 会盖掉 [hidden] 的 UA display:none，必须显式补一条，
    否则第一步（只要按钮、不要卡片）会露出一条空的边框 */
-.dsu-card[hidden] { display: none; }
+.dsu-card[hidden] {
+  display: none;
+}
 .dsu-card-row {
   display: flex;
   align-items: baseline;
@@ -102,5 +133,7 @@
   letter-spacing: 0.08em;
   color: var(--dsu-ink);
 }
-.dsu-card-row b.dsu-zhname { font-family: var(--dsu-zh); letter-spacing: 0.1em; }
-
+.dsu-card-row b.dsu-zhname {
+  font-family: var(--dsu-zh);
+  letter-spacing: 0.1em;
+}

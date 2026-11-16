@@ -1,13 +1,11 @@
 import { VOICE_LEAD_MAX } from '../../shared/schema.js'
-import { scoreVoice } from '../../shared/voice.js'
+import { findVoiceByName, pickVoice } from '../../shared/voice.js'
 import { clamp } from '../core/clamp.js'
 
 /** 全大写名字有些引擎会一个字母一个字母念，转成 Title Case 更像在叫名字 */
 export function spokenName(name) {
   return String(name || '').replace(/\S+/g, function (w) {
-    return /^[A-Z0-9.-]+$/.test(w) && w.length > 1
-      ? w.charAt(0) + w.slice(1).toLowerCase()
-      : w
+    return /^[A-Z0-9.-]+$/.test(w) && w.length > 1 ? w.charAt(0) + w.slice(1).toLowerCase() : w
   })
 }
 
@@ -18,40 +16,14 @@ function estimateMs(items, rate) {
     const t = String(items[i].t || '')
     chars += /[一-龥]/.test(t) ? t.length * 1.7 : t.length
   }
-  return Math.round((chars / 13) * 1000 / rate) + 460
+  return Math.round(((chars / 13) * 1000) / rate) + 460
 }
 
 /* 音色打分统一放在 shared/voice，面板推荐与运行时挑选用同一套规则 */
 /** 挑某语种最合适的一个音色（want 传 'en' / 'zh' 这样的两字母前缀） */
 function bestFor(state, config, want) {
-  const voices = state.voices
-  if (!voices.length) return null
-  if (config.voiceName) {
-    for (let i = 0; i < voices.length; i++) {
-      const v = voices[i]
-      if (
-        v.name === config.voiceName &&
-        String(v.lang || '').toLowerCase().indexOf(want) === 0
-      ) {
-        return v
-      }
-    }
-  }
-  let pool = []
-  for (let j = 0; j < voices.length; j++) {
-    if (String(voices[j].lang || '').toLowerCase().indexOf(want) === 0) pool.push(voices[j])
-  }
-  if (!pool.length) pool = voices.slice()
-  let best = null
-  let bs = -1e9
-  for (let n = 0; n < pool.length; n++) {
-    const sc = scoreVoice(pool[n], want)
-    if (sc > bs) {
-      bs = sc
-      best = pool[n]
-    }
-  }
-  return best
+  const preferred = findVoiceByName(state.voices, config.voiceName, want)
+  return preferred || pickVoice(state.voices, want)
 }
 
 function loadVoices(state) {
@@ -211,9 +183,11 @@ function currentVoice(state) {
 export function createTts(options) {
   const config = options.config
   const sfx = options.sfx
-  const isFinished = options.isFinished || function () {
-    return false
-  }
+  const isFinished =
+    options.isFinished ||
+    function () {
+      return false
+    }
   const state = {
     supported:
       typeof window !== 'undefined' &&

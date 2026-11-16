@@ -1,6 +1,6 @@
 /* 语音：读系统里可用的音色，女声排在前面。
    打分规则必须和启动动画运行时一致，否则面板推荐的音色和实际念出来的不是同一个。 */
-import { FEMALE_HINTS, NATURAL_HINTS, hits, scoreVoice } from '../shared/voice.js'
+import { FEMALE_HINTS, NATURAL_HINTS, findVoiceByName, hits, scoreVoice } from '../shared/voice.js'
 
 /** 面板下拉里的推荐标记：★ 神经网络音色，♀ 女声。 */
 export function voiceMark(name) {
@@ -29,23 +29,9 @@ export function readVoices() {
   }
 }
 
-function pickByName(list, name, langPrefix) {
-  for (let i = 0; i < list.length; i++) {
-    const v = list[i]
-    if (
-      v.name === name &&
-      String(v.lang || '')
-        .toLowerCase()
-        .indexOf(langPrefix) === 0
-    )
-      return v
-  }
-  return null
-}
-
 function makeUtterance(text, langPrefix, fallbackLang, draft, list) {
   const u = new window.SpeechSynthesisUtterance(text)
-  const target = pickByName(list, draft.voiceName, langPrefix)
+  const target = findVoiceByName(list, draft.voiceName, langPrefix)
   if (target) {
     u.voice = target
     u.lang = target.lang || fallbackLang
