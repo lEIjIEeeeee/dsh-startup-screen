@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
+import type { PanelTab } from './types.js'
 
 export interface PanelPageProps {
-  name: string
+  name: PanelTab
   active: boolean
   children: ReactNode
 }

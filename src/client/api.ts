@@ -20,7 +20,7 @@ interface ConfigPayload {
 
 type TimeoutError = Error & { timeout?: boolean }
 
-function messageOf(e: unknown): string {
+export function messageOf(e: unknown): string {
   return String(e && (e as { message?: unknown }).message ? (e as Error).message : e)
 }
 

@@ -1,10 +1,9 @@
+import type { VersionInfo } from './types.js'
 import { PanelPage } from './PanelPage.js'
 import { VersionLine } from './VersionLine.js'
 
-export interface AboutSectionProps {
+export interface AboutSectionProps extends VersionInfo {
   active: boolean
-  version: string
-  buildVersion: string
   file: string
 }
 

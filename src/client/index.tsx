@@ -9,22 +9,15 @@
  * 注册 id 必须和插件名一致，否则加载器会报错；注册壳由构建时套上。
  */
 import type { ReactNode } from 'react'
+import { DEFAULTS } from '../shared/defaults.js'
 import { localDayKey } from '../shared/day.js'
 import { ROUTES } from '../shared/routes.js'
-import type { Facts, RuntimeConfig, StartupConfig } from '../shared/types.js'
-import { API } from './api.js'
+import type { RuntimeConfig } from '../shared/types.js'
+import { loadConfig } from './api.js'
 import { Panel } from './panel.js'
 import { injectStyles } from './styles.js'
 
-interface BootConfig extends Partial<StartupConfig> {
-  facts?: Facts
-}
-
-interface BootPayload {
-  ok: boolean
-  config?: StartupConfig
-  facts?: Facts
-}
+type BootConfig = Partial<RuntimeConfig>
 
 interface ClientContext {
   slots: {
@@ -143,7 +136,7 @@ function injectRoot(cfg: BootConfig) {
   })
 
   /* 配置先落 window：splash.js 载入时直接读它 */
-  window.__DSH_STARTUP__ = cfg as RuntimeConfig
+  window.__DSH_STARTUP__ = cfg
   try {
     delete window.__DSH_STARTUP_LOADED__
   } catch (e) {
@@ -172,7 +165,7 @@ function injectRoot(cfg: BootConfig) {
 /* 这次不播，但先把运行时挂上：设置页的「立即预览」要靠运行时暴露的接口。
    运行时看到跳过标记只暴露接口，不建界面、不锁滚动。 */
 function loadSkippedRuntime(cfg: BootConfig) {
-  window.__DSH_STARTUP__ = cfg as RuntimeConfig
+  window.__DSH_STARTUP__ = cfg
   window.__DSH_STARTUP_SKIP__ = true
   try {
     delete window.__DSH_STARTUP_LOADED__
@@ -194,17 +187,15 @@ function selfBoot() {
     /* 已经失败过就不再重试 */
     if (window.__DSH_STARTUP_FAILED__ === true) return
     markBooted()
-    fetch(API, { headers: { Accept: 'application/json' } })
-      .then((r) => r.json() as Promise<BootPayload>)
+    loadConfig()
       .then((j) => {
-        if (!j || j.ok !== true) return null
         const cfg: BootConfig | null = j.config || null
         if (cfg && j.facts) cfg.facts = j.facts
         return cfg
       })
       .catch(() => null)
       .then((cfg) => {
-        const next: BootConfig = cfg || { enabled: true, mode: 'session', speed: 1 }
+        const next: BootConfig = cfg || DEFAULTS
         if (next.enabled === false) {
           loadSkippedRuntime(next)
           return

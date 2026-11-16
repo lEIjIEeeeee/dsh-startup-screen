@@ -186,6 +186,8 @@ const CLIENT_DIR = fileURLToPath(new URL('../src/client/', import.meta.url))
 const CLIENT_SOURCES = fs
   .readdirSync(CLIENT_DIR, { recursive: true })
   .filter((f) => /\.(js|jsx|ts|tsx)$/.test(f))
+  /* 类型声明与纯类型文件不参与运行时断言，也不影响 bundle 新旧。 */
+  .filter((f) => !/\.d\.ts$/.test(f) && !/(^|[\\/])types\.ts$/.test(f))
   .sort()
   .map((f) => path.join(CLIENT_DIR, f))
 const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.ts', import.meta.url))
@@ -587,7 +589,7 @@ console.log('\n[9] 液态玻璃面板控件')
 console.log('\n[10] 设置页：左侧导航 + 分页 + 固定底栏')
 {
   check('有左侧导航 .__ss_nav', /__ss_nav/.test(SOURCE))
-  check('导航项可点击切页', /__ss_navItem/.test(SOURCE) && /switchTab\(p\[0\]\)/.test(SOURCE))
+  check('导航项可点击切页', /__ss_navItem/.test(SOURCE) && /switchTab\(key\)/.test(SOURCE))
   check(
     '五个页面：播放/外观/声音/内容/关于',
     ['play', 'appearance', 'sound', 'content', 'about'].every(

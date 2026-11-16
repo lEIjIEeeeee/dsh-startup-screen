@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { DEFAULTS } from '../shared/defaults.js'
 import type { StartupConfig } from '../shared/types.js'
-import { loadConfig, previewConfig, resetConfig, saveConfig } from './api.js'
+import { loadConfig, messageOf, previewConfig, resetConfig, saveConfig } from './api.js'
 
 function readInjectedVersion(): string {
   try {
@@ -10,10 +10,6 @@ function readInjectedVersion(): string {
   } catch (e) {
     return ''
   }
-}
-
-function errorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : String(e)
 }
 
 export interface PanelConfigState {
@@ -56,7 +52,7 @@ export function usePanelConfig(): PanelConfigState {
         setFile(j.file || '')
         if (j.version) setVersion(String(j.version))
       })
-      .catch((e: unknown) => setError(errorMessage(e)))
+      .catch((e: unknown) => setError(messageOf(e)))
   }
 
   useEffect(() => {
@@ -81,7 +77,7 @@ export function usePanelConfig(): PanelConfigState {
         setDirty(false)
         setNotice('已保存。下次打开 DSH 生效；「立即预览」使用当前修改。')
       })
-      .catch((e: unknown) => setError(errorMessage(e)))
+      .catch((e: unknown) => setError(messageOf(e)))
       .then(() => setBusy(false))
   }
 
@@ -105,7 +101,7 @@ export function usePanelConfig(): PanelConfigState {
         setDirty(false)
         setNotice('已恢复默认。')
       })
-      .catch((e: unknown) => setError(errorMessage(e)))
+      .catch((e: unknown) => setError(messageOf(e)))
       .then(() => setBusy(false))
   }
 

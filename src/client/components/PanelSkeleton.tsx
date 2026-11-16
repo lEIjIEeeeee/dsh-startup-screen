@@ -1,9 +1,9 @@
 import { Button } from '../ui/Button.js'
 import { VersionLine } from './VersionLine.js'
 
-export interface PanelSkeletonProps {
-  version: string
-  buildVersion: string
+import type { VersionInfo } from './types.js'
+
+export interface PanelSkeletonProps extends VersionInfo {
   error: string | null
   onRetry: () => void
 }

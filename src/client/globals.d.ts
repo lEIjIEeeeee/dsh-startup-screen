@@ -3,15 +3,15 @@ interface StartupApi {
   voice?: string
   replay?: () => void
   skip?: () => void
-  speak?: (text: string) => void
-  speakName?: (name: string) => void
+  speak?: (en: string, zh?: string | null) => unknown
+  speakName?: (name: string) => unknown
   finish?: () => void
   dispose?: () => void
-  config?: import('../shared/types.js').RuntimeConfig
+  config?: Partial<import('../shared/types.js').RuntimeConfig>
 }
 
 interface Window {
-  __DSH_STARTUP__?: import('../shared/types.js').RuntimeConfig
+  __DSH_STARTUP__?: Partial<import('../shared/types.js').RuntimeConfig>
   __DSH_STARTUP_VERSION__?: string
   __DSH_STARTUP_API__?: StartupApi
   __DSH_STARTUP_BOOT__?: 'index' | 'client'

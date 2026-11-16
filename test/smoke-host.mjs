@@ -17,7 +17,7 @@ const HOST_SOURCE = path.join(PLUGIN_ROOT, 'src', 'index.ts')
 const HOST_DIR = path.join(PLUGIN_ROOT, 'src', 'host')
 const HOST_MODULES = fs
   .readdirSync(HOST_DIR)
-  .filter((f) => f.endsWith('.ts'))
+  .filter((f) => f.endsWith('.ts') && f !== 'types.ts')
   .sort()
   .map((f) => path.join(HOST_DIR, f))
 const HOST_SOURCES = [HOST_SOURCE, ...HOST_MODULES]
@@ -701,6 +701,7 @@ console.log('\n[8] 单一事实来源')
   const client = fs
     .readdirSync(clientDir, { recursive: true })
     .filter((f) => /\.(js|jsx|ts|tsx)$/.test(f))
+    .filter((f) => !/\.d\.ts$/.test(f) && !/(^|[\\/])types\.ts$/.test(f))
     .sort()
     .map((f) => fs.readFileSync(path.join(clientDir, f), 'utf8'))
     .join('\n')

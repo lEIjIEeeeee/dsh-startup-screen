@@ -10,3 +10,9 @@ export interface SectionProps {
 }
 
 export type PanelTab = 'play' | 'appearance' | 'sound' | 'content' | 'about'
+
+/** 面板顶部 / 关于页共用的版本对。 */
+export interface VersionInfo {
+  version: string
+  buildVersion: string
+}
