@@ -28,7 +28,7 @@ const LIFECYCLE_SOURCE = fileURLToPath(
 const LIFECYCLE_TEXT = fs.readFileSync(LIFECYCLE_SOURCE, 'utf8')
 const STYLES_DIR = fileURLToPath(new URL('../src/splash/styles/', import.meta.url))
 const CSS_INDEX = fileURLToPath(new URL('../src/splash/styles/index.css', import.meta.url))
-const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.js', import.meta.url))
+const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.ts', import.meta.url))
 
 /* 源码断言跨多个模块：把 splash 目录下的 JS 全拼起来再匹配 */
 function collectSources(dir) {

@@ -702,17 +702,17 @@ console.log('\n[8] 单一事实来源')
     .sort()
     .map((f) => fs.readFileSync(path.join(clientDir, f), 'utf8'))
     .join('\n')
-  const defaults = read('src/shared/defaults.js')
-  const routes = read('src/shared/routes.js')
+  const defaults = read('src/shared/defaults.ts')
+  const routes = read('src/shared/routes.ts')
 
   check(
-    '默认配置只在 shared/defaults.js 定义一次',
-    /export const DEFAULTS = \{/.test(defaults) &&
+    '默认配置只在 shared/defaults.ts 定义一次',
+    /export const DEFAULTS(?:: [A-Za-z_$][\w$]*)? = \{/.test(defaults) &&
       !/var DEFAULTS = \{/.test(splash) &&
       !/const DEFAULTS = \{/.test(host),
   )
   check('设置面板不再自带 FALLBACK 副本', !/var FALLBACK = \{/.test(client))
-  check('路由常量只在 shared/routes.js 定义', /export const ROUTES = \{/.test(routes))
+  check('路由常量只在 shared/routes.ts 定义', /export const ROUTES = \{/.test(routes))
   check(
     '三个运行时都不再硬编码路由字面量',
     [host, splash, client, ...hostModules].every((s) => !/['"]\/dsh-startup\//.test(s)),

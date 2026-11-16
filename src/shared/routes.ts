@@ -13,4 +13,6 @@ export const ROUTES = {
   asset: ROUTE_BASE + '/asset',
   config: ROUTE_BASE + '/config',
   facts: ROUTE_BASE + '/facts',
-}
+} as const
+
+export type RouteName = keyof typeof ROUTES

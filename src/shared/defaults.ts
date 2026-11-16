@@ -4,8 +4,9 @@
  * 宿主、启动动画、设置面板都从这里取值；改默认值只需要改这一处。
  * 运行时配置仍以宿主注入的 window.__DSH_STARTUP__ 为准，这里只是兜底。
  */
-/** @type {Record<string, any>} */
-export const DEFAULTS = {
+import type { StartupConfig } from './types.js'
+
+export const DEFAULTS: StartupConfig = {
   enabled: true,
   mode: 'session', // always | session | daily
   theme: 'light', // light | dark

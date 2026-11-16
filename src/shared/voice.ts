@@ -4,6 +4,7 @@
  * 神经网络音色优先，其次女声，最后剔掉男声；语种吻合、本地音色、默认音色加分。
  * 纯数据与纯函数，不依赖 window / speechSynthesis。
  */
+import type { Voice } from './types.js'
 
 export const NATURAL_HINTS = [
   'natural',
@@ -64,24 +65,16 @@ export const MALE_HINTS = [
 
 /**
  * 名字里是否命中某个提示词。
- *
- * @param {string} name
- * @param {string[]} list
- * @returns {boolean}
  */
-export function hits(name, list) {
+export function hits(name: string, list: readonly string[]): boolean {
   for (let i = 0; i < list.length; i++) if (name.indexOf(list[i]) !== -1) return true
   return false
 }
 
 /**
  * 语种前缀是否吻合；`want` 是 'en' / 'zh' 这样的两字母前缀。
- *
- * @param {string|undefined} lang
- * @param {string} want
- * @returns {boolean}
  */
-export function langMatches(lang, want) {
+export function langMatches(lang: string | undefined, want: string): boolean {
   return (
     String(lang || '')
       .toLowerCase()
@@ -91,12 +84,8 @@ export function langMatches(lang, want) {
 
 /**
  * 给一个音色打分；`want` 传 'en' / 'zh' 这样的两字母前缀。
- *
- * @param {{ name?: string, lang?: string, localService?: boolean, default?: boolean }} voice
- * @param {string} want
- * @returns {number}
  */
-export function scoreVoice(voice, want) {
+export function scoreVoice(voice: Voice, want: string): number {
   const name = String(voice.name || '').toLowerCase()
   let sc = 0
   if (hits(name, NATURAL_HINTS)) sc += 60
@@ -110,17 +99,15 @@ export function scoreVoice(voice, want) {
 
 /**
  * 从候选里挑分数最高的一个。
- *
- * @template {{ name?: string, lang?: string, localService?: boolean, default?: boolean }} T
- * @param {T[]} voices
- * @param {string} want
- * @returns {T|null}
  */
-export function pickVoice(voices, want) {
+export function pickVoice<T extends Voice>(
+  voices: readonly T[] | null | undefined,
+  want: string,
+): T | null {
   if (!voices || !voices.length) return null
   let pool = voices.filter((v) => langMatches(v.lang, want))
   if (!pool.length) pool = voices.slice()
-  let best = null
+  let best: T | null = null
   let bestScore = -1e9
   for (const voice of pool) {
     const sc = scoreVoice(voice, want)
@@ -134,14 +121,12 @@ export function pickVoice(voices, want) {
 
 /**
  * 按用户指定的音色名精确匹配，并限定语种前缀；没指定或没命中返回 null。
- *
- * @template {{ name?: string, lang?: string }} T
- * @param {T[]} voices
- * @param {string} name
- * @param {string} want
- * @returns {T|null}
  */
-export function findVoiceByName(voices, name, want) {
+export function findVoiceByName<T extends Voice>(
+  voices: readonly T[] | null | undefined,
+  name: string,
+  want: string,
+): T | null {
   if (!name || !voices || !voices.length) return null
   for (const voice of voices) {
     if (voice.name === name && langMatches(voice.lang, want)) return voice

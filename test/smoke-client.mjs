@@ -188,7 +188,7 @@ const CLIENT_SOURCES = fs
   .filter((f) => /\.(js|jsx)$/.test(f))
   .sort()
   .map((f) => path.join(CLIENT_DIR, f))
-const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.js', import.meta.url))
+const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.ts', import.meta.url))
 warnIfStale(CLIENT_BUNDLE, [...CLIENT_SOURCES, DEFAULTS_SOURCE])
 const code = fs.readFileSync(CLIENT_BUNDLE, 'utf8')
 const SOURCE = CLIENT_SOURCES.map((f) => fs.readFileSync(f, 'utf8')).join('\n')
