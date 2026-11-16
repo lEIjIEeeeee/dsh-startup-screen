@@ -43,8 +43,8 @@ then fully quit it before running dsh plugin --profile desktop.
 ## 二、桌面端和 web 端哪里不一样
 
 桌面端组合里同样挂 `@deepseek-ai/dsh-web-app`，所以有 `webServer` 服务，
-插件注册的三条路由（`splash.css` / `splash.js` / `asset/*`）和 `/dsh-startup/config`
-配置接口两边都能用，**设置页「启动动画」的表现完全一致**。
+插件注册的五条路由（`splash.css` / `splash.js` / `asset/*` / `config` / `facts`）
+两边都能用，**设置页「启动动画」的表现完全一致**。
 
 区别只在「首屏注入」这一步：
 
@@ -121,7 +121,7 @@ then fully quit it before running dsh plugin --profile desktop.
 | ------------------------------------------------------------------------------------------------- | ----------------------- |
 | 四套冒烟测试（511 项断言）                                                                        | ✅ 通过                 |
 | 真实 `dist/index.html` 上的注入产物                                                               | ✅ 通过（隔离环境实测） |
-| 隔离 DSH 实例的真实 HTTP 全链路（index 注入 / 三条路由 / 7 段音频素材 / 配置读写 / 401 信任栅栏） | ✅ 通过                 |
+| 隔离 DSH 实例的真实 HTTP 全链路（index 注入 / 五条路由 / 8 段音频素材 / 配置读写 / 401 信任栅栏） | ✅ 通过                 |
 | 没有 `webServer` 的降级路径不抛异常                                                               | ✅ 通过                 |
 | 浏览器半侧自举逻辑（DOM stub 跑真代码）                                                           | ✅ 通过 65 项断言       |
 | **桌面端实机**（真实 Electron 里看到完整动画）                                                    | ✅ **通过**             |
@@ -131,7 +131,8 @@ then fully quit it before running dsh plugin --profile desktop.
 - 六幕动画完整播放，无白闪、无残留黑幕
 - 8 段音频全部走 `lib/assets/` 的真声素材，未回落 TTS
 - 设置页出现「启动动画」，配置正确落在 `%USERPROFILE%\.dsh\dsh-startup.json`
-- 三条路由 `/dsh-startup/splash.js`、`/dsh-startup/splash.css`、`/dsh-startup/config`
+- 五条路由 `/dsh-startup/splash.js`、`/dsh-startup/splash.css`、`/dsh-startup/config`、
+  `/dsh-startup/facts`、`/dsh-startup/asset/*`
   由安装前的 **404** 变为 **401**（401 是插件自己的信任栅栏，说明路由已注册）
 - 桌面端组合里确实有 `webServer`，所以 Host 半侧的降级分支没有触发
 
