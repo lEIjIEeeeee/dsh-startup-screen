@@ -2,6 +2,8 @@ import js from '@eslint/js'
 import importX, { createNodeResolver } from 'eslint-plugin-import-x'
 import reactHooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
+import tseslint from 'typescript-eslint'
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 
 /**
  * 依赖方向（单向，禁止反向）：
@@ -44,7 +46,7 @@ export default [
   js.configs.recommended,
 
   {
-    files: ['**/*.{js,mjs,cjs,jsx}'],
+    files: ['**/*.{js,mjs,cjs,jsx,ts,tsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -64,13 +66,32 @@ export default [
   },
 
   {
-    files: ['src/**/*.{js,mjs,jsx}'],
+    /* TypeScript 文件用 TS parser；类型由 tsc 负责，ESLint 只保留行为规则。 */
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: { parser: tseslint.parser },
+    plugins: { '@typescript-eslint': tseslint.plugin },
+    rules: {
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', caughtErrors: 'none' },
+      ],
+    },
+  },
+
+  {
+    files: ['src/**/*.{js,mjs,jsx,ts,tsx}'],
     plugins: { 'import-x': importX },
     settings: {
-      // 默认解析器不认 .jsx，显式补上，否则 no-cycle 对 JSX 模块完全失效。
-      'import-x/extensions': ['.js', '.jsx', '.mjs', '.cjs'],
+      // 默认解析器不认 .jsx / .ts，显式补上，否则 no-cycle 对 JSX / TS 模块完全失效。
+      'import-x/extensions': ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx'],
       'import-x/resolver-next': [
-        createNodeResolver({ extensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'] }),
+        createNodeResolver({
+          extensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'],
+        }),
+        // TS 文件里的 ./foo.js 要映射到 foo.ts；只靠 node resolver 会静默跳过循环检查。
+        createTypeScriptImportResolver({ project: './tsconfig.json' }),
       ],
     },
     rules: {
@@ -85,7 +106,7 @@ export default [
   {
     // 规模预算：软上限只作目标，这里只卡硬上限（见 docs/architecture-refactor-design.md 6.3）。
     // 注释和空行不计入，避免文档密度高的模块被迫拆散。
-    files: ['src/**/*.{js,jsx}'],
+    files: ['src/**/*.{js,jsx,ts,tsx}'],
     rules: {
       'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
       'max-lines-per-function': ['error', { max: 120, skipBlankLines: true, skipComments: true }],
@@ -96,7 +117,7 @@ export default [
 
   {
     // React 组件比普通模块更碎：一个组件文件只放一个组件的渲染与局部状态。
-    files: ['src/client/**/*.jsx'],
+    files: ['src/client/**/*.{jsx,tsx}'],
     rules: {
       'max-lines': ['error', { max: 250, skipBlankLines: true, skipComments: true }],
     },
@@ -112,7 +133,7 @@ export default [
   },
 
   {
-    files: ['src/client/**/*.{js,jsx}', 'src/splash/**/*.{js,jsx}'],
+    files: ['src/client/**/*.{js,jsx,ts,tsx}', 'src/splash/**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       globals: { ...globals.browser },
     },
@@ -123,7 +144,7 @@ export default [
   },
 
   {
-    files: ['src/client/**/*.{js,jsx}'],
+    files: ['src/client/**/*.{js,jsx,ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
     rules: {
       'react-hooks/rules-of-hooks': 'error',

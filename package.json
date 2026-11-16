@@ -36,15 +36,15 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "node --import tsx scripts/build.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "size": "node scripts/check-size.mjs",
-    "pretest": "node scripts/build.mjs",
-    "test:unit": "node --test \"test/unit/*.test.mjs\"",
-    "test": "npm run test:unit && node test/smoke-host.mjs && node test/smoke-splash.mjs && node test/smoke-client.mjs && node test/smoke-desktop-boot.mjs",
+    "pretest": "npm run build",
+    "test:unit": "node --import tsx --test \"test/unit/*.test.mjs\"",
+    "test": "npm run test:unit && node --import tsx test/smoke-host.mjs && node --import tsx test/smoke-splash.mjs && node --import tsx test/smoke-client.mjs && node --import tsx test/smoke-desktop-boot.mjs",
     "verify": "npm run lint && npm run typecheck && npm test && npm run size",
     "release:check": "node scripts/release.mjs",
     "prepublishOnly": "npm run verify"
@@ -82,10 +82,13 @@
     "@types/node": "^26.6.6",
     "esbuild": "0.28.2",
     "eslint": "^10.14.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "^4.18.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
     "prettier": "^3.10.1",
-    "typescript": "^7.0.2"
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.2"
   }
 }

@@ -21,8 +21,11 @@
   },
   "include": [
     "src/index.js",
+    "src/index.ts",
     "src/shared/**/*.js",
+    "src/shared/**/*.ts",
     "src/host/**/*.js",
+    "src/host/**/*.ts",
     "src/**/*.d.ts",
     "scripts/**/*.mjs"
   ],
