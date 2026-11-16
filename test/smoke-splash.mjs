@@ -16,6 +16,7 @@ import path from 'node:path'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 import { warnIfStale } from './_fresh.mjs'
+import { createChecker } from './helpers/check.mjs'
 
 const BUNDLE = fileURLToPath(new URL('../lib/splash.js', import.meta.url))
 const SPLASH_DIR = fileURLToPath(new URL('../src/splash/', import.meta.url))
@@ -52,17 +53,7 @@ const CSS_TEXT = CSS_SOURCES.map((file) => fs.readFileSync(file, 'utf8')).join('
 
 warnIfStale(BUNDLE, [...SOURCES, ...CSS_SOURCES, DEFAULTS_SOURCE])
 
-let pass = 0
-let fail = 0
-function check(label, ok, extra) {
-  if (ok) {
-    pass++
-    console.log('  ok   ' + label)
-  } else {
-    fail++
-    console.log('  FAIL ' + label + (extra !== undefined ? '  → ' + extra : ''))
-  }
-}
+const { check, finish } = createChecker()
 
 /* ── 最小 DOM 桩 ─────────────────────────────────────────────────────────── */
 function makeEl(tag) {
@@ -1531,7 +1522,4 @@ console.log('\n[22] 这次不播时仍暴露接口（桌面端「立即预览」
   )
 }
 
-console.log('\n============================')
-console.log(`  通过 ${pass} / 失败 ${fail}`)
-console.log('============================\n')
-process.exit(fail === 0 ? 0 : 1)
+finish()

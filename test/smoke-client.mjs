@@ -9,19 +9,10 @@ import path from 'node:path'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 import { warnIfStale } from './_fresh.mjs'
+import { createChecker } from './helpers/check.mjs'
 import { makeJsxStub, makePrimitivesStub } from './_stubs.mjs'
 
-let pass = 0
-let fail = 0
-function check(label, ok, extra) {
-  if (ok) {
-    pass++
-    console.log('  ok   ' + label)
-  } else {
-    fail++
-    console.log('  FAIL ' + label + (extra !== undefined ? '  → ' + extra : ''))
-  }
-}
+const { check, finish } = createChecker()
 
 /* ── 极小的 React stub：够跑函数组件 + useState/useEffect ────────────────── */
 let hooks = []
@@ -667,7 +658,4 @@ console.log('\n[10] 设置页：左侧导航 + 分页 + 固定底栏')
   )
 }
 
-console.log('\n============================')
-console.log(`  通过 ${pass} / 失败 ${fail}`)
-console.log('============================\n')
-process.exit(fail === 0 ? 0 : 1)
+finish()

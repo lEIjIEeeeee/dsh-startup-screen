@@ -18,19 +18,10 @@ import fs from 'node:fs'
 import vm from 'node:vm'
 import { fileURLToPath } from 'node:url'
 import { localDayKey } from '../src/shared/day.js'
+import { createChecker } from './helpers/check.mjs'
 import { makeJsxStub, makePrimitivesStub } from './_stubs.mjs'
 
-let pass = 0
-let fail = 0
-function check(label, ok, extra) {
-  if (ok) {
-    pass++
-    console.log('  ok   ' + label)
-  } else {
-    fail++
-    console.log('  FAIL ' + label + (extra !== undefined ? '  → ' + extra : ''))
-  }
-}
+const { check, finish } = createChecker()
 
 const CLIENT_BUNDLE = fileURLToPath(new URL('../lib/client.js', import.meta.url))
 const CODE = fs.readFileSync(CLIENT_BUNDLE, 'utf8')
@@ -595,7 +586,4 @@ console.log('\n[6] 设置面板顶部的版本号（桌面端 / 旧 Host 的兜�
   check('host 没注入版本时 window.__DSH_STARTUP_VERSION__ 为空', !injected, String(injected))
 }
 
-console.log('\n============================')
-console.log(`  通过 ${pass} / 失败 ${fail}`)
-console.log('============================\n')
-process.exit(fail === 0 ? 0 : 1)
+finish()

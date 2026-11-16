@@ -10,6 +10,7 @@ import path from 'node:path'
 import vm from 'node:vm'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { warnIfStale } from './_fresh.mjs'
+import { createChecker } from './helpers/check.mjs'
 
 const PLUGIN_ROOT = fileURLToPath(new URL('..', import.meta.url))
 const HOST_SOURCE = path.join(PLUGIN_ROOT, 'src', 'index.js')
@@ -166,17 +167,7 @@ async function call(kindPath, method = 'GET', body, url) {
   return res
 }
 
-let pass = 0
-let fail = 0
-function check(label, ok, extra) {
-  if (ok) {
-    pass++
-    console.log('  ok   ' + label)
-  } else {
-    fail++
-    console.log('  FAIL ' + label + (extra ? '  → ' + extra : ''))
-  }
-}
+const { check, finish } = createChecker()
 
 console.log('\n[1] 模块导出形状')
 const mod = await import(pathToFileURL(path.join(PLUGIN_ROOT, 'lib', 'index.js')).href)
@@ -739,7 +730,4 @@ console.log('\n[8] 单一事实来源')
 }
 
 fs.rmSync(SMOKE_HOME, { recursive: true, force: true })
-console.log('\n============================')
-console.log(`  通过 ${pass} / 失败 ${fail}`)
-console.log('============================\n')
-process.exit(fail === 0 ? 0 : 1)
+finish()
