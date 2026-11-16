@@ -700,7 +700,7 @@ console.log('\n[8] 单一事实来源')
   const clientDir = path.join(PLUGIN_ROOT, 'src', 'client')
   const client = fs
     .readdirSync(clientDir, { recursive: true })
-    .filter((f) => /\.(js|jsx)$/.test(f))
+    .filter((f) => /\.(js|jsx|ts|tsx)$/.test(f))
     .sort()
     .map((f) => fs.readFileSync(path.join(clientDir, f), 'utf8'))
     .join('\n')

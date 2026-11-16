@@ -1,4 +1,5 @@
 import { ROUTES } from '../shared/routes.js'
+import type { Facts, RuntimeConfig, StartupConfig } from '../shared/types.js'
 
 export const API = ROUTES.config
 
@@ -7,12 +8,28 @@ const LOAD_TIMEOUT_MS = 8000
 const WRITE_TIMEOUT_MS = 15000
 const PREVIEW_FALLBACK_MS = 1200
 
-function messageOf(e) {
-  return String(e && e.message ? e.message : e)
+interface ConfigPayload {
+  ok: boolean
+  error?: string
+  version?: string
+  config?: StartupConfig
+  defaults?: StartupConfig
+  file?: string
+  facts?: Facts
+}
+
+type TimeoutError = Error & { timeout?: boolean }
+
+function messageOf(e: unknown): string {
+  return String(e && (e as { message?: unknown }).message ? (e as Error).message : e)
+}
+
+function isTimeout(e: unknown): e is TimeoutError {
+  return !!e && typeof e === 'object' && (e as { timeout?: unknown }).timeout === true
 }
 
 /** 带超时的请求；超时抛出的错误带 timeout 标记，调用方据此换中文提示。 */
-function request(init, timeoutMs, timeoutMessage) {
+function request(init: RequestInit, timeoutMs: number, timeoutMessage: string) {
   const ctrl = typeof AbortController === 'function' ? new AbortController() : null
   const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null
   const stop = () => {
@@ -20,15 +37,15 @@ function request(init, timeoutMs, timeoutMessage) {
   }
   if (ctrl) init.signal = ctrl.signal
   return fetch(API, init)
-    .then((r) => r.json())
+    .then((r) => r.json() as Promise<ConfigPayload>)
     .then((j) => {
       stop()
       return j
     })
-    .catch((e) => {
+    .catch((e: unknown) => {
       stop()
       if (ctrl && ctrl.signal.aborted) {
-        const err = new Error(timeoutMessage)
+        const err: TimeoutError = new Error(timeoutMessage)
         err.timeout = true
         throw err
       }
@@ -36,7 +53,7 @@ function request(init, timeoutMs, timeoutMessage) {
     })
 }
 
-function post(body) {
+function post(body: unknown) {
   return request(
     {
       method: 'POST',
@@ -49,54 +66,54 @@ function post(body) {
 }
 
 /** 读配置。超时或接口失败都抛带中文提示的 Error，由面板直接显示。 */
-export function loadConfig() {
+export function loadConfig(): Promise<ConfigPayload> {
   return request(
     { headers: { Accept: 'application/json' } },
     LOAD_TIMEOUT_MS,
     '读取配置超时，请稍后重试',
   )
     .then((j) => {
-      if (!j || j.ok !== true) throw new Error((j && j.error) || 'load failed')
+      if (!j || j.ok !== true) throw new Error(j && j.error ? j.error : 'load failed')
       return j
     })
-    .catch((e) => {
-      if (e && e.timeout) throw e
+    .catch((e: unknown) => {
+      if (isTimeout(e)) throw e
       throw new Error('读取配置失败：' + messageOf(e))
     })
 }
 
-export function saveConfig(draft) {
+export function saveConfig(draft: StartupConfig): Promise<ConfigPayload> {
   return post({ patch: draft })
     .then((j) => {
-      if (!j || j.ok !== true) throw new Error((j && j.error) || 'save failed')
+      if (!j || j.ok !== true) throw new Error(j && j.error ? j.error : 'save failed')
       return j
     })
-    .catch((e) => {
-      if (e && e.timeout) throw e
+    .catch((e: unknown) => {
+      if (isTimeout(e)) throw e
       throw new Error('保存失败：' + messageOf(e))
     })
 }
 
-export function resetConfig() {
+export function resetConfig(): Promise<ConfigPayload> {
   return post({ action: 'reset' })
     .then((j) => {
-      if (!j || j.ok !== true) throw new Error((j && j.error) || 'reset failed')
+      if (!j || j.ok !== true) throw new Error(j && j.error ? j.error : 'reset failed')
       return j
     })
-    .catch((e) => {
-      if (e && e.timeout) throw new Error('恢复默认超时，请稍后重试')
+    .catch((e: unknown) => {
+      if (isTimeout(e)) throw new Error('恢复默认超时，请稍后重试')
       throw new Error('恢复默认失败：' + messageOf(e))
     })
 }
 
 /** 立即预览：把当前未保存的 draft 合进页面配置，重播一次；不写盘。 */
-export function previewConfig(draft) {
+export function previewConfig(draft: StartupConfig | null) {
   try {
     const base =
       window.__DSH_STARTUP__ && typeof window.__DSH_STARTUP__ === 'object'
         ? window.__DSH_STARTUP__
         : {}
-    window.__DSH_STARTUP__ = Object.assign({}, base, draft || {})
+    window.__DSH_STARTUP__ = Object.assign({}, base, draft || {}) as RuntimeConfig
   } catch (e) {
     /* noop */
   }

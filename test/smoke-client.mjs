@@ -185,7 +185,7 @@ const CLIENT_BUNDLE = fileURLToPath(new URL('../lib/client.js', import.meta.url)
 const CLIENT_DIR = fileURLToPath(new URL('../src/client/', import.meta.url))
 const CLIENT_SOURCES = fs
   .readdirSync(CLIENT_DIR, { recursive: true })
-  .filter((f) => /\.(js|jsx)$/.test(f))
+  .filter((f) => /\.(js|jsx|ts|tsx)$/.test(f))
   .sort()
   .map((f) => path.join(CLIENT_DIR, f))
 const DEFAULTS_SOURCE = fileURLToPath(new URL('../src/shared/defaults.ts', import.meta.url))

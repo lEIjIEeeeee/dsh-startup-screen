@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { DEFAULTS } from '../shared/defaults.js'
+import type { StartupConfig } from '../shared/types.js'
 import { loadConfig, previewConfig, resetConfig, saveConfig } from './api.js'
 
-function readInjectedVersion() {
+function readInjectedVersion(): string {
   try {
     const v = window.__DSH_STARTUP_VERSION__
     return v ? String(v) : ''
@@ -11,18 +12,37 @@ function readInjectedVersion() {
   }
 }
 
+function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e)
+}
+
+export interface PanelConfigState {
+  draft: StartupConfig | null
+  file: string
+  version: string
+  error: string | null
+  notice: string | null
+  busy: boolean
+  dirty: boolean
+  set: <K extends keyof StartupConfig>(key: K, value: StartupConfig[K]) => void
+  save: () => void
+  reset: () => void
+  preview: () => void
+  reload: () => void
+}
+
 /**
  * 设置面板的配置状态：读取、编辑、保存、恢复默认、立即预览。
  *
  * 面板组件只负责排版；所有与配置接口的交互集中在这里，
  * 状态变更后由调用方通过 props 分发给各页签。
  */
-export function usePanelConfig() {
-  const [draft, setDraft] = useState(null)
+export function usePanelConfig(): PanelConfigState {
+  const [draft, setDraft] = useState<StartupConfig | null>(null)
   const [file, setFile] = useState('')
   const [version, setVersion] = useState(readInjectedVersion)
-  const [error, setError] = useState(null)
-  const [notice, setNotice] = useState(null)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   /* 有未保存的改动时，底部固定操作条上会亮一个点 */
   const [dirty, setDirty] = useState(false)
@@ -36,18 +56,18 @@ export function usePanelConfig() {
         setFile(j.file || '')
         if (j.version) setVersion(String(j.version))
       })
-      .catch((e) => setError(e.message))
+      .catch((e: unknown) => setError(errorMessage(e)))
   }
 
   useEffect(() => {
     load()
   }, [])
 
-  function set(key, value) {
+  function set<K extends keyof StartupConfig>(key: K, value: StartupConfig[K]) {
     setNotice(null)
     setError(null)
     setDirty(true)
-    setDraft((d) => Object.assign({}, d, { [key]: value }))
+    setDraft((d) => Object.assign({}, d, { [key]: value }) as StartupConfig)
   }
 
   function save() {
@@ -57,11 +77,11 @@ export function usePanelConfig() {
     setError(null)
     saveConfig(draft)
       .then((j) => {
-        setDraft(j.config)
+        if (j.config) setDraft(j.config)
         setDirty(false)
         setNotice('已保存。下次打开 DSH 生效；「立即预览」使用当前修改。')
       })
-      .catch((e) => setError(e.message))
+      .catch((e: unknown) => setError(errorMessage(e)))
       .then(() => setBusy(false))
   }
 
@@ -81,11 +101,11 @@ export function usePanelConfig() {
     setError(null)
     resetConfig()
       .then((j) => {
-        setDraft(j.config)
+        if (j.config) setDraft(j.config)
         setDirty(false)
         setNotice('已恢复默认。')
       })
-      .catch((e) => setError(e.message))
+      .catch((e: unknown) => setError(errorMessage(e)))
       .then(() => setBusy(false))
   }
 

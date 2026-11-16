@@ -1,15 +1,16 @@
 /* 语音：读系统里可用的音色，女声排在前面。
    打分规则必须和启动动画运行时一致，否则面板推荐的音色和实际念出来的不是同一个。 */
+import type { StartupConfig } from '../shared/types.js'
 import { FEMALE_HINTS, NATURAL_HINTS, findVoiceByName, hits, scoreVoice } from '../shared/voice.js'
 
 /** 面板下拉里的推荐标记：★ 神经网络音色，♀ 女声。 */
-export function voiceMark(name) {
+export function voiceMark(name: string): string {
   if (hits(name, NATURAL_HINTS)) return '★ '
   if (hits(name, FEMALE_HINTS)) return '♀ '
   return ''
 }
 
-export function readVoices() {
+export function readVoices(): SpeechSynthesisVoice[] {
   try {
     const s = window.speechSynthesis
     if (!s || typeof s.getVoices !== 'function') return []
@@ -29,7 +30,13 @@ export function readVoices() {
   }
 }
 
-function makeUtterance(text, langPrefix, fallbackLang, draft, list) {
+function makeUtterance(
+  text: string,
+  langPrefix: string,
+  fallbackLang: string,
+  draft: StartupConfig,
+  list: SpeechSynthesisVoice[],
+): SpeechSynthesisUtterance {
   const u = new window.SpeechSynthesisUtterance(text)
   const target = findVoiceByName(list, draft.voiceName, langPrefix)
   if (target) {
@@ -40,17 +47,14 @@ function makeUtterance(text, langPrefix, fallbackLang, draft, list) {
   }
   u.rate = Math.min(2, Math.max(0.5, Number(draft.voiceRate) || 1))
   u.pitch = Math.min(2, Math.max(0, Number(draft.voicePitch) || 1))
-  u.volume = Math.min(
-    1,
-    Math.max(
-      0,
-      draft.voiceVolume == null || draft.voiceVolume === '' ? 0.9 : Number(draft.voiceVolume),
-    ),
-  )
+  /* 运行时可能拿到空字符串；类型上是 number，这里保留原来的兜底。 */
+  const rawVolume = draft.voiceVolume as unknown
+  const volume = rawVolume == null || rawVolume === '' ? 0.9 : Number(rawVolume)
+  u.volume = Math.min(1, Math.max(0, volume))
   return u
 }
 
-export function speakSample(text, draft) {
+export function speakSample(text: string | null | undefined, draft: StartupConfig): boolean {
   try {
     const s = window.speechSynthesis
     if (!s) return false
