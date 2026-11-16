@@ -20,7 +20,9 @@ const RUNTIME_DIRS = ['host', 'client', 'splash']
 const zones = [
   // 宿主入口只负责组装，不能反向依赖浏览器侧的运行时。
   { target: './src/index.js', from: './src/client' },
+  { target: './src/index.ts', from: './src/client' },
   { target: './src/index.js', from: './src/splash' },
+  { target: './src/index.ts', from: './src/splash' },
   ...RUNTIME_DIRS.flatMap((importer) => [
     { target: './src/shared', from: `./src/${importer}` },
     ...RUNTIME_DIRS.filter((imported) => imported !== importer).map((imported) => ({
@@ -65,6 +67,9 @@ export default [
     },
   },
 
+  /* TS 自己会检查重名、未定义、构造函数等，关掉与之冲突的核心规则。 */
+  tseslint.configs.eslintRecommended,
+
   {
     /* TypeScript 文件用 TS parser；类型由 tsc 负责，ESLint 只保留行为规则。 */
     files: ['**/*.{ts,tsx}'],
@@ -91,7 +96,11 @@ export default [
           extensions: ['.js', '.jsx', '.mjs', '.cjs', '.json'],
         }),
         // TS 文件里的 ./foo.js 要映射到 foo.ts；只靠 node resolver 会静默跳过循环检查。
-        createTypeScriptImportResolver({ project: './tsconfig.json' }),
+        createTypeScriptImportResolver({
+          project: ['./tsconfig.json', './tsconfig.client.json'],
+          // 两个项目是有意的：Node 侧与浏览器侧 lib 不同，不合并成一个配置。
+          noWarnOnMultipleProjects: true,
+        }),
       ],
     },
     rules: {
@@ -126,7 +135,7 @@ export default [
   {
     // 唯一豁免：桌面端标题栏同步要同时盯着初始快照、MutationObserver 和窗口事件，
     // 拆开只会让同一份「当前是否已同步」状态散到几个闭包里。上限即设计文档的例外值。
-    files: ['src/splash/dom/chrome-sync.js'],
+    files: ['src/splash/dom/chrome-sync.js', 'src/splash/dom/chrome-sync.ts'],
     rules: {
       'max-lines-per-function': ['error', { max: 180, skipBlankLines: true, skipComments: true }],
     },
