@@ -19,7 +19,7 @@
 ```bash
 # 1) 先完全退出 DeepSeek Harness Desktop（进程不要留着）
 # 2) 再装
-dsh plugin --profile desktop add ./dsh-startup-screen-1.4.0.tgz
+dsh plugin --profile desktop add ./dsh-startup-screen-1.5.0.tgz
 # 3) 重新打开桌面端
 ```
 
@@ -119,7 +119,7 @@ then fully quit it before running dsh plugin --profile desktop.
 
 | 验证项                                                                                            | 状态                    |
 | ------------------------------------------------------------------------------------------------- | ----------------------- |
-| 四套冒烟测试（336 项断言）                                                                        | ✅ 通过                 |
+| 四套冒烟测试（511 项断言）                                                                        | ✅ 通过                 |
 | 真实 `dist/index.html` 上的注入产物                                                               | ✅ 通过（隔离环境实测） |
 | 隔离 DSH 实例的真实 HTTP 全链路（index 注入 / 三条路由 / 7 段音频素材 / 配置读写 / 401 信任栅栏） | ✅ 通过                 |
 | 没有 `webServer` 的降级路径不抛异常                                                               | ✅ 通过                 |
@@ -168,10 +168,10 @@ window.__DSH_STARTUP_BOOT__ // 'index' = Host 的 tapIndex 注入；'client' = �
 ## 五、测试
 
 ```bash
-npm test     # host + splash + client + desktop 四套，336 项断言
+npm test     # host + splash + client + desktop 四套，511 项断言
 ```
 
-`test/smoke-desktop-boot.mjs` 就是桌面端自举那 47 项断言的所在：
+`test/smoke-desktop-boot.mjs` 就是桌面端自举那 50 项断言的所在：
 它把 `lib/client.js` 按 ModuleLoader 的方式跑起来，用最小 DOM stub 断言
 「Host 没注入时自举 / Host 注入过时不重复 / 该不播时不播 / 失败时把页面还回去」。
 
