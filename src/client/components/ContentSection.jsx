@@ -50,19 +50,23 @@ export function ContentSection({ active, draft, onChange }) {
           </Field>
           <Field label="左上 · 产品行">
             <div className="__ss_row">
-              <Input
-                value={draft.brand3a}
-                maxLength={TEXT_MAX}
-                onChange={(v) => onChange('brand3a', v)}
-              />
+              <div className="__ss_grow">
+                <Input
+                  value={draft.brand3a}
+                  maxLength={TEXT_MAX}
+                  onChange={(v) => onChange('brand3a', v)}
+                />
+              </div>
               <span className="__ss_status" aria-hidden="true">
                 +
               </span>
-              <Input
-                value={draft.brand3b}
-                maxLength={TEXT_MAX}
-                onChange={(v) => onChange('brand3b', v)}
-              />
+              <div className="__ss_grow">
+                <Input
+                  value={draft.brand3b}
+                  maxLength={TEXT_MAX}
+                  onChange={(v) => onChange('brand3b', v)}
+                />
+              </div>
             </div>
           </Field>
         </div>

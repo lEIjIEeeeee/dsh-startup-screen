@@ -139,6 +139,7 @@
   .__ss_labelText { display: block; }
   .__ss_hint { font-size: 11.5px; line-height: 1.5; color: var(--dsw-alias-label-tertiary); }
   .__ss_row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .__ss_grow { flex: 1 1 0; min-width: 0; }
   .__ss_input { display: block; box-sizing: border-box; width: 100%; min-width: 0; }
   .__ss_input input { box-sizing: border-box; width: 100%; height: 34px; padding: 0 12px; border: .5px solid var(--dsw-alias-border-l4); border-radius: var(--dsw-radius-md); background: var(--dsw-alias-bg-layer-3); font: inherit; font-size: 13px; line-height: 1.5; color: var(--dsw-alias-label-primary); outline: none; }
   .__ss_input input:focus { border-color: var(--dsw-alias-state-business-primary); }
@@ -475,7 +476,7 @@
                     <div class="__ss_groupTitle">品牌文案</div>
                     <div class="__ss_two">
                       <div class="__ss_field"><span class="__ss_label">左上 · 主标题</span><span class="__ss_input"><input type="text" id="sBrand1" value="DEEPSEEK"></span></div>
-                      <div class="__ss_field"><span class="__ss_label">左上 · 产品行</span><div class="__ss_row"><span class="__ss_input" style="flex:1"><input type="text" id="sBrand3a" value="HARNESS"></span><span class="__ss_status">+</span><span class="__ss_input" style="flex:0 0 60px"><input type="text" id="sBrand3b" value="OS"></span></div></div>
+                      <div class="__ss_field"><span class="__ss_label">左上 · 产品行</span><div class="__ss_row"><span class="__ss_input __ss_grow"><input type="text" id="sBrand3a" value="HARNESS"></span><span class="__ss_status">+</span><span class="__ss_input __ss_grow"><input type="text" id="sBrand3b" value="OS"></span></div></div>
                     </div>
                     <div class="__ss_field"><span class="__ss_label">左上 · 副标题</span><span class="__ss_input"><input type="text" id="sBrand2" value="SYNTHESIZE INTELLIGENCE" maxlength="40"></span></div>
                     <div class="__ss_two">

@@ -27,6 +27,8 @@ export const CSS = [
   '.__ss_labelText{display:block}',
   '.__ss_hint{font-size:11.5px;line-height:1.5;color:var(--dsw-alias-label-tertiary)}',
   '.__ss_row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}',
+  /* 同一行里并排的输入框：各占一半，不被 width:100% 挤到下一行 */
+  '.__ss_grow{flex:1 1 0;min-width:0}',
   /* 输入框是宿主 primitives.Input：类名落在外层 span 上，内层才是原生 input */
   '.__ss_input{display:block;box-sizing:border-box;width:100%;min-width:0;height:auto;padding:0;border:0;background:none}',
   '.__ss_input input{box-sizing:border-box;width:100%;height:34px;padding:0 12px;border:.5px solid var(--dsw-alias-border-l4,rgba(127,127,127,.28));border-radius:var(--dsw-radius-md,12px);background:var(--dsw-alias-bg-layer-3,rgba(127,127,127,.08));font:inherit;font-size:13px;line-height:1.5;color:var(--dsw-alias-label-primary);outline:none}',
