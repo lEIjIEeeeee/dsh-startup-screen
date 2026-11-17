@@ -5,7 +5,7 @@ import { ROOT_ID } from '../core/constants.js'
  * 实例生命周期：拆掉当前实例、重播时重新加载运行时脚本。
  *
  * @param {{
- *   runtime: Record<string, any>,
+ *   runtime: SplashRuntime,
  *   chromeSync: any,
  *   restoreAppBackdrop: () => void,
  *   dropListeners: () => void,
@@ -19,12 +19,12 @@ export function createLifecycle(deps) {
   /** 拆掉当前实例：停时间线、清定时器、停语音、解滚动锁、摘根节点。重播前必须先调它。 */
   function dispose() {
     try {
-      runtime.timeline.dispose()
+      if (runtime.timeline) runtime.timeline.dispose()
     } catch (e) {
       /* noop */
     }
     try {
-      runtime.facts.dispose()
+      if (runtime.facts) runtime.facts.dispose()
     } catch (e) {
       /* noop */
     }
@@ -43,13 +43,13 @@ export function createLifecycle(deps) {
     }
     deps.stopClock()
     try {
-      runtime.voice.stop()
+      if (runtime.voice) runtime.voice.stop()
     } catch (e) {
       /* noop */
     }
     /* 每次重播都是一个新脚本实例，不关旧 AudioContext 会撞浏览器上限 */
     try {
-      runtime.audio.close()
+      if (runtime.audio) runtime.audio.close()
     } catch (e) {
       /* noop */
     }

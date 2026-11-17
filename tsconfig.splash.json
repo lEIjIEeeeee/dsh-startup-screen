@@ -2,9 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "strict": false,
-    "strictNullChecks": true
+    "types": [],
+    "noImplicitAny": false
   },
-  "include": ["src/splash/**/*.js", "src/**/*.d.ts"],
+  "include": ["src/splash/**/*.js", "src/splash/**/*.d.ts", "src/shared/globals.d.ts"],
   "exclude": ["node_modules", "lib", "dist"]
 }

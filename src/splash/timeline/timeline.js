@@ -44,12 +44,36 @@ import { createTermination } from './termination.js'
  */
 
 /**
+ * 入口传给时间线的运行时依赖；字段名必须和 index.js 的 createTimeline({...}) 对齐。
+ *
+ * @typedef {Object} TimelineRuntime
+ * @property {Record<string, any>} config
+ * @property {Record<string, any>} ui
+ * @property {any} root
+ * @property {any} audio
+ * @property {any} voice
+ * @property {any} chromeSync
+ * @property {() => boolean} stale
+ * @property {() => void} stopDecode
+ * @property {() => void} stopField
+ * @property {() => void} stopTrace
+ * @property {() => void} stopClock
+ * @property {() => void} dropListeners
+ * @property {() => void} restoreAppBackdrop
+ * @property {() => void} [stopFacts]
+ * @property {(n: number) => void} setChecks
+ * @property {() => boolean} ambientOn
+ * @property {any} typeIn
+ * @property {any} startDecode
+ */
+
+/**
  * 启动动画时间线：开场、逐幕推进、终幕、揭幕与跳过。
  *
  * 共享状态（计时器、等待者、finished / skipped）都收在这里；
  * DOM、声音、光场与入口状态通过 rt 传入，避免再出现隐式全局。
  *
- * @param {Record<string, any>} rt
+ * @param {TimelineRuntime} rt
  */
 export function createTimeline(rt) {
   const C = rt.config
@@ -127,8 +151,8 @@ export function createTimeline(rt) {
     restoreAppBackdrop: rt.restoreAppBackdrop,
   })
 
-  /** @type {any} */
-  const merged = Object.assign({}, rt, helpers, {
+  /** @type {TimelineContext} */
+  const ctx = Object.assign({}, rt, helpers, {
     C,
     ms,
     wait,
@@ -137,8 +161,6 @@ export function createTimeline(rt) {
     isFinished: termination.isFinished,
     finish: termination.finish,
   })
-  /** @type {TimelineContext} */
-  const ctx = merged
 
   function run() {
     /* 标记「时间线真的跑起来了」：9 秒兜底只放行"压根没跑"的情况，不误杀正常播放 */

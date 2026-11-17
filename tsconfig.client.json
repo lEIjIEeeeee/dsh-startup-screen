@@ -4,6 +4,12 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx"
   },
-  "include": ["src/client/**/*.ts", "src/client/**/*.tsx", "src/**/*.d.ts"],
+  "include": [
+    "src/client/**/*.ts",
+    "src/client/**/*.tsx",
+    "src/client/**/*.d.ts",
+    "src/shared/globals.d.ts",
+    "src/globals.d.ts"
+  ],
   "exclude": ["node_modules", "lib", "dist"]
 }
