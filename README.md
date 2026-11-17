@@ -5,9 +5,9 @@ DeepSeek Harness 的启动界面与启动动画插件。
 黑幕 DeepSeek 标识 → 过曝洗白 → 暖白「技术档案」底板 → 五步交互式访问授权 →
 色散故障揭幕。
 
-> 当前版本 **1.5.0**：设置页改为左侧导航 + 五个页签 + 固定底栏，补齐语音、音效、
-> 液态玻璃与颜色参数；底层按 Host / Client / Splash 拆分，配置、路由与音色打分收敛到
-> `src/shared`。
+> 当前版本 **1.5.1**：源码迁移到 TypeScript（`shared` / `host` / `client` 为
+> `.ts` / `.tsx`，`splash` 接入 `checkJs`）；运行时行为、设置项和视觉不变。
+> 1.5.0 的五页签设置面板与启动动画保持不变。
 
 > 本仓库是 [6shenhonghong9/dsh-startup-screen](https://github.com/6shenhonghong9/dsh-startup-screen) 的 fork。
 > 1.4.0 的 Canvas 光场、氛围层、逐字解码、准星增强与金属鲸鱼等视觉方案，
@@ -241,7 +241,7 @@ dsh plugin --profile web remove dsh-startup-screen
   Canvas 活体光场、氛围层、逐字解码、准星刻度 / 数据环 / 雷达扫描、金属鲸鱼等
   视觉方案参考自此项目。
 
-相关代码已按当前 1.5.0 底座重写并做性能优化；本仓库不直接分发 QIFANAI 的源文件。
+相关代码已按当前 1.5.1 底座重写并做性能优化；本仓库不直接分发 QIFANAI 的源文件。
 
 内置音频（`lib/assets/line-*.mp3`、`sfx-*.mp3`）的版权边界见下方「免责声明」；
 MIT 代码许可不覆盖第三方影音素材。

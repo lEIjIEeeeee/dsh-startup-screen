@@ -1,6 +1,6 @@
 {
   "name": "dsh-startup-screen",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "DeepSeek Harness 启动界面与启动动画：黑幕标识 → 过曝洗白 → 暖白档案底板 → 五步访问授权 → 色散揭幕。Canvas 活体光场、真实 DSH 版本与运行数据、真声台词与界面音效、液态玻璃、暗/浅双主题。设置页按播放 / 外观 / 声音 / 内容 / 关于五页组织，共 39 项，保存后下次启动生效。web 与桌面端通用；Windows 桌面端播放期间标题栏自动透明，结束后还原。本仓库为 6shenhonghong9/dsh-startup-screen 的 fork，视觉方案参考 QIFANAI/dsh-startup-screen v1.6.0（MIT）。",
   "keywords": [
     "dsh",

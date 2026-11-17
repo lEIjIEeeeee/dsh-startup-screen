@@ -5,6 +5,14 @@
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-11-17
+
+### Changed
+
+- 源码迁移到 TypeScript：`shared` / `host` / `client` 改为 `.ts` / `.tsx`，
+  `splash` 接入 `checkJs`；不改变运行时行为、HTTP 路由、配置字段与视觉。
+- 构建与测试改用 `tsx`，新增 TypeScript ESLint 解析器和三份 typecheck 配置。
+
 ## [1.5.0] - 2026-11-16
 
 ### Added
@@ -45,6 +53,7 @@
 
 - 视觉密度对齐 QIFANAI v1.6.0 方案（MIT）。
 
-[Unreleased]: https://github.com/lEIjIEeeeee/dsh-startup-screen/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/lEIjIEeeeee/dsh-startup-screen/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/lEIjIEeeeee/dsh-startup-screen/releases/tag/v1.5.1
 [1.5.0]: https://github.com/lEIjIEeeeee/dsh-startup-screen/releases/tag/v1.5.0
 [1.4.0]: https://github.com/lEIjIEeeeee/dsh-startup-screen/releases/tag/v1.4.0
