@@ -37,6 +37,9 @@ export function createField(options) {
   const limit = 150
   let raf = 0
   let frames = 0
+  let ticks = 0
+  /* 玻璃模式每帧都要重新合成 backdrop-filter；光场隔帧画一次，观感几乎不变。 */
+  const frameEvery = config.glass ? 2 : 1
   let stopped = false
   const startedAt = Date.now()
   function fieldNow() {
@@ -112,9 +115,12 @@ export function createField(options) {
 
   function frame() {
     if (stopped) return
-    scene.draw(fieldNow(), false)
-    frames++
-    handle.frames = frames
+    ticks++
+    if (ticks % frameEvery === 0) {
+      scene.draw(fieldNow(), false)
+      frames++
+      handle.frames = frames
+    }
     raf = window.requestAnimationFrame(frame)
   }
 
