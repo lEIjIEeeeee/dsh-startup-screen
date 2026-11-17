@@ -5,6 +5,13 @@
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-11-17
+
+### Changed
+
+- 玻璃模式下光场绘制次数减半，降低 `backdrop-filter` 与 Canvas 叠加的合成开销；
+  默认配置（玻璃关闭）不受影响，视觉版式不变。
+
 ## [1.5.1] - 2026-11-17
 
 ### Changed
@@ -53,7 +60,8 @@
 
 - 视觉密度对齐 QIFANAI v1.6.0 方案（MIT）。
 
-[Unreleased]: https://github.com/lEIjIEeeeee/dsh-startup-screen/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/lEIjIEeeeee/dsh-startup-screen/compare/v1.5.2...HEAD
+[1.5.2]: https://github.com/lEIjIEeeeee/dsh-startup-screen/releases/tag/v1.5.2
 [1.5.1]: https://github.com/lEIjIEeeeee/dsh-startup-screen/releases/tag/v1.5.1
 [1.5.0]: https://github.com/lEIjIEeeeee/dsh-startup-screen/releases/tag/v1.5.0
 [1.4.0]: https://github.com/lEIjIEeeeee/dsh-startup-screen/releases/tag/v1.4.0
