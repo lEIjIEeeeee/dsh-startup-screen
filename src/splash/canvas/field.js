@@ -36,9 +36,10 @@ export function createField(options) {
   const dpr = Math.min(1.75, Math.max(1, Number(window.devicePixelRatio) || 1))
   const limit = 150
   let raf = 0
-  let frames = 0
+  let frames = 0 /* 实际绘制次数；玻璃模式约为 rAF 的一半 */
   let ticks = 0
-  /* 玻璃模式每帧都要重新合成 backdrop-filter；光场隔帧画一次，观感几乎不变。 */
+  /* 玻璃模式每帧都要重新合成 backdrop-filter；光场绘制次数减半。
+     高刷新率屏幕上也会按比例减半，不会仍然画满整屏刷新。 */
   const frameEvery = config.glass ? 2 : 1
   let stopped = false
   const startedAt = Date.now()
@@ -116,7 +117,7 @@ export function createField(options) {
   function frame() {
     if (stopped) return
     ticks++
-    if (ticks % frameEvery === 0) {
+    if (ticks === 1 || ticks % frameEvery === 0) {
       scene.draw(fieldNow(), false)
       frames++
       handle.frames = frames

@@ -1287,6 +1287,14 @@ console.log('\n[18] 光场与氛围层')
   check('finish 后光场停止', on.windowStub.__DSH_STARTUP_FIELD__ === null)
   check('finish 取消了 RAF', on.rafCancels() > 0)
 
+  const glassOn = run(true, { glass: true })
+  check(
+    '玻璃模式光场仍会绘制',
+    !!glassOn.windowStub.__DSH_STARTUP_FIELD__ &&
+      glassOn.windowStub.__DSH_STARTUP_FIELD__.frames >= 1,
+  )
+  glassOn.windowStub.__DSH_STARTUP_API__.finish()
+
   const off = run(true, { ambient: false })
   check(
     'ambient=false 不生成光场/氛围层',
