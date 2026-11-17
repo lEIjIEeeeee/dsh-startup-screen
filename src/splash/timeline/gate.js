@@ -25,7 +25,8 @@ export function createGate(options) {
   let released = false
 
   function wait(base) {
-    return new Promise(function (resolve) {
+    /** @type {Promise<void>} */
+    const p = new Promise(function (resolve) {
       if (released || isSkipped()) return resolve()
       let done = false
       let timer = null
@@ -44,10 +45,12 @@ export function createGate(options) {
       timers.add(timer)
       waiters.push(fin)
     })
+    return p
   }
 
   function waitAction() {
-    return new Promise(function (resolve) {
+    /** @type {Promise<void>} */
+    const p = new Promise(function (resolve) {
       if (released || isSkipped() || !C.requireInteraction) return resolve()
       /* 等用户操作期间暂停计时：正在犹豫的人不该被超时保护踢出去 */
       disarmStall()
@@ -82,6 +85,7 @@ export function createGate(options) {
       document.addEventListener('keydown', onKey)
       waiters.push(fin)
     })
+    return p
   }
 
   /** 清掉所有计时器并放行等待者；跳过 / 揭幕 / 销毁都走这里。之后闸门保持打开。 */

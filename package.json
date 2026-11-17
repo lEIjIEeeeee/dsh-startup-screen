@@ -38,7 +38,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.client.json && tsc --noEmit -p tsconfig.splash.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "size": "node scripts/check-size.mjs",

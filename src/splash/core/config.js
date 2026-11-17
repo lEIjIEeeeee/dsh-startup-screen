@@ -5,10 +5,11 @@ import { normalize } from '../../shared/schema.js'
  * 宿主会把 facts 快照塞在配置对象里一起注入，它不是配置项，所以不进 normalize。
  *
  * @param {any} raw
- * @returns {Record<string, any>}
+ * @returns {import('../../shared/types.js').RuntimeConfig}
  */
 export function readStartupConfig(raw) {
   const source = raw && typeof raw === 'object' ? raw : {}
+  /** @type {import('../../shared/types.js').RuntimeConfig} */
   const out = normalize(source)
   if (source.facts && typeof source.facts === 'object') out.facts = source.facts
   return out

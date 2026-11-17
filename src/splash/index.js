@@ -70,6 +70,7 @@ function boot() {
   const dropListeners = listeners.drop
 
   /* 各运行部件的引用集中在一个对象里，生命周期模块按它清理。 */
+  /** @type {{ timeline: any, facts: any, voice: any, audio: any }} */
   const runtime = { timeline: null, facts: null, voice: null, audio: null }
   const lifecycle = createLifecycle({
     runtime,

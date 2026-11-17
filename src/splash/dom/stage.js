@@ -41,9 +41,9 @@ export function createStage(options) {
   const facts = options.facts || {}
   const ui = options.ui
 
-  let root = document.getElementById(ROOT_ID)
-  if (!root) {
-    root = el('div')
+  const existing = document.getElementById(ROOT_ID)
+  const root = existing || el('div')
+  if (!existing) {
     root.id = ROOT_ID
     root.className = 'dsu-root'
     document.body.appendChild(root)

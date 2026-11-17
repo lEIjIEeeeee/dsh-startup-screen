@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "strict": false,
+    "strictNullChecks": true
+  },
+  "include": ["src/splash/**/*.js", "src/**/*.d.ts"],
+  "exclude": ["node_modules", "lib", "dist"]
+}

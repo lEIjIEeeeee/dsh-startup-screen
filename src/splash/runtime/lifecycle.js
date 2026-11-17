@@ -96,7 +96,8 @@ export function createLifecycle(deps) {
     try {
       const stale = document.querySelectorAll('script[data-dsh-startup-runtime]')
       for (let i = 0; i < stale.length; i++) {
-        if (stale[i] && stale[i].parentNode) stale[i].parentNode.removeChild(stale[i])
+        const node = stale[i]
+        if (node && node.parentNode) node.parentNode.removeChild(node)
       }
     } catch (e) {
       /* noop */

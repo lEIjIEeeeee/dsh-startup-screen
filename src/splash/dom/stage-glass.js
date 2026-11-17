@@ -19,6 +19,7 @@ export function applyGlass(root, config) {
     try {
       if (!document.body || !document.body.children) return
       for (let i = 0; i < document.body.children.length; i++) {
+        /** @type {any} */
         const node = document.body.children[i]
         if (!node || !node.style || node.id === ROOT_ID) continue
         blurredNodes.push({ node, filter: node.style.filter || '' })

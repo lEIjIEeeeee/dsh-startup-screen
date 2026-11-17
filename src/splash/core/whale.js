@@ -24,6 +24,7 @@ export function createWhaleSvg(cls) {
   lg.setAttribute('y1', '0')
   lg.setAttribute('x2', '0.62')
   lg.setAttribute('y2', '1')
+  /** @type {Array<[number, string, string]>} */
   const stops = [
     [0, '#ffffff', '0.24'],
     [0.4, '#ffffff', '0'],

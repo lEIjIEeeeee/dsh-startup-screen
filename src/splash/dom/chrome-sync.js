@@ -18,6 +18,7 @@ export function createChromeSync(env) {
   const VARS = ['--dsw-specific-sidebar-fill', '--dsw-alias-label-primary']
   const MAX_HOLD_MS = 60000 /* 硬上限：万一动画卡住，别把按钮永久藏住 */
   const rootEl = doc.documentElement
+  /** @type {{ applied: boolean, probe: HTMLElement | null, settledHits: number }} */
   const state = { applied: false, probe: null, settledHits: 0 }
   const savedVars = {}
   let retryTimers = []
@@ -40,6 +41,7 @@ export function createChromeSync(env) {
   }
 
   /* 桌面版用来取色的隐藏元素是一个 span，内联背景色的声明值里带这个变量名 */
+  /** @returns {HTMLElement | null} */
   function findProbe() {
     try {
       if (!doc.querySelector) return null

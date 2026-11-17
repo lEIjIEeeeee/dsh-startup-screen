@@ -127,7 +127,8 @@ export function createTimeline(rt) {
     restoreAppBackdrop: rt.restoreAppBackdrop,
   })
 
-  const ctx = Object.assign({}, rt, helpers, {
+  /** @type {any} */
+  const merged = Object.assign({}, rt, helpers, {
     C,
     ms,
     wait,
@@ -136,6 +137,8 @@ export function createTimeline(rt) {
     isFinished: termination.isFinished,
     finish: termination.finish,
   })
+  /** @type {TimelineContext} */
+  const ctx = merged
 
   function run() {
     /* 标记「时间线真的跑起来了」：9 秒兜底只放行"压根没跑"的情况，不误杀正常播放 */
